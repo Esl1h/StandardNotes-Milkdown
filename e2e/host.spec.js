@@ -271,6 +271,46 @@ test('printing shows only the rendered note, unclipped', async ({ page }) => {
   expect(clipped).toBe(false);
 });
 
+/** A noisy PNG (incompressible), generated in the browser. */
+async function noisyPng(page, side) {
+  const base64 = await page.evaluate((size) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const context = canvas.getContext('2d');
+    const pixels = context.createImageData(size, size);
+    for (let i = 0; i < pixels.data.length; i++) {
+      pixels.data[i] = i % 4 === 3 ? 255 : Math.floor(Math.random() * 256);
+    }
+    context.putImageData(pixels, 0, 0);
+    return canvas.toDataURL('image/png').split(',')[1];
+  }, side);
+  return Buffer.from(base64, 'base64');
+}
+
+test('uploaded images are embedded in the note, large ones shrunk', async ({ page }) => {
+  const plugin = await openHost(page, { text: '# Photo\n' });
+  await plugin.locator('.milkdown .editor h1').click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/');
+  await plugin.locator('.milkdown-slash-menu').getByText('Image', { exact: true }).click();
+  const input = plugin.locator('.milkdown-image-block input[type="file"]');
+  await expect(input).toHaveCount(1);
+
+  const buffer = await noisyPng(page, 1200);
+  expect(buffer.length).toBeGreaterThan(2_000_000);
+  await input.setInputFiles({ name: 'big.png', mimeType: 'image/png', buffer });
+
+  const lastSave = async () => {
+    const saves = await hostLogs(page, 'save-items');
+    return saves.length ? saves[saves.length - 1].text : '';
+  };
+  await expect.poll(lastSave).toMatch(/\]\((data|blob):/);
+  const text = await lastSave();
+  expect(text).toMatch(/!\[[^\]]*\]\(data:image\/(webp|jpeg);base64,/);
+  expect(text.length).toBeLessThan(520 * 1024);
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 

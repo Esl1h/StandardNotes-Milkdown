@@ -11,6 +11,7 @@ import { toolbar } from '@milkdown/crepe/feature/toolbar';
 import { topBar } from '@milkdown/crepe/feature/top-bar';
 import { languages } from '@codemirror/language-data';
 import { oneDark } from '@codemirror/theme-one-dark';
+import { embedImage } from './image';
 
 /**
  * Builds the editor from the Crepe features this plugin uses. The `Crepe`
@@ -26,7 +27,9 @@ function createCrepe(root: HTMLElement, defaultValue: string, withTopBar: boolea
     .addFeature(cursor)
     .addFeature(listItem)
     .addFeature(linkTooltip)
-    .addFeature(imageBlock)
+    // Uploads (button, paste, drop) are embedded as data URIs: without it
+    // Crepe stores a blob: URL that is gone once the note is reopened.
+    .addFeature(imageBlock, { onUpload: embedImage })
     .addFeature(blockEdit)
     .addFeature(placeholder, { text: 'Type / for commands' })
     .addFeature(toolbar)
