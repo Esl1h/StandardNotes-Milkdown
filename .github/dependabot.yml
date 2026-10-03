@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # Milkdown publishes all packages in lockstep; never mix versions.
+      milkdown:
+        patterns: ['@milkdown/*']
+      codemirror:
+        patterns: ['@codemirror/*', 'codemirror']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
