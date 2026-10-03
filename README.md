@@ -19,13 +19,15 @@ plugin only changes how you edit them.
    and code blocks with syntax highlighting
 2. A floating toolbar on the selection, a `/` slash menu and drag handles
    to add and move blocks
-3. Three modes, switched from the bar at the top: **Visual**, **Split**
-   (the Markdown source next to the visual editor, side by side or stacked)
-   and **Source** (a plain CodeMirror pane for fine grained edits)
-4. An optional fixed formatting bar (**Bar**), at the top or the bottom of
-   the editor
-5. Mode, split orientation and formatting bar choices are remembered per
-   browser
+3. Three modes, switched from the icon bar at the top: **Visual**,
+   **Split** (the Markdown source next to the visual editor, side by side
+   or stacked) and **Source** (a plain CodeMirror pane for fine grained
+   edits)
+4. An optional fixed formatting bar, at the top or the bottom of the
+   editor
+5. The icon bar itself folds away with the `>` button at its right end,
+   leaving only a small `<` in the corner to bring it back. Every layout
+   choice is remembered per browser
 6. Opening a note never rewrites it: nothing is saved until you edit
 7. Undo never reaches into the previously opened note
 8. Works with the Standard Notes web, desktop and mobile apps; follows the
