@@ -48,17 +48,8 @@ function CrepeView(props: CrepeViewProps) {
     let disposed = false;
     // What the prop was when this boot started; only a change during the
     // async boot needs the catch-up replaceAll below.
-    let bootText = rawTextRef.current;
+    const bootText = rawTextRef.current;
     const boot = async () => {
-      const previous = crepeRef.current;
-      if (previous) {
-        crepeRef.current = null;
-        await previous.destroy();
-        if (disposed) {
-          return;
-        }
-        bootText = rawTextRef.current;
-      }
       const crepe = new Crepe({
         root: containerRef.current as HTMLElement,
         defaultValue: rawTextRef.current,
