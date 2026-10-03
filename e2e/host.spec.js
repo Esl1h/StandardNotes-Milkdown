@@ -53,6 +53,23 @@ test('opening a note does not save it, editing saves once', async ({ page }) => 
   expect(save.text).toContain('Notes with Milkdown!');
 });
 
+test('undoing an edit saves the restored text', async ({ page }) => {
+  const plugin = await openHost(page, { text: '# Title\n\ncontent\n' });
+  await expect(plugin.locator('.milkdown .editor h1')).toHaveText('Title');
+
+  await plugin.locator('.milkdown .editor h1').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('!');
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(1);
+
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(plugin.locator('.milkdown .editor h1')).toHaveText('Title');
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(2);
+  const saves = await hostLogs(page, 'save-items');
+  expect(saves[1].text).toContain('# Title');
+  expect(saves[1].text).not.toContain('Title!');
+});
+
 test('undo does not bring back the text of the previous note', async ({ page }) => {
   const plugin = await openHost(page, { text: '# Note A\n\ncontent a\n' });
   const content = plugin.locator('.ProseMirror');

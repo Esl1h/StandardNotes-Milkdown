@@ -28,8 +28,10 @@ function CrepeView(props: CrepeViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const crepeRef = useRef<Crepe | null>(null);
   const suppressRef = useRef(false);
-  // The last text applied programmatically; an identical markdownUpdated
-  // echo is dropped even without the flag.
+  // The serialized text the note holds, from a programmatic apply or the
+  // last saved user edit; an identical markdownUpdated echo is dropped even
+  // without the flag. Tracking user edits too keeps an undo back to the
+  // opened text from being mistaken for an echo.
   const lastAppliedRef = useRef(rawText);
   const onTextChangeRef = useRef(onTextChange);
   useEffect(() => {
@@ -82,6 +84,7 @@ function CrepeView(props: CrepeViewProps) {
           if (suppressRef.current || markdown === lastAppliedRef.current) {
             return;
           }
+          lastAppliedRef.current = markdown;
           onTextChangeRef.current(markdown);
         });
       });

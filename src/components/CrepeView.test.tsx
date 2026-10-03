@@ -58,6 +58,19 @@ describe('CrepeView', () => {
     expect(onTextChange).toHaveBeenCalledWith('# Hello world');
   });
 
+  it('saves an edit that brings the text back to the loaded one', async () => {
+    const { onTextChange } = setup();
+    await booted();
+
+    // Typing and then undoing returns the doc to the opened text; the
+    // note already holds the typed version, so the undo must be saved.
+    lastCrepe().emit('# Hello!');
+    lastCrepe().emit('# Hello');
+
+    expect(onTextChange).toHaveBeenCalledTimes(2);
+    expect(onTextChange).toHaveBeenLastCalledWith('# Hello');
+  });
+
   it('applies external text without saving it back', async () => {
     const { onTextChange, view } = setup();
     await booted();
