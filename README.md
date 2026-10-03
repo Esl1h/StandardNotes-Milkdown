@@ -37,7 +37,17 @@ plugin only changes how you edit them.
 10. If the editor ever fails to render, the raw note text stays available
     and editable in a plain text area, and edits are still saved
 
-![Milkdown editor in focus mode](.github/screenshots/milkdown-focus.png)
+## Screenshots
+
+The icon bar folded away and the formatting bar at the bottom, leaving
+only the note:
+
+![Clean interface with the formatting bar at the bottom](.github/screenshots/milkdown-clean.png)
+
+The `/` slash menu on a new note, for adding lists, images, code blocks
+and tables:
+
+![Slash menu on a new note](.github/screenshots/milkdown-slash-menu.png)
 
 ## Installation
 
