@@ -1,12 +1,21 @@
 /**
- * Persisted layout preferences, kept in localStorage (per browser). Storage
- * failures degrade to the defaults; unknown stored values fall back too, so
- * a stale value from an older version never breaks the layout.
+ * Persisted layout preferences. The primary store is the component data
+ * Standard Notes keeps on the editor's component item (synced, and immune
+ * to iframe sandboxes or per-session origins that make localStorage fail or
+ * forget); localStorage is the fallback, e.g. before registration or outside
+ * the app. Unknown stored values fall back to the defaults, so a stale value
+ * from an older version never breaks the layout.
  */
 
 type Mode = 'visual' | 'split' | 'source';
 type Orientation = 'vertical' | 'horizontal';
 type TopbarPosition = 'top' | 'bottom';
+
+/** Key/value store backed by the Standard Notes component data. */
+interface PreferenceStore {
+  get: (key: string) => unknown;
+  set: (key: string, value: string) => void;
+}
 
 const DEFAULT_MODE: Mode = 'visual';
 const DEFAULT_ORIENTATION: Orientation = 'vertical';
@@ -16,32 +25,50 @@ const DEFAULT_LAYOUT_BAR = true;
 
 const STORAGE_PREFIX = 'standardnotes-milkdown';
 
-function readStored<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+let preferenceStore: PreferenceStore | null = null;
+
+function setPreferenceStore(store: PreferenceStore | null): void {
+  preferenceStore = store;
+}
+
+function readRaw(key: string): string | null {
   try {
-    const stored = window.localStorage.getItem(`${STORAGE_PREFIX}-${key}`);
-    const value = allowed.find((candidate) => candidate === stored);
-    return value ?? fallback;
+    const synced = preferenceStore?.get(key);
+    if (typeof synced === 'string') {
+      return synced;
+    }
   } catch {
-    return fallback;
+    // Not registered yet; localStorage below.
   }
+  try {
+    return window.localStorage.getItem(`${STORAGE_PREFIX}-${key}`);
+  } catch {
+    return null;
+  }
+}
+
+function readStored<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+  const stored = readRaw(key);
+  return allowed.find((candidate) => candidate === stored) ?? fallback;
 }
 
 function readStoredBoolean(key: string, fallback: boolean): boolean {
-  try {
-    const stored = window.localStorage.getItem(`${STORAGE_PREFIX}-${key}`);
-    if (stored === 'true') {
-      return true;
-    }
-    if (stored === 'false') {
-      return false;
-    }
-    return fallback;
-  } catch {
-    return fallback;
+  const stored = readRaw(key);
+  if (stored === 'true') {
+    return true;
   }
+  if (stored === 'false') {
+    return false;
+  }
+  return fallback;
 }
 
 function writeStored(key: string, value: string): void {
+  try {
+    preferenceStore?.set(key, value);
+  } catch {
+    // Not registered yet; localStorage below still keeps it.
+  }
   try {
     window.localStorage.setItem(`${STORAGE_PREFIX}-${key}`, value);
   } catch {
@@ -93,13 +120,14 @@ function writeLayoutBar(visible: boolean): void {
   writeStored('layout-bar', String(visible));
 }
 
-export type { Mode, Orientation, TopbarPosition };
+export type { Mode, Orientation, TopbarPosition, PreferenceStore };
 export {
   DEFAULT_MODE,
   DEFAULT_ORIENTATION,
   DEFAULT_TOPBAR,
   DEFAULT_TOPBAR_POSITION,
   DEFAULT_LAYOUT_BAR,
+  setPreferenceStore,
   readMode,
   writeMode,
   readOrientation,

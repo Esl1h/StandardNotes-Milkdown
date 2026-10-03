@@ -5,6 +5,7 @@ import { SAMPLE_MARKDOWN_TEXT } from '../lib/sampleMarkdown';
 import './Editor.css';
 import MilkdownEditor from './MilkdownEditor';
 import ErrorBoundary from './ErrorBoundary';
+import { setPreferenceStore } from '../lib/layout';
 
 /** How long to wait for Standard Notes to stream the note before saying so */
 const NOTE_WAIT_MS = 5000;
@@ -23,8 +24,11 @@ export default class Editor extends React.Component<
   Record<string, never>,
   EditorInterface
 > {
-  // Only the save entry point is used; tests stub this field.
-  editorKit: Pick<EditorKit, 'onEditorValueChanged'>;
+  // Only these entry points are used; tests stub this field.
+  editorKit: Pick<
+    EditorKit,
+    'onEditorValueChanged' | 'getComponentDataValueForKey' | 'setComponentDataValueForKey'
+  >;
 
   constructor(props: Record<string, never>) {
     super(props);
@@ -65,6 +69,13 @@ export default class Editor extends React.Component<
       mode: 'plaintext',
       coallesedSaving: true,
       coallesedSavingDelay: 350,
+    });
+    // Layout preferences live in the component data, which the app keeps
+    // on the component item; localStorage alone is lost in sandboxed or
+    // per-session iframe origins.
+    setPreferenceStore({
+      get: (key) => this.editorKit.getComponentDataValueForKey(key),
+      set: (key, value) => this.editorKit.setComponentDataValueForKey(key, value),
     });
   };
 

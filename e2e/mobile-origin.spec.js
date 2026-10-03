@@ -31,3 +31,22 @@ test('the note survives a slow (throttled) mobile CPU', async ({ page }) => {
   await expect(plugin.locator('.milkdown .editor h1')).toHaveText('Throttled note');
   expect(pageErrors).toEqual([]);
 });
+
+test('layout preferences survive reopening without localStorage', async ({ page }) => {
+  // The opaque origin also blocks localStorage, as in the app's sandbox.
+  const plugin = await openHost(page, { text: '# Note\n', opaqueOrigin: true });
+  await expect(plugin.locator('.milkdown-top-bar')).toBeVisible();
+  await plugin.getByTitle('The bar sticks to the top; click to move it to the bottom').click();
+  await plugin.getByTitle('Show the source next to the visual editor').click();
+  const saved = await page.evaluate(() => window.componentData);
+
+  const reopened = await openHost(page, {
+    text: '# Note\n',
+    opaqueOrigin: true,
+    componentData: saved,
+  });
+  await expect(
+    reopened.getByTitle('The bar sticks to the bottom; click to move it to the top')
+  ).toBeVisible();
+  await expect(reopened.locator('.source-pane')).toBeVisible();
+});

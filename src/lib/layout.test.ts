@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   readMode,
   writeMode,
@@ -10,7 +10,13 @@ import {
   writeTopbarPosition,
   readLayoutBar,
   writeLayoutBar,
+  setPreferenceStore,
 } from './layout';
+
+afterEach(() => {
+  setPreferenceStore(null);
+  window.localStorage.clear();
+});
 
 describe('layout preferences', () => {
   it('round trips every preference through storage', () => {
@@ -38,5 +44,29 @@ describe('layout preferences', () => {
     expect(readTopbar()).toBe(true);
     expect(readTopbarPosition()).toBe('top');
     expect(readLayoutBar()).toBe(true);
+  });
+
+  it('prefers the component data store and writes to it', () => {
+    const data: Record<string, string> = { 'topbar-position': 'bottom' };
+    setPreferenceStore({ get: (key) => data[key], set: (key, value) => (data[key] = value) });
+    window.localStorage.setItem('standardnotes-milkdown-topbar-position', 'top');
+
+    expect(readTopbarPosition()).toBe('bottom');
+    writeMode('source');
+    expect(data.mode).toBe('source');
+  });
+
+  it('falls back to localStorage while the store is not ready', () => {
+    setPreferenceStore({
+      get: () => {
+        throw new Error('The component has not been initialized.');
+      },
+      set: () => {
+        throw new Error('The component has not been initialized.');
+      },
+    });
+
+    writeOrientation('horizontal');
+    expect(readOrientation()).toBe('horizontal');
   });
 });
