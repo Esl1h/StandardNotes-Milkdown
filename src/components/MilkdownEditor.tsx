@@ -17,6 +17,7 @@ import {
   readLayoutBar,
   writeLayoutBar,
 } from '../lib/layout';
+import { formatCount, type TextStats } from '../lib/wordCount';
 
 interface MilkdownEditorProps {
   rawText: string;
@@ -24,6 +25,15 @@ interface MilkdownEditorProps {
   historyEpoch: number;
   onTextChange: (text: string) => void;
   onInsertSample: () => void;
+}
+
+function WordCount({ stats }: { stats: TextStats }) {
+  const { label, title } = formatCount(stats.total, stats.selection);
+  return (
+    <span className="word-count" title={title}>
+      {label}
+    </span>
+  );
 }
 
 /** Layout shell: the persistent mode/orientation/top bar preferences plus
@@ -38,6 +48,9 @@ function MilkdownEditor(props: MilkdownEditorProps) {
     readTopbarPosition()
   );
   const [layoutBar, setLayoutBar] = useState<boolean>(() => readLayoutBar());
+  // Each pane counts its own text; the visual one wins whenever it is shown.
+  const [visualStats, setVisualStats] = useState<TextStats | null>(null);
+  const [sourceStats, setSourceStats] = useState<TextStats | null>(null);
 
   const changeMode = (next: Mode) => {
     setMode(next);
@@ -62,6 +75,11 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   };
 
   const empty = rawText.trim() === '';
+  const stats = mode === 'source' ? sourceStats : visualStats;
+  const wordCount = stats ? <WordCount stats={stats} /> : null;
+  // The counter lives in the formatting bar when there is one, else in the
+  // icon bar; with both gone the interface stays clean.
+  const countInTopBar = topbar && mode !== 'source';
 
   return (
     <div className={`milkdown-app mode-${mode}${layoutBar ? '' : ' layout-bar-hidden'}`}>
@@ -77,11 +95,14 @@ function MilkdownEditor(props: MilkdownEditorProps) {
           onTopbarPositionChange={changeTopbarPosition}
           onHide={() => changeLayoutBar(false)}
           trailing={
-            empty ? (
-              <button className="insert-sample" onClick={onInsertSample}>
-                Add sample
-              </button>
-            ) : undefined
+            <>
+              {empty && (
+                <button className="insert-sample" onClick={onInsertSample}>
+                  Add sample
+                </button>
+              )}
+              {!countInTopBar && wordCount}
+            </>
           }
         />
       ) : (
@@ -93,12 +114,24 @@ function MilkdownEditor(props: MilkdownEditorProps) {
       >
         {mode !== 'visual' && (
           <div className="source-pane">
-            <SourceView rawText={rawText} epoch={historyEpoch} onTextChange={onTextChange} />
+            <SourceView
+              rawText={rawText}
+              epoch={historyEpoch}
+              onTextChange={onTextChange}
+              onStats={setSourceStats}
+            />
           </div>
         )}
         {mode !== 'source' && (
           <div className="crepe-pane">
-            <CrepeView rawText={rawText} epoch={historyEpoch} topbar={topbar} onTextChange={onTextChange} />
+            <CrepeView
+              rawText={rawText}
+              epoch={historyEpoch}
+              topbar={topbar}
+              onTextChange={onTextChange}
+              onStats={setVisualStats}
+              topBarAccessory={countInTopBar ? wordCount : null}
+            />
           </div>
         )}
       </div>

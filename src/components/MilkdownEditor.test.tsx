@@ -100,6 +100,23 @@ describe('MilkdownEditor', () => {
     expect(window.localStorage.getItem('standardnotes-milkdown-layout-bar')).toBe('true');
   });
 
+  it('shows the word count in the formatting bar, else in the icon bar', async () => {
+    const { view } = setup('# Hello brave world');
+    await waitFor(() =>
+      expect(document.querySelector('.milkdown-top-bar .word-count')?.textContent).toBe(
+        '3 words'
+      )
+    );
+
+    fireEvent.click(view.getByTitle('Show or hide the fixed formatting bar'));
+    await waitFor(() =>
+      expect(document.querySelector('.mode-switcher .word-count')?.textContent).toBe('3 words')
+    );
+
+    fireEvent.click(view.getByTitle('Hide the layout bar'));
+    expect(document.querySelector('.word-count')).toBeNull();
+  });
+
   it('offers the sample for an empty note only', () => {
     const { onInsertSample, view } = setup('');
     fireEvent.click(view.getByText('Add sample'));

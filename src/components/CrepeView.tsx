@@ -1,7 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { type CrepeBuilder } from '@milkdown/crepe/builder';
+import { editorViewCtx } from '@milkdown/kit/core';
+import { type Ctx } from '@milkdown/kit/ctx';
+import { type Node } from '@milkdown/kit/prose/model';
+import { type Selection } from '@milkdown/kit/prose/state';
 import { replaceAll } from '@milkdown/kit/utils';
 import { createCrepe } from '../lib/crepe';
+import { countText, type TextStats } from '../lib/wordCount';
 // The common styles one by one: the aggregate style.css also pulls the
 // Latex (KaTeX, with its fonts), AI and diff styles of unused features.
 import '@milkdown/crepe/theme/common/prosemirror.css';
@@ -25,6 +31,20 @@ interface CrepeViewProps {
   /** Whether the fixed top bar feature is enabled. */
   topbar: boolean;
   onTextChange: (text: string) => void;
+  /** Receives the word count of the document and of the selection. */
+  onStats?: (stats: TextStats) => void;
+  /** Rendered at the right end of the Crepe top bar, when it is on. */
+  topBarAccessory?: React.ReactNode;
+}
+
+/** Counts the rendered text, so Markdown syntax never inflates the count. */
+function statsOf(doc: Node, selection: Selection): TextStats {
+  return {
+    total: countText(doc.textBetween(0, doc.content.size, '\n', ' ')),
+    selection: selection.empty
+      ? null
+      : countText(doc.textBetween(selection.from, selection.to, '\n', ' ')),
+  };
 }
 
 /**
@@ -38,7 +58,7 @@ interface CrepeViewProps {
  *   with `replaceAll` under a suppress flag, so the echo never saves.
  */
 function CrepeView(props: CrepeViewProps) {
-  const { rawText, epoch, topbar, onTextChange } = props;
+  const { rawText, epoch, topbar, onTextChange, topBarAccessory } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const crepeRef = useRef<CrepeBuilder | null>(null);
   const suppressRef = useRef(false);
@@ -48,9 +68,13 @@ function CrepeView(props: CrepeViewProps) {
   // opened text from being mistaken for an echo.
   const lastAppliedRef = useRef(rawText);
   const onTextChangeRef = useRef(onTextChange);
+  const onStatsRef = useRef(props.onStats);
   useEffect(() => {
     onTextChangeRef.current = onTextChange;
+    onStatsRef.current = props.onStats;
   });
+  // The Crepe top bar element of the current instance, for the portal.
+  const [topBarElement, setTopBarElement] = useState<HTMLElement | null>(null);
 
   const rawTextRef = useRef(rawText);
   useEffect(() => {
@@ -84,6 +108,15 @@ function CrepeView(props: CrepeViewProps) {
           lastAppliedRef.current = markdown;
           onTextChangeRef.current(markdown);
         });
+        const report = (doc: Node, selection: Selection) => {
+          if (!disposed) {
+            onStatsRef.current?.(statsOf(doc, selection));
+          }
+        };
+        // selectionUpdated runs while the transaction is being applied, so
+        // view.state is still the old one: count from what it hands over.
+        listener.selectionUpdated((_ctx, selection) => report(selection.$from.doc, selection));
+        listener.updated((ctx, doc) => report(doc, ctx.get(editorViewCtx).state.selection));
       });
       crepeRef.current = crepe;
       suppressRef.current = false;
@@ -100,10 +133,16 @@ function CrepeView(props: CrepeViewProps) {
           suppressRef.current = false;
         }
       }
+      crepe.editor.action((ctx: Ctx) => {
+        const { doc, selection } = ctx.get(editorViewCtx).state;
+        onStatsRef.current?.(statsOf(doc, selection));
+      });
+      setTopBarElement(containerRef.current?.querySelector<HTMLElement>('.milkdown-top-bar') ?? null);
     };
     void boot();
     return () => {
       disposed = true;
+      setTopBarElement(null);
       const crepe = crepeRef.current;
       if (crepe) {
         crepeRef.current = null;
@@ -127,7 +166,13 @@ function CrepeView(props: CrepeViewProps) {
     }
   }, [rawText]);
 
-  return <div className="crepe-container" ref={containerRef} />;
+  return (
+    <div className="crepe-container" ref={containerRef}>
+      {topBarElement &&
+        topBarAccessory &&
+        createPortal(<div className="top-bar-accessory">{topBarAccessory}</div>, topBarElement)}
+    </div>
+  );
 }
 
 export default CrepeView;

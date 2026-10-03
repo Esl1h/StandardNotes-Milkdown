@@ -4,6 +4,7 @@ import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { minimalSetup } from 'codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { countText, type TextStats } from '../lib/wordCount';
 
 /** Marks transactions that sync the view with the prop, so they are not saved back. */
 const External = Annotation.define<boolean>();
@@ -13,6 +14,16 @@ interface SourceViewProps {
   /** Bumped on every note switch; recreates the view and its undo history. */
   epoch: number;
   onTextChange: (text: string) => void;
+  /** Receives the word count of the source and of the selection. */
+  onStats?: (stats: TextStats) => void;
+}
+
+function statsOf(state: EditorState): TextStats {
+  const { main } = state.selection;
+  return {
+    total: countText(state.doc.toString()),
+    selection: main.empty ? null : countText(state.sliceDoc(main.from, main.to)),
+  };
 }
 
 const sourceTheme = () =>
@@ -54,8 +65,10 @@ function SourceView(props: SourceViewProps) {
   const viewRef = useRef<EditorView | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onTextChangeRef = useRef(onTextChange);
+  const onStatsRef = useRef(props.onStats);
   useEffect(() => {
     onTextChangeRef.current = onTextChange;
+    onStatsRef.current = props.onStats;
   });
 
   // Wire the view once per note (epoch); rawText at mount time seeds the doc.
@@ -74,6 +87,9 @@ function SourceView(props: SourceViewProps) {
           ) {
             onTextChangeRef.current(update.state.doc.toString());
           }
+          if (update.docChanged || update.selectionSet) {
+            onStatsRef.current?.(statsOf(update.state));
+          }
         }),
         keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
       ],
@@ -85,6 +101,7 @@ function SourceView(props: SourceViewProps) {
       state: buildState(rawText),
     });
     viewRef.current = view;
+    onStatsRef.current?.(statsOf(view.state));
     return () => {
       view.destroy();
       viewRef.current = null;

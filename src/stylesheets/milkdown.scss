@@ -203,3 +203,25 @@
   bottom: 100%;
   top: auto;
 }
+
+// The word count shares the Crepe top bar: the buttons take the free width
+// and the count stays at the right end.
+.crepe-container .milkdown .milkdown-top-bar .top-bar-inner {
+  flex: 1 1 auto;
+  width: auto;
+}
+
+.top-bar-accessory {
+  margin-left: auto;
+  padding-left: 12px;
+}
+
+.word-count {
+  color: var(--sn-stylekit-neutral-color);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.mode-switcher .word-count {
+  padding: 0 8px;
+}
