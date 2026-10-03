@@ -33,16 +33,20 @@ plugin only changes how you edit them.
    text is selected)
 8. **Copy as Markdown** and **Print** buttons in the icon bar; printing
    shows only the rendered note
-9. The icon bar itself folds away with the `>` button at its right end,
-   leaving only a small `<` in the corner to bring it back. Layout choices
-   are saved with the editor in your Standard Notes account
-10. Opening a note never rewrites it: nothing is saved until you edit
-11. Undo never reaches into the previously opened note
-12. Works with the Standard Notes web, desktop and mobile apps; follows
+9. Find and replace (`Ctrl/Cmd+F` or the search button), with highlighted
+   matches and a `2/7` count; source mode uses CodeMirror's own search
+10. An outline of the note's headings in a side panel, to jump around long
+    notes
+11. The icon bar itself folds away with the `>` button at its right end,
+    leaving only a small `<` in the corner to bring it back. Layout choices
+    are saved with the editor in your Standard Notes account
+12. Opening a note never rewrites it: nothing is saved until you edit
+13. Undo never reaches into the previously opened note
+14. Works with the Standard Notes web, desktop and mobile apps; follows
     the theme selected in the app. On narrow screens the split view stacks
-13. A new empty note shows an `Add sample` button that seeds it with
+15. A new empty note shows an `Add sample` button that seeds it with
     example Markdown
-14. If the editor ever fails to render, the raw note text stays available
+16. If the editor ever fails to render, the raw note text stays available
     and editable in a plain text area, and edits are still saved
 
 ## Screenshots
@@ -109,6 +113,9 @@ graph LR
   or embedded as data URIs when uploaded, pasted or dropped. Embedded
   images up to 500 KB go in as they are; larger ones are scaled down and
   recompressed, since the note syncs to every device
+- YAML front matter, GitHub alerts (`> [!NOTE]`, rendered as colored
+  callouts) and `[[wiki links]]` are kept exactly as written, so notes
+  imported from GitHub, Obsidian, Jekyll or Hugo are not rewritten
 - Math uses the `$...$` / `$$...$$` syntax and diagrams the ```` ```mermaid ````
   fence, both understood by GitHub, Obsidian and most Markdown tools
 
