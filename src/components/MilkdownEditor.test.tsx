@@ -117,6 +117,17 @@ describe('MilkdownEditor', () => {
     expect(document.querySelector('.word-count')).toBeNull();
   });
 
+  it('copies the note as Markdown', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const { view } = setup('# Hello *there*');
+
+    fireEvent.click(view.getByTitle('Copy the note as Markdown'));
+
+    expect(writeText).toHaveBeenCalledWith('# Hello *there*');
+    await waitFor(() => expect(view.getByTitle('Copied')).toBeTruthy());
+  });
+
   it('offers the sample for an empty note only', () => {
     const { onInsertSample, view } = setup('');
     fireEvent.click(view.getByText('Add sample'));

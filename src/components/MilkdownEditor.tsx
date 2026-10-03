@@ -18,6 +18,7 @@ import {
   writeLayoutBar,
 } from '../lib/layout';
 import { formatCount, type TextStats } from '../lib/wordCount';
+import { copyText } from '../lib/clipboard';
 
 interface MilkdownEditorProps {
   rawText: string;
@@ -93,6 +94,7 @@ function MilkdownEditor(props: MilkdownEditorProps) {
           onOrientationChange={changeOrientation}
           onTopbarChange={changeTopbar}
           onTopbarPositionChange={changeTopbarPosition}
+          onCopy={() => copyText(rawText)}
           onHide={() => changeLayoutBar(false)}
           trailing={
             <>

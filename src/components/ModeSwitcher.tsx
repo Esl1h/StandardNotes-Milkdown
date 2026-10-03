@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { type Mode, type Orientation, type TopbarPosition } from '../lib/layout';
 
 interface ModeSwitcherProps {
@@ -10,6 +10,8 @@ interface ModeSwitcherProps {
   onOrientationChange: (orientation: Orientation) => void;
   onTopbarChange: (enabled: boolean) => void;
   onTopbarPositionChange: (position: TopbarPosition) => void;
+  /** Copies the note as Markdown; resolves to whether it worked. */
+  onCopy: () => Promise<boolean>;
   /** Collapses the whole bar into the ShowLayoutBarButton. */
   onHide: () => void;
   /** Extra content shown at the right end (the sample affordance). */
@@ -80,6 +82,17 @@ const ICONS = {
       <path d="M4 20h16M12 4v11M7 11l5 5 5-5" />
     </Icon>
   ),
+  copy: (
+    <Icon>
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+    </Icon>
+  ),
+  copied: (
+    <Icon>
+      <path d="M5 12l5 5L20 7" />
+    </Icon>
+  ),
   hide: (
     <Icon>
       <path d="M9 6l6 6-6 6" />
@@ -98,6 +111,29 @@ const MODE_TITLES: Record<Mode, string> = {
   source: 'Edit the Markdown source only',
 };
 
+/** Copies the note, then shows a check for a moment as the confirmation. */
+function CopyButton({ onCopy }: { onCopy: () => Promise<boolean> }) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) {
+      return;
+    }
+    const timer = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  const title = copied ? 'Copied' : 'Copy the note as Markdown';
+  return (
+    <button
+      className="copy-button"
+      onClick={() => void onCopy().then(setCopied)}
+      title={title}
+      aria-label={title}
+    >
+      {copied ? ICONS.copied : ICONS.copy}
+    </button>
+  );
+}
+
 /** Persistent layout controls: the editing mode, the split orientation and
  * the fixed Crepe top bar (on/off and top/bottom). Icon buttons; the title
  * doubles as tooltip and accessible name. */
@@ -111,6 +147,7 @@ function ModeSwitcher(props: ModeSwitcherProps) {
     onOrientationChange,
     onTopbarChange,
     onTopbarPositionChange,
+    onCopy,
     onHide,
     trailing,
   } = props;
@@ -152,6 +189,7 @@ function ModeSwitcher(props: ModeSwitcherProps) {
       )}
       <span className="spacer" />
       {trailing}
+      <CopyButton onCopy={onCopy} />
       <button
         className={topbar ? 'topbar-button active' : 'topbar-button'}
         onClick={() => onTopbarChange(!topbar)}

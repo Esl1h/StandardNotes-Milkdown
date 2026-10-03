@@ -232,6 +232,19 @@ test('the word count falls back to the icon bar', async ({ page }) => {
   await expect(plugin.locator('.word-count')).toHaveCount(0);
 });
 
+test('the note is copied as Markdown', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const plugin = await openHost(page, { text: '# Title\n\n* starred list\n' });
+  await expect(plugin.locator('.milkdown .editor h1')).toBeVisible();
+
+  await plugin.getByTitle('Copy the note as Markdown').click();
+  await expect(plugin.getByTitle('Copied')).toBeVisible();
+  // The note text as stored, not the serializer's normalized form.
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    '# Title\n\n* starred list\n'
+  );
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 
