@@ -12,6 +12,7 @@ import { topBar } from '@milkdown/crepe/feature/top-bar';
 import { languages } from '@codemirror/language-data';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { embedImage } from './image';
+import { renderMermaidPreview } from './mermaid';
 
 // Latex pulls KaTeX in (about 90 KB gzipped plus fonts); it is split into
 // its own chunk, and the import starts right away so it is usually loaded
@@ -43,7 +44,8 @@ async function createCrepe(
     .addFeature(blockEdit)
     .addFeature(placeholder, { text: 'Type / for commands' })
     .addFeature(toolbar)
-    .addFeature(codeMirror, { theme: oneDark, languages })
+    // Latex, added below, wraps this preview hook for its own blocks.
+    .addFeature(codeMirror, { theme: oneDark, languages, renderPreview: renderMermaidPreview })
     .addFeature(table)
     .addFeature(latex);
   return withTopBar ? crepe.addFeature(topBar) : crepe;

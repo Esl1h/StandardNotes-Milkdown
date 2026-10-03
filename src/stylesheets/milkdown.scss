@@ -269,3 +269,13 @@
     --crepe-color-on-background: #000;
   }
 }
+
+// Mermaid parse errors keep their line breaks (the caret points at the
+// mistake) and read as an error, not as the diagram.
+.milkdown .milkdown-code-block .preview .mermaid-error {
+  color: var(--crepe-color-error);
+  font-family: var(--crepe-font-code);
+  font-size: 0.85em;
+  text-align: left;
+  white-space: pre-wrap;
+}

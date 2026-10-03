@@ -326,6 +326,22 @@ test('math renders with KaTeX, inline and in blocks', async ({ page }) => {
   expect(pageErrors).toEqual([]);
 });
 
+test('mermaid code blocks render as diagrams', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const plugin = await openHost(page, {
+    text: '# Flow\n\n```mermaid\ngraph TD\n  Start --> Finish\n```\n',
+  });
+
+  const diagram = plugin.locator('.milkdown-code-block .preview svg');
+  await expect(diagram).toBeVisible({ timeout: 15000 });
+  await expect(diagram).toContainText('Start');
+  await expect(diagram).toContainText('Finish');
+  await page.waitForTimeout(800);
+  expect(await hostLogs(page, 'save-items')).toHaveLength(0);
+  expect(pageErrors).toEqual([]);
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 
