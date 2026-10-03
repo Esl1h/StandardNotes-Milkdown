@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CrepeView from './CrepeView';
 import SourceView from './SourceView';
-import ModeSwitcher from './ModeSwitcher';
+import ModeSwitcher, { ShowLayoutBarButton } from './ModeSwitcher';
 import {
   type Mode,
   type Orientation,
@@ -14,6 +14,8 @@ import {
   writeTopbar,
   readTopbarPosition,
   writeTopbarPosition,
+  readLayoutBar,
+  writeLayoutBar,
 } from '../lib/layout';
 
 interface MilkdownEditorProps {
@@ -35,6 +37,7 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   const [topbarPosition, setTopbarPosition] = useState<TopbarPosition>(() =>
     readTopbarPosition()
   );
+  const [layoutBar, setLayoutBar] = useState<boolean>(() => readLayoutBar());
 
   const changeMode = (next: Mode) => {
     setMode(next);
@@ -53,27 +56,37 @@ function MilkdownEditor(props: MilkdownEditorProps) {
     writeTopbarPosition(next);
   };
 
+  const changeLayoutBar = (next: boolean) => {
+    setLayoutBar(next);
+    writeLayoutBar(next);
+  };
+
   const empty = rawText.trim() === '';
 
   return (
-    <div className={`milkdown-app mode-${mode}`}>
-      <ModeSwitcher
-        mode={mode}
-        orientation={orientation}
-        topbar={topbar}
-        topbarPosition={topbarPosition}
-        onModeChange={changeMode}
-        onOrientationChange={changeOrientation}
-        onTopbarChange={changeTopbar}
-        onTopbarPositionChange={changeTopbarPosition}
-        trailing={
-          empty ? (
-            <button className="insert-sample" onClick={onInsertSample}>
-              Add sample
-            </button>
-          ) : undefined
-        }
-      />
+    <div className={`milkdown-app mode-${mode}${layoutBar ? '' : ' layout-bar-hidden'}`}>
+      {layoutBar ? (
+        <ModeSwitcher
+          mode={mode}
+          orientation={orientation}
+          topbar={topbar}
+          topbarPosition={topbarPosition}
+          onModeChange={changeMode}
+          onOrientationChange={changeOrientation}
+          onTopbarChange={changeTopbar}
+          onTopbarPositionChange={changeTopbarPosition}
+          onHide={() => changeLayoutBar(false)}
+          trailing={
+            empty ? (
+              <button className="insert-sample" onClick={onInsertSample}>
+                Add sample
+              </button>
+            ) : undefined
+          }
+        />
+      ) : (
+        <ShowLayoutBarButton onShow={() => changeLayoutBar(true)} />
+      )}
       <div
         className={`panes${mode === 'split' ? ` orientation-${orientation}` : ''}`}
         data-topbar={topbarPosition}

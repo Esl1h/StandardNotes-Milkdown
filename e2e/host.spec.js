@@ -156,6 +156,20 @@ test('the top bar hides and moves to the bottom', async ({ page }) => {
   expect(bar.y).toBeGreaterThan(editor.y);
 });
 
+test('the layout bar hides, leaving only the button to bring it back', async ({ page }) => {
+  const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+  await expect(plugin.locator('.mode-switcher')).toBeVisible();
+
+  await plugin.getByTitle('Hide the layout bar').click();
+  await expect(plugin.locator('.mode-switcher')).toHaveCount(0);
+  const pane = await plugin.locator('.crepe-pane').boundingBox();
+  expect(pane.y).toBe(0);
+
+  await plugin.getByTitle('Show the layout bar').click();
+  await expect(plugin.locator('.mode-switcher')).toBeVisible();
+  await expect(plugin.getByTitle('Show the layout bar')).toHaveCount(0);
+});
+
 test('the bottom bar sits at the bottom even for a short note', async ({ page }) => {
   const plugin = await openHost(page, { text: '# Short\n' });
   await expect(plugin.locator('.milkdown-top-bar')).toBeVisible();

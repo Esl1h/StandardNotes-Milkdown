@@ -10,6 +10,8 @@ interface ModeSwitcherProps {
   onOrientationChange: (orientation: Orientation) => void;
   onTopbarChange: (enabled: boolean) => void;
   onTopbarPositionChange: (position: TopbarPosition) => void;
+  /** Collapses the whole bar into the ShowLayoutBarButton. */
+  onHide: () => void;
   /** Extra content shown at the right end (the sample affordance). */
   trailing?: React.ReactNode;
 }
@@ -78,6 +80,16 @@ const ICONS = {
       <path d="M4 20h16M12 4v11M7 11l5 5 5-5" />
     </Icon>
   ),
+  hide: (
+    <Icon>
+      <path d="M9 6l6 6-6 6" />
+    </Icon>
+  ),
+  show: (
+    <Icon>
+      <path d="M15 6l-6 6 6 6" />
+    </Icon>
+  ),
 };
 
 const MODE_TITLES: Record<Mode, string> = {
@@ -99,6 +111,7 @@ function ModeSwitcher(props: ModeSwitcherProps) {
     onOrientationChange,
     onTopbarChange,
     onTopbarPositionChange,
+    onHide,
     trailing,
   } = props;
 
@@ -158,8 +171,32 @@ function ModeSwitcher(props: ModeSwitcherProps) {
           {ICONS[topbarPosition]}
         </button>
       )}
+      <button
+        className="layout-bar-hide"
+        onClick={onHide}
+        title="Hide the layout bar"
+        aria-label="Hide the layout bar"
+      >
+        {ICONS.hide}
+      </button>
     </div>
   );
 }
+
+/** All that is left of the layout bar while it is hidden. */
+function ShowLayoutBarButton({ onShow }: { onShow: () => void }) {
+  return (
+    <button
+      className="layout-bar-show"
+      onClick={onShow}
+      title="Show the layout bar"
+      aria-label="Show the layout bar"
+    >
+      {ICONS.show}
+    </button>
+  );
+}
+
+export { ShowLayoutBarButton };
 
 export default ModeSwitcher;

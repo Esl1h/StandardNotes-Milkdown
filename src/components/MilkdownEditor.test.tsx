@@ -87,6 +87,19 @@ describe('MilkdownEditor', () => {
     expect(window.localStorage.getItem('standardnotes-milkdown-topbar-position')).toBe('bottom');
   });
 
+  it('hides the layout bar behind a single button and persists it', () => {
+    const { view } = setup();
+
+    fireEvent.click(view.getByTitle('Hide the layout bar'));
+    expect(document.querySelector('.mode-switcher')).toBeNull();
+    expect(window.localStorage.getItem('standardnotes-milkdown-layout-bar')).toBe('false');
+
+    fireEvent.click(view.getByTitle('Show the layout bar'));
+    expect(document.querySelector('.mode-switcher')).toBeTruthy();
+    expect(view.queryByTitle('Show the layout bar')).toBeNull();
+    expect(window.localStorage.getItem('standardnotes-milkdown-layout-bar')).toBe('true');
+  });
+
   it('offers the sample for an empty note only', () => {
     const { onInsertSample, view } = setup('');
     fireEvent.click(view.getByText('Add sample'));

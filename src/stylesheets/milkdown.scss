@@ -55,6 +55,36 @@
   }
 }
 
+// Hidden layout bar: the panes take the whole height and a small button,
+// floating over the top right corner, is the only control left.
+.milkdown-app.layout-bar-hidden {
+  grid-template-rows: minmax(0, 1fr);
+  position: relative;
+}
+
+.layout-bar-show {
+  align-items: center;
+  background-color: var(--sn-stylekit-contrast-background-color);
+  border: 1px solid var(--sn-stylekit-border-color);
+  border-radius: 4px;
+  color: var(--sn-stylekit-neutral-color);
+  cursor: pointer;
+  display: inline-flex;
+  opacity: 0.6;
+  padding: 4px;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  // Above the Crepe top bar (10) and its heading dropdown (20).
+  z-index: 30;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--sn-stylekit-foreground-color);
+    opacity: 1;
+  }
+}
+
 .panes {
   display: grid;
   height: 100%;

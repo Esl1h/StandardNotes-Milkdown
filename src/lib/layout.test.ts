@@ -8,6 +8,8 @@ import {
   writeTopbar,
   readTopbarPosition,
   writeTopbarPosition,
+  readLayoutBar,
+  writeLayoutBar,
 } from './layout';
 
 describe('layout preferences', () => {
@@ -20,6 +22,8 @@ describe('layout preferences', () => {
     expect(readTopbar()).toBe(false);
     writeTopbarPosition('bottom');
     expect(readTopbarPosition()).toBe('bottom');
+    writeLayoutBar(false);
+    expect(readLayoutBar()).toBe(false);
   });
 
   it('falls back to the defaults for unknown stored values', () => {
@@ -27,10 +31,12 @@ describe('layout preferences', () => {
     window.localStorage.setItem('standardnotes-milkdown-orientation', 'diagonal');
     window.localStorage.setItem('standardnotes-milkdown-topbar', 'maybe');
     window.localStorage.setItem('standardnotes-milkdown-topbar-position', 'middle');
+    window.localStorage.setItem('standardnotes-milkdown-layout-bar', 'gone');
 
     expect(readMode()).toBe('visual');
     expect(readOrientation()).toBe('vertical');
     expect(readTopbar()).toBe(true);
     expect(readTopbarPosition()).toBe('top');
+    expect(readLayoutBar()).toBe(true);
   });
 });
