@@ -156,6 +156,30 @@ test('the top bar hides and moves to the bottom', async ({ page }) => {
   expect(bar.y).toBeGreaterThan(editor.y);
 });
 
+test('the bottom bar sits at the bottom even for a short note', async ({ page }) => {
+  const plugin = await openHost(page, { text: '# Short\n' });
+  await expect(plugin.locator('.milkdown-top-bar')).toBeVisible();
+  await plugin.getByTitle('The bar sticks to the top; click to move it to the bottom').click();
+
+  const pane = await plugin.locator('.crepe-pane').boundingBox();
+  const bar = await plugin.locator('.milkdown-top-bar').boundingBox();
+  expect(bar.y + bar.height).toBeCloseTo(pane.y + pane.height, 0);
+});
+
+test('the bottom bar stays pinned while a long note scrolls', async ({ page }) => {
+  const long = Array.from({ length: 80 }, (_, i) => `Paragraph ${i + 1}`).join('\n\n');
+  const plugin = await openHost(page, { text: `# Long\n\n${long}\n` });
+  await expect(plugin.locator('.milkdown-top-bar')).toBeVisible();
+  await plugin.getByTitle('The bar sticks to the top; click to move it to the bottom').click();
+
+  for (const scroll of [0, 1000]) {
+    await plugin.locator('.crepe-pane').evaluate((el, top) => el.scrollTo(0, top), scroll);
+    const pane = await plugin.locator('.crepe-pane').boundingBox();
+    const bar = await plugin.locator('.milkdown-top-bar').boundingBox();
+    expect(bar.y + bar.height).toBeCloseTo(pane.y + pane.height, 0);
+  }
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 
