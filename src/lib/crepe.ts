@@ -13,6 +13,7 @@ import { languages } from '@codemirror/language-data';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { embedImage } from './image';
 import { renderMermaidPreview } from './mermaid';
+import { frontmatter } from './frontmatter';
 
 // Latex pulls KaTeX in (about 90 KB gzipped plus fonts); it is split into
 // its own chunk, and the import starts right away so it is usually loaded
@@ -48,6 +49,8 @@ async function createCrepe(
     .addFeature(codeMirror, { theme: oneDark, languages, renderPreview: renderMermaidPreview })
     .addFeature(table)
     .addFeature(latex);
+  // Syntaxes the commonmark/GFM presets would mangle on save.
+  crepe.editor.use(frontmatter);
   return withTopBar ? crepe.addFeature(topBar) : crepe;
 }
 

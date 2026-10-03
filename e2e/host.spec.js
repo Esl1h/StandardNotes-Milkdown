@@ -342,6 +342,24 @@ test('mermaid code blocks render as diagrams', async ({ page }) => {
   expect(pageErrors).toEqual([]);
 });
 
+/** Types at the end of the last paragraph and returns the saved note. */
+async function editLastParagraph(page, plugin) {
+  await plugin.locator('.milkdown .editor > p').last().click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('!');
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(1);
+  return (await hostLogs(page, 'save-items'))[0].text;
+}
+
+test('YAML front matter survives editing the note', async ({ page }) => {
+  const frontMatter = '---\ntitle: Trip\ntags: [travel, 2026]\n---\n';
+  const plugin = await openHost(page, { text: `${frontMatter}\nBody text.\n` });
+  await expect(plugin.locator('.milkdown .editor .frontmatter')).toContainText('title: Trip');
+
+  const saved = await editLastParagraph(page, plugin);
+  expect(saved).toBe(`${frontMatter}\nBody text.!\n`);
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 
