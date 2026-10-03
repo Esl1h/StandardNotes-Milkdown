@@ -10,6 +10,9 @@ updates:
         patterns: ['@milkdown/*']
       codemirror:
         patterns: ['@codemirror/*', 'codemirror']
+      # @eslint/js majors require the matching eslint major.
+      eslint:
+        patterns: ['eslint', '@eslint/*']
     ignore:
       # React 19: @standardnotes/stylekit (5.29.3) peers on React 18.
       - dependency-name: 'react'
