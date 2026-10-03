@@ -88,6 +88,12 @@ const ICONS = {
       <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
     </Icon>
   ),
+  print: (
+    <Icon>
+      <path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2" />
+      <rect x="6" y="14" width="12" height="7" />
+    </Icon>
+  ),
   copied: (
     <Icon>
       <path d="M5 12l5 5L20 7" />
@@ -190,6 +196,15 @@ function ModeSwitcher(props: ModeSwitcherProps) {
       <span className="spacer" />
       {trailing}
       <CopyButton onCopy={onCopy} />
+      <button
+        className="print-button"
+        // Prints this iframe only: the app's own print would capture its UI.
+        onClick={() => window.print()}
+        title="Print the note"
+        aria-label="Print the note"
+      >
+        {ICONS.print}
+      </button>
       <button
         className={topbar ? 'topbar-button active' : 'topbar-button'}
         onClick={() => onTopbarChange(!topbar)}

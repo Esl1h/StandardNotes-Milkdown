@@ -225,3 +225,47 @@
 .mode-switcher .word-count {
   padding: 0 8px;
 }
+
+// Printing shows the rendered note only: no bars, no source pane, no
+// editing affordances, and the full height instead of a scrolled pane.
+@media print {
+  html,
+  body,
+  #root,
+  .milkdown-app,
+  .panes,
+  .crepe-pane,
+  .crepe-container,
+  .crepe-container .milkdown {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .mode-switcher,
+  .layout-bar-show,
+  .source-pane,
+  .milkdown .milkdown-top-bar,
+  .milkdown .milkdown-block-handle,
+  .milkdown .milkdown-slash-menu,
+  .milkdown .milkdown-toolbar,
+  .milkdown .milkdown-link-edit,
+  .milkdown .milkdown-link-preview,
+  .milkdown .milkdown-code-block .tools,
+  .milkdown-table-block .handle,
+  .milkdown-table-block .cell-handle,
+  .milkdown-table-block .line-handle,
+  .crepe-placeholder::before {
+    display: none !important;
+  }
+
+  // In source mode there is nothing rendered: print the Markdown instead.
+  .mode-source .source-pane {
+    display: block !important;
+  }
+
+  .crepe-container {
+    --crepe-color-background: #fff;
+    --crepe-color-on-background: #000;
+  }
+}

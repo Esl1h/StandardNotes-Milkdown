@@ -245,6 +245,32 @@ test('the note is copied as Markdown', async ({ page, context }) => {
   );
 });
 
+test('printing shows only the rendered note, unclipped', async ({ page }) => {
+  const long = Array.from({ length: 60 }, (_, i) => `Paragraph ${i + 1}`).join('\n\n');
+  const plugin = await openHost(page, { text: `# Print me\n\n${long}\n` });
+  await plugin.getByTitle('Show the source next to the visual editor').click();
+  await expect(plugin.locator('.milkdown-top-bar')).toBeVisible();
+
+  const frame = page.frames().find((candidate) => candidate.url().endsWith('/index.html'));
+  await frame.evaluate(() => {
+    window.print = () => {
+      window.printed = true;
+    };
+  });
+  await plugin.getByTitle('Print the note').click();
+  expect(await frame.evaluate(() => window.printed)).toBe(true);
+
+  await page.emulateMedia({ media: 'print' });
+  for (const hidden of ['.mode-switcher', '.milkdown-top-bar', '.source-pane']) {
+    await expect(plugin.locator(hidden)).toBeHidden();
+  }
+  await expect(plugin.locator('.milkdown .editor h1')).toBeVisible();
+  const clipped = await plugin
+    .locator('.crepe-pane')
+    .evaluate((pane) => pane.scrollHeight > pane.clientHeight + 1);
+  expect(clipped).toBe(false);
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 
