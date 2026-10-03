@@ -81,7 +81,9 @@ function CrepeView(props: CrepeViewProps) {
           // The milkdown listener debounces by 200 ms, longer than the
           // suppress flag below holds, so the guard is the serialized
           // form of the last programmatically applied text.
-          if (suppressRef.current || markdown === lastAppliedRef.current) {
+          // `disposed`: destroy is async, and a late update from the
+          // previous note's instance would be saved into the new note.
+          if (disposed || suppressRef.current || markdown === lastAppliedRef.current) {
             return;
           }
           lastAppliedRef.current = markdown;

@@ -100,6 +100,22 @@ describe('CrepeView', () => {
     expect(onTextChange).not.toHaveBeenCalled();
   });
 
+  it('ignores late updates from the instance of the previous note', async () => {
+    const { onTextChange, view } = setup();
+    await booted();
+    const first = lastCrepe();
+
+    view.rerender(
+      <CrepeView rawText={'# Other note'} epoch={1} topbar={true} onTextChange={onTextChange} />
+    );
+    await booted();
+    // A debounced update still in flight while the old instance shuts down
+    // would otherwise be saved into the newly opened note.
+    first.emit('# Hello, late');
+
+    expect(onTextChange).not.toHaveBeenCalled();
+  });
+
   it('recreates the editor when the top bar is toggled', async () => {
     const { onTextChange, view } = setup();
     await booted();
