@@ -1,0 +1,37 @@
+.note-status {
+  align-items: center;
+  color: var(--sn-stylekit-neutral-color);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.error-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  padding: 24px;
+
+  p {
+    color: var(--sn-stylekit-danger-color);
+    margin: 0;
+  }
+
+  textarea {
+    background-color: var(--sn-stylekit-contrast-background-color);
+    border: 1px solid var(--sn-stylekit-border-color);
+    color: var(--sn-stylekit-contrast-foreground-color);
+    flex: 1;
+    font-family: var(--sn-stylekit-monospace-font, monospace);
+    font-size: var(--sn-stylekit-font-size-editor);
+    padding: 12px;
+    resize: none;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
