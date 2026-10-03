@@ -22,6 +22,7 @@ const DEFAULT_ORIENTATION: Orientation = 'vertical';
 const DEFAULT_TOPBAR = true;
 const DEFAULT_TOPBAR_POSITION: TopbarPosition = 'top';
 const DEFAULT_LAYOUT_BAR = true;
+const DEFAULT_OUTLINE = false;
 
 const STORAGE_PREFIX = 'standardnotes-milkdown';
 
@@ -120,6 +121,14 @@ function writeLayoutBar(visible: boolean): void {
   writeStored('layout-bar', String(visible));
 }
 
+function readOutline(): boolean {
+  return readStoredBoolean('outline', DEFAULT_OUTLINE);
+}
+
+function writeOutline(open: boolean): void {
+  writeStored('outline', String(open));
+}
+
 export type { Mode, Orientation, TopbarPosition, PreferenceStore };
 export {
   DEFAULT_MODE,
@@ -138,4 +147,6 @@ export {
   writeTopbarPosition,
   readLayoutBar,
   writeLayoutBar,
+  readOutline,
+  writeOutline,
 };

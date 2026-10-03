@@ -46,7 +46,11 @@ class FakeCrepe {
     const markdown = this.markdown;
     const view = {
       state: {
-        doc: { content: { size: markdown.length }, textBetween: () => markdown },
+        doc: {
+          content: { size: markdown.length },
+          textBetween: () => markdown,
+          forEach: () => undefined,
+        },
         selection: { empty: true },
       },
     };

@@ -34,10 +34,30 @@ interface CrepeViewProps {
   onTextChange: (text: string) => void;
   /** Receives the word count of the document and of the selection. */
   onStats?: (stats: TextStats) => void;
+  /** Receives the top level headings whenever the document changes. */
+  onHeadings?: (headings: Heading[]) => void;
   /** Receives the ProseMirror view once created, and null when it goes. */
   onView?: (view: EditorView | null) => void;
   /** Rendered at the right end of the Crepe top bar, when it is on. */
   topBarAccessory?: React.ReactNode;
+}
+
+/** A top level heading of the document, for the outline. */
+interface Heading {
+  level: number;
+  text: string;
+  /** Document position of the heading node. */
+  pos: number;
+}
+
+function headingsOf(doc: Node): Heading[] {
+  const headings: Heading[] = [];
+  doc.forEach((node, offset) => {
+    if (node.type.name === 'heading') {
+      headings.push({ level: node.attrs.level as number, text: node.textContent, pos: offset });
+    }
+  });
+  return headings;
 }
 
 /** Counts the rendered text, so Markdown syntax never inflates the count. */
@@ -73,7 +93,9 @@ function CrepeView(props: CrepeViewProps) {
   const onTextChangeRef = useRef(onTextChange);
   const onStatsRef = useRef(props.onStats);
   const onViewRef = useRef(props.onView);
+  const onHeadingsRef = useRef(props.onHeadings);
   useEffect(() => {
+    onHeadingsRef.current = props.onHeadings;
     onTextChangeRef.current = onTextChange;
     onStatsRef.current = props.onStats;
     onViewRef.current = props.onView;
@@ -128,7 +150,12 @@ function CrepeView(props: CrepeViewProps) {
         // selectionUpdated runs while the transaction is being applied, so
         // view.state is still the old one: count from what it hands over.
         listener.selectionUpdated((_ctx, selection) => report(selection.$from.doc, selection));
-        listener.updated((ctx, doc) => report(doc, ctx.get(editorViewCtx).state.selection));
+        listener.updated((ctx, doc) => {
+          report(doc, ctx.get(editorViewCtx).state.selection);
+          if (!disposed) {
+            onHeadingsRef.current?.(headingsOf(doc));
+          }
+        });
       });
       crepeRef.current = crepe;
       suppressRef.current = false;
@@ -148,6 +175,7 @@ function CrepeView(props: CrepeViewProps) {
       crepe.editor.action((ctx: Ctx) => {
         const view = ctx.get(editorViewCtx);
         onStatsRef.current?.(statsOf(view.state.doc, view.state.selection));
+        onHeadingsRef.current?.(headingsOf(view.state.doc));
         onViewRef.current?.(view);
       });
       setTopBarElement(containerRef.current?.querySelector<HTMLElement>('.milkdown-top-bar') ?? null);
@@ -189,4 +217,5 @@ function CrepeView(props: CrepeViewProps) {
   );
 }
 
+export type { Heading };
 export default CrepeView;

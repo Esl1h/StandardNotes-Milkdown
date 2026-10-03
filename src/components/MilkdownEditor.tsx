@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { type EditorView as ProseView } from '@milkdown/kit/prose/view';
 import { type EditorView as SourceEditorView } from '@codemirror/view';
 import { openSearchPanel } from '@codemirror/search';
-import CrepeView from './CrepeView';
+import { TextSelection } from '@milkdown/kit/prose/state';
+import CrepeView, { type Heading } from './CrepeView';
+import Outline from './Outline';
 import SourceView from './SourceView';
 import ModeSwitcher, { ShowLayoutBarButton } from './ModeSwitcher';
 import SearchBar from './SearchBar';
@@ -20,6 +22,8 @@ import {
   writeTopbarPosition,
   readLayoutBar,
   writeLayoutBar,
+  readOutline,
+  writeOutline,
 } from '../lib/layout';
 import { formatCount, type TextStats } from '../lib/wordCount';
 import { copyText } from '../lib/clipboard';
@@ -59,12 +63,42 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   const [proseView, setProseView] = useState<ProseView | null>(null);
   const [sourceView, setSourceView] = useState<SourceEditorView | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [outline, setOutline] = useState<boolean>(() => readOutline());
+  const [headings, setHeadings] = useState<Heading[]>([]);
   // A search belongs to one note's editor instance; a note switch closes it.
   const [searchEpoch, setSearchEpoch] = useState(historyEpoch);
   if (searchEpoch !== historyEpoch) {
     setSearchEpoch(historyEpoch);
     setSearchOpen(false);
   }
+
+  const changeOutline = (next: boolean) => {
+    setOutline(next);
+    writeOutline(next);
+  };
+
+  // The outline needs the rendered document; source mode has none.
+  const outlineShown = outline && mode !== 'source';
+
+  /** Scrolls the heading to the top of the pane and puts the cursor in it. */
+  const goToHeading = (heading: Heading) => {
+    if (!proseView) {
+      return;
+    }
+    const dom = proseView.nodeDOM(heading.pos);
+    if (dom instanceof HTMLElement) {
+      dom.scrollIntoView({ block: 'start' });
+    }
+    const { state } = proseView;
+    proseView.dispatch(
+      state.tr.setSelection(TextSelection.near(state.doc.resolve(heading.pos + 1)))
+    );
+    proseView.focus();
+    // On narrow screens the outline covers the note: get out of the way.
+    if (window.matchMedia('(max-width: 899px)').matches) {
+      changeOutline(false);
+    }
+  };
 
   /** The source pane has CodeMirror's own panel; the visual one the SearchBar. */
   const openSearch = () => {
@@ -120,6 +154,8 @@ function MilkdownEditor(props: MilkdownEditorProps) {
           onTopbarPositionChange={changeTopbarPosition}
           onCopy={() => copyText(rawText)}
           onSearch={openSearch}
+          outline={mode === 'source' ? null : outline}
+          onOutlineChange={changeOutline}
           onHide={() => changeLayoutBar(false)}
           trailing={
             <>
@@ -139,7 +175,9 @@ function MilkdownEditor(props: MilkdownEditorProps) {
         <SearchBar view={proseView} onClose={() => setSearchOpen(false)} />
       )}
       <div
-        className={`panes${mode === 'split' ? ` orientation-${orientation}` : ''}`}
+        className={`panes${mode === 'split' ? ` orientation-${orientation}` : ''}${
+          outlineShown ? ' with-outline' : ''
+        }`}
         data-topbar={topbarPosition}
       >
         {mode !== 'visual' && (
@@ -170,10 +208,12 @@ function MilkdownEditor(props: MilkdownEditorProps) {
               onTextChange={onTextChange}
               onStats={setVisualStats}
               onView={setProseView}
+              onHeadings={setHeadings}
               topBarAccessory={countInTopBar ? wordCount : null}
             />
           </div>
         )}
+        {outlineShown && <Outline headings={headings} onSelect={goToHeading} />}
       </div>
     </div>
   );

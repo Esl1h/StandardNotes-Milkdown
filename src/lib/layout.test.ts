@@ -10,6 +10,8 @@ import {
   writeTopbarPosition,
   readLayoutBar,
   writeLayoutBar,
+  readOutline,
+  writeOutline,
   setPreferenceStore,
 } from './layout';
 
@@ -30,6 +32,9 @@ describe('layout preferences', () => {
     expect(readTopbarPosition()).toBe('bottom');
     writeLayoutBar(false);
     expect(readLayoutBar()).toBe(false);
+    expect(readOutline()).toBe(false);
+    writeOutline(true);
+    expect(readOutline()).toBe(true);
   });
 
   it('falls back to the defaults for unknown stored values', () => {

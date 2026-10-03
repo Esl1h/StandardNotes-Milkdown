@@ -434,6 +434,34 @@ test('the search button opens the search of the current mode', async ({ page }) 
   await expect(plugin.locator('.source-pane .cm-search')).toBeVisible();
 });
 
+test('the outline lists the headings and jumps to them', async ({ page }) => {
+  const filler = Array.from({ length: 40 }, (_, i) => `Line ${i + 1}`).join('\n\n');
+  const text = `# Intro\n\n${filler}\n\n## Details\n\n${filler}\n\n### Last part\n\nEnd.\n`;
+  const plugin = await openHost(page, { text });
+  await expect(plugin.locator('.milkdown .editor h1')).toBeVisible();
+
+  await plugin.getByTitle('Show the outline').click();
+  const items = plugin.locator('.outline li');
+  await expect(items).toHaveText(['Intro', 'Details', 'Last part']);
+  await expect(items.nth(2)).toHaveClass(/outline-level-3/);
+
+  // The middle heading has enough text below it to reach the top.
+  await items.nth(1).getByRole('button').click();
+  const pane = await plugin.locator('.crepe-pane').boundingBox();
+  await expect
+    .poll(async () => (await plugin.locator('.milkdown .editor h2').boundingBox()).y)
+    .toBeLessThan(pane.y + 120);
+
+  // The cursor went into the heading; edits show up in the outline.
+  await page.keyboard.press('End');
+  await page.keyboard.type(' again');
+  await expect(items.nth(1)).toHaveText('Details again');
+
+  await plugin.getByTitle('Edit the Markdown source only').click();
+  await expect(plugin.locator('.outline')).toHaveCount(0);
+  await expect(plugin.getByTitle('Show the outline')).toHaveCount(0);
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 

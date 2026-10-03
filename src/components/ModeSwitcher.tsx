@@ -12,6 +12,9 @@ interface ModeSwitcherProps {
   onTopbarPositionChange: (position: TopbarPosition) => void;
   /** Copies the note as Markdown; resolves to whether it worked. */
   onCopy: () => Promise<boolean>;
+  /** Whether the outline is open; null where it is not available. */
+  outline: boolean | null;
+  onOutlineChange: (open: boolean) => void;
   /** Opens find and replace for the current mode. */
   onSearch: () => void;
   /** Collapses the whole bar into the ShowLayoutBarButton. */
@@ -90,6 +93,11 @@ const ICONS = {
       <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
     </Icon>
   ),
+  outline: (
+    <Icon>
+      <path d="M4 6h16M8 12h12M12 18h8" />
+    </Icon>
+  ),
   search: (
     <Icon>
       <circle cx="11" cy="11" r="7" />
@@ -163,6 +171,8 @@ function ModeSwitcher(props: ModeSwitcherProps) {
     onTopbarPositionChange,
     onCopy,
     onSearch,
+    outline,
+    onOutlineChange,
     onHide,
     trailing,
   } = props;
@@ -204,6 +214,17 @@ function ModeSwitcher(props: ModeSwitcherProps) {
       )}
       <span className="spacer" />
       {trailing}
+      {outline !== null && (
+        <button
+          className={outline ? 'outline-button active' : 'outline-button'}
+          onClick={() => onOutlineChange(!outline)}
+          title={outline ? 'Hide the outline' : 'Show the outline'}
+          aria-label={outline ? 'Hide the outline' : 'Show the outline'}
+          aria-pressed={outline}
+        >
+          {ICONS.outline}
+        </button>
+      )}
       <button
         className="search-button"
         onClick={onSearch}
