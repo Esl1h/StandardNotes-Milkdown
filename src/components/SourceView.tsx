@@ -3,6 +3,7 @@ import { Annotation, EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { minimalSetup } from 'codemirror';
+import { search, searchKeymap } from '@codemirror/search';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { countText, type TextStats } from '../lib/wordCount';
 
@@ -16,6 +17,8 @@ interface SourceViewProps {
   onTextChange: (text: string) => void;
   /** Receives the word count of the source and of the selection. */
   onStats?: (stats: TextStats) => void;
+  /** Receives the CodeMirror view once created, and null when it goes. */
+  onView?: (view: EditorView | null) => void;
 }
 
 function statsOf(state: EditorState): TextStats {
@@ -66,9 +69,11 @@ function SourceView(props: SourceViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onTextChangeRef = useRef(onTextChange);
   const onStatsRef = useRef(props.onStats);
+  const onViewRef = useRef(props.onView);
   useEffect(() => {
     onTextChangeRef.current = onTextChange;
     onStatsRef.current = props.onStats;
+    onViewRef.current = props.onView;
   });
 
   // Wire the view once per note (epoch); rawText at mount time seeds the doc.
@@ -91,7 +96,8 @@ function SourceView(props: SourceViewProps) {
             onStatsRef.current?.(statsOf(update.state));
           }
         }),
-        keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+        search({ top: true }),
+        keymap.of([...searchKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
       ],
     });
 
@@ -102,7 +108,9 @@ function SourceView(props: SourceViewProps) {
     });
     viewRef.current = view;
     onStatsRef.current?.(statsOf(view.state));
+    onViewRef.current?.(view);
     return () => {
+      onViewRef.current?.(null);
       view.destroy();
       viewRef.current = null;
     };

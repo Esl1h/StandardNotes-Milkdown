@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
+import { type EditorView as ProseView } from '@milkdown/kit/prose/view';
+import { type EditorView as SourceEditorView } from '@codemirror/view';
+import { openSearchPanel } from '@codemirror/search';
 import CrepeView from './CrepeView';
 import SourceView from './SourceView';
 import ModeSwitcher, { ShowLayoutBarButton } from './ModeSwitcher';
+import SearchBar from './SearchBar';
 import {
   type Mode,
   type Orientation,
@@ -52,6 +56,26 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   // Each pane counts its own text; the visual one wins whenever it is shown.
   const [visualStats, setVisualStats] = useState<TextStats | null>(null);
   const [sourceStats, setSourceStats] = useState<TextStats | null>(null);
+  const [proseView, setProseView] = useState<ProseView | null>(null);
+  const [sourceView, setSourceView] = useState<SourceEditorView | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  // A search belongs to one note's editor instance; a note switch closes it.
+  const [searchEpoch, setSearchEpoch] = useState(historyEpoch);
+  if (searchEpoch !== historyEpoch) {
+    setSearchEpoch(historyEpoch);
+    setSearchOpen(false);
+  }
+
+  /** The source pane has CodeMirror's own panel; the visual one the SearchBar. */
+  const openSearch = () => {
+    if (mode === 'source') {
+      if (sourceView) {
+        openSearchPanel(sourceView);
+      }
+    } else {
+      setSearchOpen(true);
+    }
+  };
 
   const changeMode = (next: Mode) => {
     setMode(next);
@@ -95,6 +119,7 @@ function MilkdownEditor(props: MilkdownEditorProps) {
           onTopbarChange={changeTopbar}
           onTopbarPositionChange={changeTopbarPosition}
           onCopy={() => copyText(rawText)}
+          onSearch={openSearch}
           onHide={() => changeLayoutBar(false)}
           trailing={
             <>
@@ -110,6 +135,9 @@ function MilkdownEditor(props: MilkdownEditorProps) {
       ) : (
         <ShowLayoutBarButton onShow={() => changeLayoutBar(true)} />
       )}
+      {searchOpen && mode !== 'source' && proseView && (
+        <SearchBar view={proseView} onClose={() => setSearchOpen(false)} />
+      )}
       <div
         className={`panes${mode === 'split' ? ` orientation-${orientation}` : ''}`}
         data-topbar={topbarPosition}
@@ -121,17 +149,27 @@ function MilkdownEditor(props: MilkdownEditorProps) {
               epoch={historyEpoch}
               onTextChange={onTextChange}
               onStats={setSourceStats}
+              onView={setSourceView}
             />
           </div>
         )}
         {mode !== 'source' && (
-          <div className="crepe-pane">
+          <div
+            className="crepe-pane"
+            onKeyDownCapture={(event) => {
+              if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+                event.preventDefault();
+                setSearchOpen(true);
+              }
+            }}
+          >
             <CrepeView
               rawText={rawText}
               epoch={historyEpoch}
               topbar={topbar}
               onTextChange={onTextChange}
               onStats={setVisualStats}
+              onView={setProseView}
               topBarAccessory={countInTopBar ? wordCount : null}
             />
           </div>

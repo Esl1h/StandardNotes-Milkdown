@@ -5,6 +5,7 @@ import { editorViewCtx } from '@milkdown/kit/core';
 import { type Ctx } from '@milkdown/kit/ctx';
 import { type Node } from '@milkdown/kit/prose/model';
 import { type Selection } from '@milkdown/kit/prose/state';
+import { type EditorView } from '@milkdown/kit/prose/view';
 import { replaceAll } from '@milkdown/kit/utils';
 import { createCrepe } from '../lib/crepe';
 import { countText, type TextStats } from '../lib/wordCount';
@@ -33,6 +34,8 @@ interface CrepeViewProps {
   onTextChange: (text: string) => void;
   /** Receives the word count of the document and of the selection. */
   onStats?: (stats: TextStats) => void;
+  /** Receives the ProseMirror view once created, and null when it goes. */
+  onView?: (view: EditorView | null) => void;
   /** Rendered at the right end of the Crepe top bar, when it is on. */
   topBarAccessory?: React.ReactNode;
 }
@@ -69,9 +72,11 @@ function CrepeView(props: CrepeViewProps) {
   const lastAppliedRef = useRef(rawText);
   const onTextChangeRef = useRef(onTextChange);
   const onStatsRef = useRef(props.onStats);
+  const onViewRef = useRef(props.onView);
   useEffect(() => {
     onTextChangeRef.current = onTextChange;
     onStatsRef.current = props.onStats;
+    onViewRef.current = props.onView;
   });
   // The Crepe top bar element of the current instance, for the portal.
   const [topBarElement, setTopBarElement] = useState<HTMLElement | null>(null);
@@ -141,8 +146,9 @@ function CrepeView(props: CrepeViewProps) {
         }
       }
       crepe.editor.action((ctx: Ctx) => {
-        const { doc, selection } = ctx.get(editorViewCtx).state;
-        onStatsRef.current?.(statsOf(doc, selection));
+        const view = ctx.get(editorViewCtx);
+        onStatsRef.current?.(statsOf(view.state.doc, view.state.selection));
+        onViewRef.current?.(view);
       });
       setTopBarElement(containerRef.current?.querySelector<HTMLElement>('.milkdown-top-bar') ?? null);
     };
@@ -150,6 +156,7 @@ function CrepeView(props: CrepeViewProps) {
     return () => {
       disposed = true;
       setTopBarElement(null);
+      onViewRef.current?.(null);
       const crepe = crepeRef.current;
       if (crepe) {
         crepeRef.current = null;

@@ -12,6 +12,8 @@ interface ModeSwitcherProps {
   onTopbarPositionChange: (position: TopbarPosition) => void;
   /** Copies the note as Markdown; resolves to whether it worked. */
   onCopy: () => Promise<boolean>;
+  /** Opens find and replace for the current mode. */
+  onSearch: () => void;
   /** Collapses the whole bar into the ShowLayoutBarButton. */
   onHide: () => void;
   /** Extra content shown at the right end (the sample affordance). */
@@ -88,6 +90,12 @@ const ICONS = {
       <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
     </Icon>
   ),
+  search: (
+    <Icon>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-4-4" />
+    </Icon>
+  ),
   print: (
     <Icon>
       <path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2" />
@@ -154,6 +162,7 @@ function ModeSwitcher(props: ModeSwitcherProps) {
     onTopbarChange,
     onTopbarPositionChange,
     onCopy,
+    onSearch,
     onHide,
     trailing,
   } = props;
@@ -195,6 +204,14 @@ function ModeSwitcher(props: ModeSwitcherProps) {
       )}
       <span className="spacer" />
       {trailing}
+      <button
+        className="search-button"
+        onClick={onSearch}
+        title="Find and replace"
+        aria-label="Find and replace"
+      >
+        {ICONS.search}
+      </button>
       <CopyButton onCopy={onCopy} />
       <button
         className="print-button"

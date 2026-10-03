@@ -15,11 +15,16 @@ import { embedImage } from './image';
 import { renderMermaidPreview } from './mermaid';
 import { frontmatter } from './frontmatter';
 import { preserveSyntaxOnSave, syntaxDecorations } from './markdownSyntax';
+import { search } from 'prosemirror-search';
+import { $prose } from '@milkdown/kit/utils';
 
 // Latex pulls KaTeX in (about 90 KB gzipped plus fonts); it is split into
 // its own chunk, and the import starts right away so it is usually loaded
 // by the time Standard Notes has streamed the note in.
 const latexFeature = import('./latex');
+
+/** Match highlighting and the find/replace commands the SearchBar drives. */
+const searchPlugin = $prose(() => search());
 
 /**
  * Builds the editor from the Crepe features this plugin uses. The `Crepe`
@@ -51,7 +56,11 @@ async function createCrepe(
     .addFeature(table)
     .addFeature(latex);
   // Syntaxes the commonmark/GFM presets would mangle on save.
-  crepe.editor.config(preserveSyntaxOnSave).use(frontmatter).use(syntaxDecorations);
+  crepe.editor
+    .config(preserveSyntaxOnSave)
+    .use(frontmatter)
+    .use(syntaxDecorations)
+    .use(searchPlugin);
   return withTopBar ? crepe.addFeature(topBar) : crepe;
 }
 

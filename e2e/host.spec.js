@@ -392,6 +392,48 @@ test('wiki links keep their brackets', async ({ page }) => {
   expect(saved).toBe(text.replace('today.', 'today.!'));
 });
 
+test('find and replace in the visual editor', async ({ page }) => {
+  const plugin = await openHost(page, { text: 'one two\n\ntwo three\n' });
+  await plugin.locator('.milkdown .editor p').first().click();
+  // The search starts at the cursor, like a browser's.
+  await page.keyboard.press('ControlOrMeta+Home');
+  await page.keyboard.press('ControlOrMeta+f');
+
+  const bar = plugin.locator('.search-bar');
+  await expect(bar).toBeVisible();
+  await expect(bar.getByPlaceholder('Find')).toBeFocused();
+  await page.keyboard.type('two');
+  await expect(bar.locator('.search-count')).toHaveText('1/2');
+  const matches = plugin.locator('.ProseMirror-search-match, .ProseMirror-active-search-match');
+  await expect(matches).toHaveCount(2);
+
+  await page.keyboard.press('Enter');
+  await expect(bar.locator('.search-count')).toHaveText('2/2');
+
+  await bar.getByPlaceholder('Replace').fill('TWO');
+  await bar.getByTitle('Replace all').click();
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBeGreaterThan(0);
+  const saves = await hostLogs(page, 'save-items');
+  expect(saves[saves.length - 1].text).toBe('one TWO\n\nTWO three\n');
+
+  await bar.getByPlaceholder('Find').press('Escape');
+  await expect(bar).toHaveCount(0);
+  await expect(matches).toHaveCount(0);
+});
+
+test('the search button opens the search of the current mode', async ({ page }) => {
+  const plugin = await openHost(page, { text: '# Title\n' });
+  await expect(plugin.locator('.milkdown .editor h1')).toBeVisible();
+
+  await plugin.getByTitle('Find and replace').click();
+  await expect(plugin.locator('.search-bar')).toBeVisible();
+  await plugin.getByTitle('Close the search').click();
+
+  await plugin.getByTitle('Edit the Markdown source only').click();
+  await plugin.getByTitle('Find and replace').click();
+  await expect(plugin.locator('.source-pane .cm-search')).toBeVisible();
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 
