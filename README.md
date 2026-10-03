@@ -1,76 +1,174 @@
-# StandardNotes-Milkdown
+# StandardNotes Milkdown
 
 [![CI](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml/badge.svg)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Esl1h/StandardNotes-Milkdown)](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest)
 [![License](https://img.shields.io/github/license/Esl1h/StandardNotes-Milkdown)](LICENSE)
 
-A WYSIWYG Markdown editor for [Standard Notes](https://standardnotes.com), powered by
-[Milkdown Crepe](https://milkdown.dev). Notes stay plain, portable Markdown; the plugin
-only changes how you edit them.
+A WYSIWYG Markdown editor for [Standard Notes](https://standardnotes.com), a
+free, open-source, end-to-end encrypted notes app, powered by
+[Milkdown Crepe](https://milkdown.dev). Notes stay plain Markdown inside the
+note, so they remain readable, searchable, exportable and portable; the
+plugin only changes how you edit them.
+
+![Milkdown editor running inside Standard Notes](.github/screenshots/milkdown-app.png)
 
 ## Features
 
-- **Visual editing**: the whole Markdown feature set (tables, code blocks with syntax
-  highlighting, todo lists, links, images, blockquotes) without seeing the source.
-- **Split view**: the Markdown source next to the visual editor, side by side or
-  stacked, with the choice persisted per browser.
-- **Source mode**: a plain CodeMirror pane for fine grained edits.
-- **Fixed formatting bar**: the Crepe top bar, on/off and top/bottom, your choice.
-- **Follows the app theme**: the Crepe palette is mapped onto the Standard Notes
-  StyleKit, so light and dark follow the app with no detection.
-- **Mobile ready**: single column layout on narrow screens, and a bootstrap that
-  survives slow mobile WebViews.
+1. Visual editing of the whole Markdown feature set without seeing the
+   source: headings, lists, todo lists, tables, links, images, blockquotes
+   and code blocks with syntax highlighting
+2. A floating toolbar on the selection, a `/` slash menu and drag handles
+   to add and move blocks
+3. Three modes, switched from the bar at the top: **Visual**, **Split**
+   (the Markdown source next to the visual editor, side by side or stacked)
+   and **Source** (a plain CodeMirror pane for fine grained edits)
+4. An optional fixed formatting bar (**Bar**), at the top or the bottom of
+   the editor
+5. Mode, split orientation and formatting bar choices are remembered per
+   browser
+6. Opening a note never rewrites it: nothing is saved until you edit
+7. Undo never reaches into the previously opened note
+8. Works with the Standard Notes web, desktop and mobile apps; follows the
+   theme selected in the app. On narrow screens the split view stacks
+9. A new empty note shows an `Add sample` button that seeds it with example
+   Markdown
+10. If the editor ever fails to render, the raw note text stays available
+    and editable in a plain text area, and edits are still saved
 
-## Data format
+![Milkdown editor in focus mode](.github/screenshots/milkdown-focus.png)
 
-The note is plain Markdown (CommonMark plus GitHub Flavored Markdown: tables, task
-lists, strikethrough). Nothing is stored outside the note: open the same note with the
-built in editor and the content is identical.
+## Installation
 
-Opening a note never rewrites it. The visual editor normalizes the Markdown it saves
-(for example `*` list markers become `-`), but only once you edit the note.
-
-## Install
-
-1. Open the Standard Notes web or desktop app.
-2. Go to **Preferences** → **Plugins**.
-3. Paste this URL into the **Install Custom Plugin** box and confirm:
+1. Run the Standard Notes web or desktop app.
+2. Click the **Preferences** (gear) icon.
+3. Select **Plugins** in the Preferences menu.
+4. Scroll to the bottom and paste this URL into the
+   **Install Custom Plugin** box:
 
    ```
    https://esli.cafe/StandardNotes-Milkdown/ext.json
    ```
 
-4. Open a note and pick **Milkdown** in the editor menu.
+5. Confirm the installation.
+6. Create a new note, open the **Editor** menu and pick **Milkdown**.
 
-The app checks that URL for updates. The packaged build is also attached to every
-[release](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest) as
-`extension.zip`.
+The app checks that URL for updates, so new releases arrive on their own.
+Each [release](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest)
+also carries the packaged build as `extension.zip`.
 
-## Development
+## Note format
 
-```bash
-npm ci
-npm start        # dev server on :3002 (install as a dev extension in SN)
-npm test         # unit tests (vitest)
-npm run e2e      # end to end against the build, incl. the fake Standard Notes host
-npm run typecheck && npm run lint && npm run build
+The note body is plain Markdown: CommonMark plus GitHub Flavored Markdown
+(tables, task lists, strikethrough).
+
+```markdown
+# Shopping
+
+- [x] bread
+- [ ] coffee
+
+| Item  | Price |
+| ----- | ----- |
+| bread | 2.50  |
+
+> Everything stays in the note as plain text.
 ```
 
-The e2e suite drives the plugin through a fake Standard Notes host (`e2e/snHost.js`),
-including the throttled mobile registration scenario and the opaque-origin mobile app
-case.
+- Nothing is stored outside the note: open the same note with the built in
+  editor and the content is identical
+- The visual editor writes Markdown in a normalized shape (for example `*`
+  list markers become `-`), but only after you edit the note
+- Images are referenced by URL and load from their original host. Paste a
+  link in the image block: **Upload file** only creates a temporary local
+  link that does not survive reopening the note
 
-## Bundle size
+## Privacy
 
-Only the Crepe features in use are bundled (no Latex/KaTeX, no AI). The main chunk is
-about 390 KB gzipped; code block languages load on demand.
+Everything is stored inside your Standard Notes note, so it is encrypted
+with the rest of your data. The editor has no AI features and no network
+access of its own; the only remote content it loads is images referenced
+in the note.
 
-## Releases
+## Development and running locally
 
-Tags (`v*`) trigger the release workflow: it builds, packs `extension.zip`, publishes
-the GitHub release and deploys the build to the `gh-pages` branch. `package.json` and
-`public/ext.json` must carry the tag's version.
+**Prerequisites:**
 
-## License
+1. (Optional) Fork this repo on GitHub.
+2. [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
+   this repo or your fork.
+3. Run `cd StandardNotes-Milkdown` and then `npm install` to install all
+   dependencies.
 
-AGPL-3.0-or-later. Milkdown is MIT.
+### Testing inside your local Standard Notes app
+
+The editor waits for Standard Notes to send the note, so it needs a host:
+the Standard Notes app, or the fake host of the e2e suite.
+
+1. Run `npm run build` to build the app, then:
+
+```
+npm run server-cors
+```
+
+2. In Standard Notes, follow the Installation steps above but paste:
+
+```
+http://localhost:3000/ext.dev.json
+```
+
+The dev extension uses a separate identifier (`Milkdown (Dev)`) so it does
+not clash with the hosted one.
+
+3. When you're done, press `Ctrl + C` to shut down the server.
+
+If you run into issues, please refer to the
+[Standard Notes instructions for local plugin setup](https://standardnotes.com/help/plugins/local-setup).
+
+### Checks
+
+CI runs these on every push and pull request; run them before opening a PR:
+
+```
+npm run typecheck   # TypeScript
+npm run lint        # ESLint
+npm test            # unit tests (Vitest)
+npm run build       # production build
+npm run e2e         # end to end tests (Playwright)
+```
+
+Run `npx playwright install chromium` once before the first `npm run e2e`.
+The e2e suite builds the plugin and drives it through a fake Standard Notes
+host (`e2e/snHost.js`), including a throttled CPU (slow mobile WebView) and
+the opaque origin of the mobile app.
+
+Only the Crepe features in use are bundled (no Latex/KaTeX, no AI): the
+main chunk is about 390 KB gzipped, and code block languages load on
+demand.
+
+### Deployment
+
+The extension is hosted on GitHub Pages from the `gh-pages` branch, served
+at `https://esli.cafe/StandardNotes-Milkdown/`. Releases are automated by
+the `Release` workflow:
+
+1. Bump the version in `package.json` and `public/ext.json` (also its
+   `download_url`) in one `chore(release)` commit. The workflow rewrites
+   the version on the distributed `ext.json` (zip + Pages), so the app
+   updates automatically by comparing the version at `latest_url`; keeping
+   the committed copy in sync avoids a misleading one.
+2. On `main`, push a tag whose version matches `package.json` (the
+   workflow fails otherwise):
+
+```
+git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z
+```
+
+The workflow builds, runs the checks, attaches `extension.zip` to the
+GitHub release and publishes the hosted build to Pages.
+
+## Credits and license
+
+- Built on [Standard Notes](https://standardnotes.com),
+  [@standardnotes/editor-kit](https://github.com/standardnotes/editor-kit)
+  and [Milkdown](https://milkdown.dev) (MIT)
+- Licensed under [AGPL-3.0](LICENSE) or later
