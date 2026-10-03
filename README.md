@@ -1,5 +1,9 @@
 # StandardNotes-Milkdown
 
+[![CI](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml/badge.svg)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Esl1h/StandardNotes-Milkdown)](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest)
+[![License](https://img.shields.io/github/license/Esl1h/StandardNotes-Milkdown)](LICENSE)
+
 A WYSIWYG Markdown editor for [Standard Notes](https://standardnotes.com), powered by
 [Milkdown Crepe](https://milkdown.dev). Notes stay plain, portable Markdown; the plugin
 only changes how you edit them.
@@ -19,16 +23,28 @@ only changes how you edit them.
 
 ## Data format
 
-The note is Markdown, in the same dialect the [VS Code REST Client / commonmark + GFM]
-world uses. Nothing is stored outside the note: open the same note with the built in
-editor and the content is identical.
+The note is plain Markdown (CommonMark plus GitHub Flavored Markdown: tables, task
+lists, strikethrough). Nothing is stored outside the note: open the same note with the
+built in editor and the content is identical.
+
+Opening a note never rewrites it. The visual editor normalizes the Markdown it saves
+(for example `*` list markers become `-`), but only once you edit the note.
 
 ## Install
 
-Download the [latest extension.zip](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest/download/extension.zip)
-and add it in Standard Notes via *Advanced options → Install external extension*,
-pointing to the
-[ext.json](https://esli.cafe/StandardNotes-Milkdown/ext.json) URL.
+1. Open the Standard Notes web or desktop app.
+2. Go to **Preferences** → **Plugins**.
+3. Paste this URL into the **Install Custom Plugin** box and confirm:
+
+   ```
+   https://esli.cafe/StandardNotes-Milkdown/ext.json
+   ```
+
+4. Open a note and pick **Milkdown** in the editor menu.
+
+The app checks that URL for updates. The packaged build is also attached to every
+[release](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest) as
+`extension.zip`.
 
 ## Development
 
@@ -43,6 +59,11 @@ npm run typecheck && npm run lint && npm run build
 The e2e suite drives the plugin through a fake Standard Notes host (`e2e/snHost.js`),
 including the throttled mobile registration scenario and the opaque-origin mobile app
 case.
+
+## Bundle size
+
+Only the Crepe features in use are bundled (no Latex/KaTeX, no AI). The main chunk is
+about 390 KB gzipped; code block languages load on demand.
 
 ## Releases
 
