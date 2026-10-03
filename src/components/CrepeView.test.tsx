@@ -21,13 +21,7 @@ const lastCrepe = () => FakeCrepe.all[FakeCrepe.all.length - 1];
 function setup(props: Partial<Parameters<typeof CrepeView>[0]> = {}) {
   const onTextChange = vi.fn();
   const view = render(
-    <CrepeView
-      rawText={'# Hello'}
-      epoch={0}
-      topbar={true}
-      onTextChange={onTextChange}
-      {...props}
-    />
+    <CrepeView rawText={'# Hello'} epoch={0} topbar={true} onTextChange={onTextChange} {...props} />
   );
   return { onTextChange, view };
 }

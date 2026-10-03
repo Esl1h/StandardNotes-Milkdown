@@ -195,8 +195,7 @@
   order: 2;
   margin-top: auto;
   border-bottom: none;
-  border-top: 1px solid
-    color-mix(in srgb, var(--crepe-color-outline), transparent 80%);
+  border-top: 1px solid color-mix(in srgb, var(--crepe-color-outline), transparent 80%);
 }
 
 .panes[data-topbar='bottom'] .milkdown .top-bar-heading-dropdown {

@@ -32,8 +32,9 @@ describe('formatCount', () => {
   });
 
   it('shows the selection against the total', () => {
-    expect(
-      formatCount({ words: 132, characters: 800 }, { words: 12, characters: 70 })
-    ).toEqual({ label: '12 of 132 words', title: '70 of 800 characters' });
+    expect(formatCount({ words: 132, characters: 800 }, { words: 12, characters: 70 })).toEqual({
+      label: '12 of 132 words',
+      title: '70 of 800 characters',
+    });
   });
 });

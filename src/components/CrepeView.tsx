@@ -178,7 +178,9 @@ function CrepeView(props: CrepeViewProps) {
         onHeadingsRef.current?.(headingsOf(view.state.doc));
         onViewRef.current?.(view);
       });
-      setTopBarElement(containerRef.current?.querySelector<HTMLElement>('.milkdown-top-bar') ?? null);
+      setTopBarElement(
+        containerRef.current?.querySelector<HTMLElement>('.milkdown-top-bar') ?? null
+      );
     };
     void boot();
     return () => {

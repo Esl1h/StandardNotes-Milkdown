@@ -53,9 +53,7 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   const [mode, setMode] = useState<Mode>(() => readMode());
   const [orientation, setOrientation] = useState<Orientation>(() => readOrientation());
   const [topbar, setTopbar] = useState<boolean>(() => readTopbar());
-  const [topbarPosition, setTopbarPosition] = useState<TopbarPosition>(() =>
-    readTopbarPosition()
-  );
+  const [topbarPosition, setTopbarPosition] = useState<TopbarPosition>(() => readTopbarPosition());
   const [layoutBar, setLayoutBar] = useState<boolean>(() => readLayoutBar());
   // Each pane counts its own text; the visual one wins whenever it is shown.
   const [visualStats, setVisualStats] = useState<TextStats | null>(null);
