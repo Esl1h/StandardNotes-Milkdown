@@ -19,22 +19,30 @@ plugin only changes how you edit them.
    and code blocks with syntax highlighting
 2. A floating toolbar on the selection, a `/` slash menu and drag handles
    to add and move blocks
-3. Three modes, switched from the icon bar at the top: **Visual**,
+3. Math with KaTeX: `$inline$` formulas and `$$` blocks
+4. Diagrams: ```` ```mermaid ```` code blocks show a live preview of the
+   diagram, while the note keeps its source
+5. Images uploaded, pasted or dropped are embedded in the note; large ones
+   are scaled down so the note stays light
+6. Three modes, switched from the icon bar at the top: **Visual**,
    **Split** (the Markdown source next to the visual editor, side by side
    or stacked) and **Source** (a plain CodeMirror pane for fine grained
    edits)
-4. An optional fixed formatting bar, at the top or the bottom of the
-   editor
-5. The icon bar itself folds away with the `>` button at its right end,
-   leaving only a small `<` in the corner to bring it back. Every layout
-   choice is remembered per browser
-6. Opening a note never rewrites it: nothing is saved until you edit
-7. Undo never reaches into the previously opened note
-8. Works with the Standard Notes web, desktop and mobile apps; follows the
-   theme selected in the app. On narrow screens the split view stacks
-9. A new empty note shows an `Add sample` button that seeds it with example
-   Markdown
-10. If the editor ever fails to render, the raw note text stays available
+7. An optional fixed formatting bar, at the top or the bottom of the
+   editor, with a word count at its right end (`12 of 132 words` while
+   text is selected)
+8. **Copy as Markdown** and **Print** buttons in the icon bar; printing
+   shows only the rendered note
+9. The icon bar itself folds away with the `>` button at its right end,
+   leaving only a small `<` in the corner to bring it back. Layout choices
+   are saved with the editor in your Standard Notes account
+10. Opening a note never rewrites it: nothing is saved until you edit
+11. Undo never reaches into the previously opened note
+12. Works with the Standard Notes web, desktop and mobile apps; follows
+    the theme selected in the app. On narrow screens the split view stacks
+13. A new empty note shows an `Add sample` button that seeds it with
+    example Markdown
+14. If the editor ever fails to render, the raw note text stays available
     and editable in a plain text area, and edits are still saved
 
 ## Screenshots
@@ -73,7 +81,7 @@ also carries the packaged build as `extension.zip`.
 The note body is plain Markdown: CommonMark plus GitHub Flavored Markdown
 (tables, task lists, strikethrough).
 
-```markdown
+````markdown
 # Shopping
 
 - [x] bread
@@ -84,22 +92,32 @@ The note body is plain Markdown: CommonMark plus GitHub Flavored Markdown
 | bread | 2.50  |
 
 > Everything stays in the note as plain text.
+
+Energy: $E = mc^2$
+
+```mermaid
+graph LR
+  Idea --> Draft --> Done
 ```
+````
 
 - Nothing is stored outside the note: open the same note with the built in
   editor and the content is identical
 - The visual editor writes Markdown in a normalized shape (for example `*`
   list markers become `-`), but only after you edit the note
-- Images are referenced by URL and load from their original host. Paste a
-  link in the image block: **Upload file** only creates a temporary local
-  link that does not survive reopening the note
+- Images are either links (`![](https://...)`), loaded from their host,
+  or embedded as data URIs when uploaded, pasted or dropped. Embedded
+  images up to 500 KB go in as they are; larger ones are scaled down and
+  recompressed, since the note syncs to every device
+- Math uses the `$...$` / `$$...$$` syntax and diagrams the ```` ```mermaid ````
+  fence, both understood by GitHub, Obsidian and most Markdown tools
 
 ## Privacy
 
 Everything is stored inside your Standard Notes note, so it is encrypted
 with the rest of your data. The editor has no AI features and no network
-access of its own; the only remote content it loads is images referenced
-in the note.
+access of its own; the only remote content it loads is images linked by
+URL in the note. Mermaid renders diagrams with its strict security level.
 
 ## Development and running locally
 
@@ -153,9 +171,10 @@ The e2e suite builds the plugin and drives it through a fake Standard Notes
 host (`e2e/snHost.js`), including a throttled CPU (slow mobile WebView) and
 the opaque origin of the mobile app.
 
-Only the Crepe features in use are bundled (no Latex/KaTeX, no AI): the
-main chunk is about 390 KB gzipped, and code block languages load on
-demand.
+Only the Crepe features in use are bundled (no AI): the main chunk is
+about 390 KB gzipped. KaTeX (about 80 KB gzipped) loads in its own chunk
+at startup, Mermaid only when a note has a diagram, and code block
+languages on demand.
 
 ### Deployment
 
