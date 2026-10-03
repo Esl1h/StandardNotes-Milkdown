@@ -28,7 +28,7 @@ function createCrepe(root: HTMLElement, defaultValue: string, withTopBar: boolea
     .addFeature(linkTooltip)
     .addFeature(imageBlock)
     .addFeature(blockEdit)
-    .addFeature(placeholder)
+    .addFeature(placeholder, { text: 'Type / for commands' })
     .addFeature(toolbar)
     .addFeature(codeMirror, { theme: oneDark, languages })
     .addFeature(table);

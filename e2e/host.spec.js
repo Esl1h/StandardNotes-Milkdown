@@ -53,6 +53,15 @@ test('opening a note does not save it, editing saves once', async ({ page }) => 
   expect(save.text).toContain('Notes with Milkdown!');
 });
 
+test('an empty note invites the slash menu', async ({ page }) => {
+  const plugin = await openHost(page, { text: '' });
+  await plugin.locator('.ProseMirror').click();
+  await expect(plugin.locator('.crepe-placeholder')).toHaveAttribute(
+    'data-placeholder',
+    'Type / for commands'
+  );
+});
+
 test('undoing an edit saves the restored text', async ({ page }) => {
   const plugin = await openHost(page, { text: '# Title\n\ncontent\n' });
   await expect(plugin.locator('.milkdown .editor h1')).toHaveText('Title');
