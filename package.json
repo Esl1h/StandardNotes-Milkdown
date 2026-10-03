@@ -1,0 +1,73 @@
+{
+  "name": "standardnotes-milkdown",
+  "version": "0.1.0",
+  "description": "WYSIWYG Markdown editor for Standard Notes, powered by Milkdown Crepe",
+  "keywords": [
+    "Standard Notes",
+    "Standard Notes Extensions",
+    "Standard Notes Editors",
+    "Markdown",
+    "Milkdown"
+  ],
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Esl1h/StandardNotes-Milkdown.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Esl1h/StandardNotes-Milkdown/issues"
+  },
+  "sn": {
+    "main": "build/index.html"
+  },
+  "scripts": {
+    "start": "vite --port 3002",
+    "build": "vite build",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "server": "vite preview --port 3000",
+    "server-cors": "vite preview --port 3000",
+    "pretty": "prettier --write 'src/**/*.{html,css,scss,js,jsx,ts,tsx,json}' README.md",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.6",
+    "@milkdown/crepe": "7.22.2",
+    "@milkdown/kit": "7.22.2",
+    "@standardnotes/editor-kit": "github:standardnotes/editor-kit#626d7a6e63d4ada48be36676c466fea46d7709d3",
+    "@standardnotes/stylekit": "^5.29.3",
+    "codemirror": "^6.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sass": "^1.105.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.63.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.20.4",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "jsdom": "^30.1.1",
+    "prettier": "^2.2.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.0",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.3"
+  },
+  "overrides": {
+    "brace-expansion": "^2.0.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
