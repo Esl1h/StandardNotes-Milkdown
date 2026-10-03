@@ -1,0 +1,14 @@
+{
+  "identifier": "org.esl1h.sn-milkdown-editor",
+  "name": "Milkdown",
+  "content_type": "SN|Component",
+  "area": "editor-editor",
+  "note_type": "markdown",
+  "version": "0.1.0",
+  "description": "WYSIWYG Markdown editor for Standard Notes, powered by Milkdown Crepe",
+  "url": "https://esli.cafe/StandardNotes-Milkdown/index.html",
+  "download_url": "https://github.com/Esl1h/StandardNotes-Milkdown/releases/download/v0.1.0/extension.zip",
+  "latest_url": "https://esli.cafe/StandardNotes-Milkdown/ext.json",
+  "marketing_url": "https://github.com/Esl1h/StandardNotes-Milkdown",
+  "thumbnail_url": "https://esli.cafe/StandardNotes-Milkdown/logo512.png"
+}

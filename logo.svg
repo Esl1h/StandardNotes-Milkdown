@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Markdown mark ("M" + down arrow) on a rounded tile, theme-neutral. -->
+  <rect x="4" y="4" width="120" height="120" rx="24" fill="#2f3336" />
+  <g fill="#ffffff">
+    <polygon points="30,84 30,44 41,44 52.5,57 64,44 75,44 75,84 64,84 64,61 52.5,74 41,61 41,84" />
+    <polygon points="91,44 101,44 101,72 112,72 96,90 80,72 91,72" />
+  </g>
+</svg>
