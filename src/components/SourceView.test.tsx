@@ -26,6 +26,21 @@ describe('SourceView', () => {
     expect(onTextChange).not.toHaveBeenCalled();
   });
 
+  it('keeps the cursor when external text changes elsewhere', () => {
+    const { getView, onTextChange, view } = setup('# Hello\n\nfirst\n');
+    act(() => {
+      getView().dispatch({ selection: { anchor: 4 } });
+    });
+
+    // An edit in the visual pane, below the cursor of the source pane.
+    view.rerender(
+      <SourceView rawText={'# Hello\n\nfirst, edited\n'} epoch={0} onTextChange={onTextChange} />
+    );
+
+    expect(getView().state.doc.toString()).toBe('# Hello\n\nfirst, edited\n');
+    expect(getView().state.selection.main.head).toBe(4);
+  });
+
   it('saves exactly once per user edit', () => {
     const { getView, onTextChange } = setup('# Hello');
 

@@ -32,6 +32,21 @@ const sourceTheme = () =>
     },
   });
 
+/** The single change turning `from` into `to`, trimmed to what differs, so
+ * the cursor and scroll position outside the edit survive the sync. */
+function changedRange(from: string, to: string) {
+  let start = 0;
+  const max = Math.min(from.length, to.length);
+  while (start < max && from[start] === to[start]) {
+    start++;
+  }
+  let end = 0;
+  while (end < max - start && from[from.length - 1 - end] === to[to.length - 1 - end]) {
+    end++;
+  }
+  return { from: start, to: from.length - end, insert: to.slice(start, to.length - end) };
+}
+
 /** The Markdown source pane, a slim CodeMirror with the same sync contract
  * the visual editor follows: external text is applied without saving back. */
 function SourceView(props: SourceViewProps) {
@@ -81,11 +96,15 @@ function SourceView(props: SourceViewProps) {
   // Keep the source identical to the prop (remote sync, visual pane edits).
   useEffect(() => {
     const view = viewRef.current;
-    if (!view || view.state.doc.toString() === rawText) {
+    if (!view) {
+      return;
+    }
+    const current = view.state.doc.toString();
+    if (current === rawText) {
       return;
     }
     view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: rawText },
+      changes: changedRange(current, rawText),
       annotations: External.of(true),
     });
   }, [rawText]);
