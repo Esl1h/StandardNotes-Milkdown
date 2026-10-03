@@ -311,6 +311,21 @@ test('uploaded images are embedded in the note, large ones shrunk', async ({ pag
   expect(text.length).toBeLessThan(520 * 1024);
 });
 
+test('math renders with KaTeX, inline and in blocks', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const plugin = await openHost(page, {
+    text: '# Math\n\nEnergy $E=mc^2$ inline.\n\n$$\n\\int_0^1 x\\,dx\n$$\n',
+  });
+
+  await expect(plugin.locator('.milkdown .editor p .katex')).toBeVisible();
+  await expect(plugin.locator('.milkdown-code-block .katex').first()).toBeVisible();
+  // Opening a note with math must not rewrite it either.
+  await page.waitForTimeout(800);
+  expect(await hostLogs(page, 'save-items')).toHaveLength(0);
+  expect(pageErrors).toEqual([]);
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 

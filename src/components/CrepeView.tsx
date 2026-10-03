@@ -88,7 +88,14 @@ function CrepeView(props: CrepeViewProps) {
     // async boot needs the catch-up replaceAll below.
     const bootText = rawTextRef.current;
     const boot = async () => {
-      const crepe = createCrepe(containerRef.current as HTMLElement, rawTextRef.current, topbar);
+      const crepe = await createCrepe(
+        containerRef.current as HTMLElement,
+        rawTextRef.current,
+        topbar
+      );
+      if (disposed) {
+        return;
+      }
       suppressRef.current = true;
       await crepe.create();
       if (disposed) {

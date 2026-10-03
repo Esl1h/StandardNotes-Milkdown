@@ -13,16 +13,26 @@ import { languages } from '@codemirror/language-data';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { embedImage } from './image';
 
+// Latex pulls KaTeX in (about 90 KB gzipped plus fonts); it is split into
+// its own chunk, and the import starts right away so it is usually loaded
+// by the time Standard Notes has streamed the note in.
+const latexFeature = import('./latex');
+
 /**
  * Builds the editor from the Crepe features this plugin uses. The `Crepe`
- * class imports every feature statically, so even with Latex disabled it
- * bundles KaTeX (and the AI feature); the builder only pulls what is added.
+ * class imports every feature statically (the AI one and an eager KaTeX
+ * included); the builder only pulls what is added, and Latex lazily.
  *
- * Same features and order as Crepe's defaults, minus Latex, plus the
- * optional top bar. The code block config repeats Crepe's defaults, which
- * the builder does not apply.
+ * Same features and order as Crepe's defaults, plus the optional top bar.
+ * The code block config repeats Crepe's defaults, which the builder does
+ * not apply.
  */
-function createCrepe(root: HTMLElement, defaultValue: string, withTopBar: boolean): CrepeBuilder {
+async function createCrepe(
+  root: HTMLElement,
+  defaultValue: string,
+  withTopBar: boolean
+): Promise<CrepeBuilder> {
+  const { latex } = await latexFeature;
   const crepe = new CrepeBuilder({ root, defaultValue })
     .addFeature(cursor)
     .addFeature(listItem)
@@ -34,7 +44,8 @@ function createCrepe(root: HTMLElement, defaultValue: string, withTopBar: boolea
     .addFeature(placeholder, { text: 'Type / for commands' })
     .addFeature(toolbar)
     .addFeature(codeMirror, { theme: oneDark, languages })
-    .addFeature(table);
+    .addFeature(table)
+    .addFeature(latex);
   return withTopBar ? crepe.addFeature(topBar) : crepe;
 }
 
