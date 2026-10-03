@@ -360,6 +360,38 @@ test('YAML front matter survives editing the note', async ({ page }) => {
   expect(saved).toBe(`${frontMatter}\nBody text.!\n`);
 });
 
+test('GitHub alerts render as callouts and keep their marker', async ({ page }) => {
+  const text = '# T\n\n> [!WARNING]\n> Mind the gap.\n\n> Plain quote.\n\nBody text.\n';
+  const plugin = await openHost(page, { text });
+  await expect(plugin.locator('.milkdown .editor .markdown-alert-warning')).toContainText(
+    'Mind the gap.'
+  );
+  await expect(plugin.locator('.milkdown .editor .markdown-alert')).toHaveCount(1);
+
+  const saved = await editLastParagraph(page, plugin);
+  expect(saved).toBe(text.replace('Body text.', 'Body text.!'));
+});
+
+test('a typed alert marker is saved unescaped', async ({ page }) => {
+  const plugin = await openHost(page, { text: '> quote\n' });
+  await plugin.locator('.milkdown .editor blockquote p').click();
+  await page.keyboard.press('Home');
+  await page.keyboard.type('[!TIP] ');
+  await expect(plugin.locator('.milkdown .editor .markdown-alert-tip')).toBeVisible();
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBeGreaterThan(0);
+  const saves = await hostLogs(page, 'save-items');
+  expect(saves[saves.length - 1].text).toBe('> [!TIP] quote\n');
+});
+
+test('wiki links keep their brackets', async ({ page }) => {
+  const text = 'See [[Other note]] and [[Plans|the plans]] today.\n';
+  const plugin = await openHost(page, { text });
+  await expect(plugin.locator('.milkdown .editor .wiki-link')).toHaveCount(2);
+
+  const saved = await editLastParagraph(page, plugin);
+  expect(saved).toBe(text.replace('today.', 'today.!'));
+});
+
 test.describe('narrow screens', () => {
   test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
 

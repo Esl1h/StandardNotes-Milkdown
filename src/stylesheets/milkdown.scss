@@ -291,4 +291,55 @@
   margin: 0 0 16px;
   padding: 8px 12px;
   white-space: pre-wrap;
+
+  // Not inline code: no code color or chip background.
+  code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+}
+
+// GitHub alerts: a colored callout; the [!KIND] marker stays editable and
+// reads as its title. Colors follow GitHub's meaning for each kind.
+.milkdown .editor blockquote.markdown-alert {
+  --alert-color: #0969da;
+  background: color-mix(in srgb, var(--alert-color), transparent 92%);
+  border-left: 4px solid var(--alert-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+
+  &::before {
+    display: none;
+  }
+}
+
+.milkdown .editor blockquote.markdown-alert-tip {
+  --alert-color: #1a7f37;
+}
+
+.milkdown .editor blockquote.markdown-alert-important {
+  --alert-color: #8250df;
+}
+
+.milkdown .editor blockquote.markdown-alert-warning {
+  --alert-color: #9a6700;
+}
+
+.milkdown .editor blockquote.markdown-alert-caution {
+  --alert-color: #cf222e;
+}
+
+.milkdown .editor .markdown-alert-marker {
+  color: var(--alert-color);
+  font-size: 0.85em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+// Wiki links are kept as typed; there is no note lookup to follow them.
+.milkdown .editor .wiki-link {
+  color: var(--crepe-color-primary);
+  text-decoration: underline dotted;
 }
