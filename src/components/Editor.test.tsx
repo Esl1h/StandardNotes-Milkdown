@@ -20,9 +20,9 @@ vi.mock('@standardnotes/editor-kit', () => ({
   },
 }));
 
-vi.mock('@milkdown/crepe', async () => {
-  const { FakeCrepe: MockCrepe } = await import('../mocks/crepeMock');
-  return { Crepe: MockCrepe, default: MockCrepe };
+vi.mock('../lib/crepe', async () => {
+  const { fakeCreateCrepe } = await import('../mocks/crepeMock');
+  return { createCrepe: fakeCreateCrepe };
 });
 vi.mock('@milkdown/kit/utils', async () => {
   const { fakeReplaceAll } = await import('../mocks/crepeMock');

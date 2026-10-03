@@ -3,9 +3,9 @@ import { fireEvent, render, waitFor } from '@testing-library/react';
 import MilkdownEditor from './MilkdownEditor';
 import { FakeCrepe } from '../mocks/crepeMock';
 
-vi.mock('@milkdown/crepe', async () => {
-  const { FakeCrepe: MockCrepe } = await import('../mocks/crepeMock');
-  return { Crepe: MockCrepe, default: MockCrepe };
+vi.mock('../lib/crepe', async () => {
+  const { fakeCreateCrepe } = await import('../mocks/crepeMock');
+  return { createCrepe: fakeCreateCrepe };
 });
 vi.mock('@milkdown/kit/utils', async () => {
   const { fakeReplaceAll } = await import('../mocks/crepeMock');
@@ -76,11 +76,7 @@ describe('MilkdownEditor', () => {
 
     fireEvent.click(view.getByTitle('Show or hide the fixed formatting bar'));
     await waitFor(() => expect(FakeCrepe.all).toHaveLength(2));
-    expect(FakeCrepe.all[1]?.config.features).toEqual({
-      [FakeCrepe.Feature.TopBar]: false,
-      [FakeCrepe.Feature.Latex]: false,
-      [FakeCrepe.Feature.AI]: false,
-    });
+    expect(FakeCrepe.all[1]?.config.topBar).toBe(false);
     expect(window.localStorage.getItem('standardnotes-milkdown-topbar')).toBe('false');
 
     fireEvent.click(view.getByTitle('Show or hide the fixed formatting bar'));

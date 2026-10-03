@@ -1,5 +1,5 @@
 /**
- * In-memory stand-in for the Milkdown Crepe class, so component tests can
+ * In-memory stand-in for the Milkdown Crepe editor, so component tests can
  * drive the wrapper contract (create/destroy lifecycle, markdownUpdated,
  * replaceAll echoes) without booting a real ProseMirror editor in jsdom.
  *
@@ -10,7 +10,6 @@
  */
 
 class FakeCrepe {
-  static Feature = { TopBar: 'top-bar', Latex: 'latex', AI: 'ai' } as const;
   static all: FakeCrepe[] = [];
 
   static reset() {
@@ -61,9 +60,13 @@ class FakeCrepe {
   }
 }
 
+/** The module mock for '../lib/crepe': records what the editor was built with. */
+const fakeCreateCrepe = (root: HTMLElement, defaultValue: string, topBar: boolean) =>
+  new FakeCrepe({ root, defaultValue, topBar });
+
 /** The module mock for '@milkdown/kit/utils': replaceAll via the fake ctx. */
 const fakeReplaceAll = (markdown: string, _flush?: boolean) => (ctx: unknown) => {
   (ctx as { __replace: (markdown: string) => void }).__replace(markdown);
 };
 
-export { FakeCrepe, fakeReplaceAll };
+export { FakeCrepe, fakeCreateCrepe, fakeReplaceAll };

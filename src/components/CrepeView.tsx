@@ -1,7 +1,21 @@
 import React, { useEffect, useRef } from 'react';
-import { Crepe } from '@milkdown/crepe';
+import { type CrepeBuilder } from '@milkdown/crepe/builder';
 import { replaceAll } from '@milkdown/kit/utils';
-import '@milkdown/crepe/theme/common/style.css';
+import { createCrepe } from '../lib/crepe';
+// The common styles one by one: the aggregate style.css also pulls the
+// Latex (KaTeX, with its fonts), AI and diff styles of unused features.
+import '@milkdown/crepe/theme/common/prosemirror.css';
+import '@milkdown/crepe/theme/common/reset.css';
+import '@milkdown/crepe/theme/common/block-edit.css';
+import '@milkdown/crepe/theme/common/code-mirror.css';
+import '@milkdown/crepe/theme/common/cursor.css';
+import '@milkdown/crepe/theme/common/image-block.css';
+import '@milkdown/crepe/theme/common/link-tooltip.css';
+import '@milkdown/crepe/theme/common/list-item.css';
+import '@milkdown/crepe/theme/common/placeholder.css';
+import '@milkdown/crepe/theme/common/toolbar.css';
+import '@milkdown/crepe/theme/common/table.css';
+import '@milkdown/crepe/theme/common/top-bar.css';
 import '@milkdown/crepe/theme/frame.css';
 
 interface CrepeViewProps {
@@ -26,7 +40,7 @@ interface CrepeViewProps {
 function CrepeView(props: CrepeViewProps) {
   const { rawText, epoch, topbar, onTextChange } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const crepeRef = useRef<Crepe | null>(null);
+  const crepeRef = useRef<CrepeBuilder | null>(null);
   const suppressRef = useRef(false);
   // The serialized text the note holds, from a programmatic apply or the
   // last saved user edit; an identical markdownUpdated echo is dropped even
@@ -50,17 +64,7 @@ function CrepeView(props: CrepeViewProps) {
     // async boot needs the catch-up replaceAll below.
     const bootText = rawTextRef.current;
     const boot = async () => {
-      const crepe = new Crepe({
-        root: containerRef.current as HTMLElement,
-        defaultValue: rawTextRef.current,
-        // Everything except the top bar is on by default; Latex stays off
-        // to keep the bundle small (it drags KaTeX in).
-        features: {
-          [Crepe.Feature.TopBar]: topbar,
-          [Crepe.Feature.Latex]: false,
-          [Crepe.Feature.AI]: false,
-        },
-      });
+      const crepe = createCrepe(containerRef.current as HTMLElement, rawTextRef.current, topbar);
       suppressRef.current = true;
       await crepe.create();
       if (disposed) {

@@ -3,9 +3,9 @@ import { render, waitFor } from '@testing-library/react';
 import CrepeView from './CrepeView';
 import { FakeCrepe } from '../mocks/crepeMock';
 
-vi.mock('@milkdown/crepe', async () => {
-  const { FakeCrepe: MockCrepe } = await import('../mocks/crepeMock');
-  return { Crepe: MockCrepe, default: MockCrepe };
+vi.mock('../lib/crepe', async () => {
+  const { fakeCreateCrepe } = await import('../mocks/crepeMock');
+  return { createCrepe: fakeCreateCrepe };
 });
 vi.mock('@milkdown/kit/utils', async () => {
   const { fakeReplaceAll } = await import('../mocks/crepeMock');
@@ -42,11 +42,7 @@ describe('CrepeView', () => {
     setup();
     await booted();
 
-    expect(lastCrepe().config.features).toEqual({
-      [FakeCrepe.Feature.TopBar]: true,
-      [FakeCrepe.Feature.Latex]: false,
-      [FakeCrepe.Feature.AI]: false,
-    });
+    expect(lastCrepe().config.topBar).toBe(true);
   });
 
   it('reports user edits through onTextChange', async () => {
@@ -125,11 +121,7 @@ describe('CrepeView', () => {
     );
     await booted();
 
-    expect(lastCrepe().config.features).toEqual({
-      [FakeCrepe.Feature.TopBar]: false,
-      [FakeCrepe.Feature.Latex]: false,
-      [FakeCrepe.Feature.AI]: false,
-    });
+    expect(lastCrepe().config.topBar).toBe(false);
   });
 
   it('destroys the editor on unmount', async () => {
