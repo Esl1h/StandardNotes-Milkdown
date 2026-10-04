@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { act, render } from '@testing-library/react';
 import { EditorView } from '@codemirror/view';
+import { undo } from '@codemirror/commands';
 import SourceView from './SourceView';
 
 function setup(rawText: string) {
@@ -39,6 +40,20 @@ describe('SourceView', () => {
 
     expect(getView().state.doc.toString()).toBe('# Hello\n\nfirst, edited\n');
     expect(getView().state.selection.main.head).toBe(4);
+  });
+
+  it('does not undo external text, so it is neither reverted nor saved', () => {
+    const { getView, onTextChange, view } = setup('a');
+
+    view.rerender(<SourceView rawText="ab" epoch={0} onTextChange={onTextChange} />);
+    let undone = true;
+    act(() => {
+      undone = undo(getView());
+    });
+
+    expect(undone).toBe(false);
+    expect(getView().state.doc.toString()).toBe('ab');
+    expect(onTextChange).not.toHaveBeenCalled();
   });
 
   it('saves exactly once per user edit', () => {
