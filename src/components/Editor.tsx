@@ -6,6 +6,7 @@ import './Editor.css';
 import MilkdownEditor from './MilkdownEditor';
 import ErrorBoundary from './ErrorBoundary';
 import { setPreferenceStore } from '../lib/layout';
+import { markdownPreview } from '../lib/preview';
 
 /** How long to wait for Standard Notes to stream the note before saying so */
 const NOTE_WAIT_MS = 5000;
@@ -60,6 +61,7 @@ export default class Editor extends React.Component<Record<string, never>, Edito
         this.setState(({ historyEpoch }) => ({ historyEpoch: historyEpoch + 1 }));
       },
       handleRequestForContentHeight: () => undefined,
+      generateCustomPreview: (text: string) => ({ plain: markdownPreview(text) }),
     };
 
     this.editorKit = new EditorKit(delegate, {
