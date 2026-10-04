@@ -51,6 +51,7 @@ test('opening a note does not save it, editing saves once', async ({ page }) => 
   const [save] = await hostLogs(page, 'save-items');
   // The serializer owns the Markdown shape; assert the typed text made it.
   expect(save.text).toContain('Notes with Milkdown!');
+  expect(save.preview.startsWith('Notes with Milkdown!')).toBe(true);
 });
 
 test('an empty note invites the slash menu', async ({ page }) => {
@@ -309,6 +310,11 @@ test('uploaded images are embedded in the note, large ones shrunk', async ({ pag
   const text = await lastSave();
   expect(text).toMatch(/!\[[^\]]*\]\(data:image\/(webp|jpeg);base64,/);
   expect(text.length).toBeLessThan(520 * 1024);
+  // The notes list must not carry the image along with the text.
+  const saves = await hostLogs(page, 'save-items');
+  const { preview } = saves[saves.length - 1];
+  expect(preview).not.toContain('data:');
+  expect(preview.length).toBeLessThanOrEqual(160);
 });
 
 test('math renders with KaTeX, inline and in blocks', async ({ page }) => {
