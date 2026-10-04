@@ -113,6 +113,7 @@ graph LR
   or embedded as data URIs when uploaded, pasted or dropped. Embedded
   images up to 500 KB go in as they are; larger ones are scaled down and
   recompressed, since the note syncs to every device
+- Images keep their alt text and title when the note is edited. One limit: Crepe stores the resize ratio of an image in its alt text, so resizing an image that has alt text replaces the alt with the ratio (for example `![0.50](https://...)`)
 - YAML front matter, GitHub alerts (`> [!NOTE]`, rendered as colored
   callouts) and `[[wiki links]]` are kept exactly as written, so notes
   imported from GitHub, Obsidian, Jekyll or Hugo are not rewritten
