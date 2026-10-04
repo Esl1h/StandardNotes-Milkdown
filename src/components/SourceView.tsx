@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Annotation, EditorState } from '@codemirror/state';
+import { Annotation, EditorState, Transaction } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { minimalSetup } from 'codemirror';
@@ -130,7 +130,8 @@ function SourceView(props: SourceViewProps) {
     }
     view.dispatch({
       changes: changedRange(current, rawText),
-      annotations: External.of(true),
+      // Not the user's edit: neither saved back nor undone from here.
+      annotations: [External.of(true), Transaction.addToHistory.of(false)],
     });
   }, [rawText]);
 
