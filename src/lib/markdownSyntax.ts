@@ -23,7 +23,8 @@ const ESCAPED_WIKI_LINK = /\\\[\\\[([^[\]\n]+)\]\]/g;
 /**
  * Wraps the serializer handlers. Milkdown passes its own handlers (text
  * among them) as remark-stringify settings, which override any extension,
- * so the wrapping goes into those settings.
+ * so the wrapping goes into those settings. The same settings write lists
+ * with `-`, the GitHub and Obsidian default, instead of remark's `*`.
  */
 function preserveSyntaxOnSave(ctx: Ctx): void {
   ctx.update(remarkStringifyOptionsCtx, (options) => {
@@ -32,6 +33,7 @@ function preserveSyntaxOnSave(ctx: Ctx): void {
     const text = handlers.text ?? defaultHandlers.text;
     return {
       ...options,
+      bullet: '-' as const,
       handlers: {
         ...handlers,
         blockquote: (node, parent, state, info) =>
