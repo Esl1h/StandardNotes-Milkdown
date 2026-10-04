@@ -25,6 +25,9 @@ import '@milkdown/crepe/theme/common/table.css';
 import '@milkdown/crepe/theme/common/top-bar.css';
 import '@milkdown/crepe/theme/frame.css';
 
+/** How long the visual pane waits for the text to settle before applying it. */
+const APPLY_DELAY_MS = 150;
+
 interface CrepeViewProps {
   rawText: string;
   /** Bumped on every note switch; recreates the Crepe instance. */
@@ -195,20 +198,36 @@ function CrepeView(props: CrepeViewProps) {
     };
   }, [epoch, topbar]);
 
-  // External text on the same note: apply without saving it back.
+  // External text on the same note: apply without saving it back. Typing in
+  // the source pane changes it on every key, and each replaceAll reparses the
+  // whole visual document (rebuilding code and Mermaid blocks), so a burst is
+  // applied once, after a pause.
+  const lastRawRef = useRef(rawText);
+  const lastEpochRef = useRef(epoch);
   useEffect(() => {
-    const crepe = crepeRef.current;
-    if (!crepe || crepe.getMarkdown() === rawText) {
-      return;
+    // On mount and on a note switch the instance boots from this text; applying
+    // it again later would overwrite what was typed in between.
+    const settled = epoch !== lastEpochRef.current || rawText === lastRawRef.current;
+    lastEpochRef.current = epoch;
+    lastRawRef.current = rawText;
+    if (settled) {
+      return undefined;
     }
-    suppressRef.current = true;
-    try {
-      crepe.editor.action(replaceAll(rawText, true));
-      lastAppliedRef.current = crepe.getMarkdown();
-    } finally {
-      suppressRef.current = false;
-    }
-  }, [rawText]);
+    const timer = setTimeout(() => {
+      const crepe = crepeRef.current;
+      if (!crepe || crepe.getMarkdown() === rawTextRef.current) {
+        return;
+      }
+      suppressRef.current = true;
+      try {
+        crepe.editor.action(replaceAll(rawTextRef.current, true));
+        lastAppliedRef.current = crepe.getMarkdown();
+      } finally {
+        suppressRef.current = false;
+      }
+    }, APPLY_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [rawText, epoch]);
 
   return (
     <div className="crepe-container" ref={containerRef}>

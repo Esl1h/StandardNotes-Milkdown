@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, render, waitFor } from '@testing-library/react';
 import CrepeView from './CrepeView';
 import { FakeCrepe } from '../mocks/crepeMock';
 
@@ -14,6 +14,10 @@ vi.mock('@milkdown/kit/utils', async () => {
 
 beforeEach(() => {
   FakeCrepe.reset();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 const lastCrepe = () => FakeCrepe.all[FakeCrepe.all.length - 1];
@@ -70,8 +74,68 @@ describe('CrepeView', () => {
     );
 
     // The replaceAll echo fired markdownUpdated; nothing may reach the host.
-    expect(lastCrepe().getMarkdown()).toBe('# Changed');
+    await waitFor(() => expect(lastCrepe().getMarkdown()).toBe('# Changed'));
     expect(onTextChange).not.toHaveBeenCalled();
+  });
+
+  it('applies a burst of external text once, after a pause', async () => {
+    const { onTextChange, view } = setup();
+    await booted();
+    vi.useFakeTimers();
+    const rerender = (rawText: string) =>
+      view.rerender(
+        <CrepeView rawText={rawText} epoch={0} topbar={true} onTextChange={onTextChange} />
+      );
+
+    // Typing in the source pane changes the text on every key; reparsing the
+    // visual document each time is what made the split mode slow.
+    rerender('# H');
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    rerender('# He');
+    act(() => {
+      vi.advanceTimersByTime(149);
+    });
+    expect(lastCrepe().getMarkdown()).toBe('# Hello');
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(lastCrepe().getMarkdown()).toBe('# He');
+    expect(onTextChange).not.toHaveBeenCalled();
+  });
+
+  it('drops a pending apply when the view unmounts', async () => {
+    const { onTextChange, view } = setup();
+    await booted();
+    vi.useFakeTimers();
+
+    view.rerender(
+      <CrepeView rawText={'# Changed'} epoch={0} topbar={true} onTextChange={onTextChange} />
+    );
+    view.unmount();
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(lastCrepe().getMarkdown()).toBe('# Hello');
+  });
+
+  it('does not reapply the opened text over typing right after a note switch', async () => {
+    const { onTextChange, view } = setup();
+    await booted();
+
+    view.rerender(
+      <CrepeView rawText={'# Other note'} epoch={1} topbar={true} onTextChange={onTextChange} />
+    );
+    await waitFor(() => expect(FakeCrepe.all).toHaveLength(2));
+    await booted();
+    // Typed before the 200 ms listener debounce has told the host.
+    lastCrepe().markdown = '# Other note, typed';
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    expect(lastCrepe().getMarkdown()).toBe('# Other note, typed');
   });
 
   it('recreates the editor when the note changes, destroying the old one', async () => {
