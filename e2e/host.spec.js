@@ -54,6 +54,26 @@ test('opening a note does not save it, editing saves once', async ({ page }) => 
   expect(save.preview.startsWith('Notes with Milkdown!')).toBe(true);
 });
 
+test('a late echo of an earlier save does not undo newer typing', async ({ page }) => {
+  const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+  await plugin.locator('.milkdown .editor h1').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('!');
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(1);
+  const [first] = await hostLogs(page, 'save-items');
+
+  await page.keyboard.type('?');
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(2);
+  // Only once the React state holds the newer text (the Milkdown listener
+  // debounces by 200 ms) does the echo of the first save differ from it.
+  await page.evaluate((text) => window.sendNote('n1', text), first.text);
+  await page.waitForTimeout(800);
+
+  await expect(plugin.locator('.milkdown .editor h1')).toHaveText('Notes with Milkdown!?');
+  const saves = await hostLogs(page, 'save-items');
+  expect(saves.at(-1).text).toContain('Notes with Milkdown!?');
+});
+
 test('an empty note invites the slash menu', async ({ page }) => {
   const plugin = await openHost(page, { text: '' });
   await plugin.locator('.ProseMirror').click();
