@@ -1,6 +1,6 @@
 {
   "name": "standardnotes-milkdown",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "WYSIWYG Markdown editor for Standard Notes, powered by Milkdown Crepe",
   "private": true,
   "license": "AGPL-3.0-or-later",
