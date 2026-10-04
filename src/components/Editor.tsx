@@ -7,6 +7,7 @@ import MilkdownEditor from './MilkdownEditor';
 import ErrorBoundary from './ErrorBoundary';
 import { setPreferenceStore } from '../lib/layout';
 import { markdownPreview } from '../lib/preview';
+import { EchoGuard } from '../lib/echoGuard';
 
 /** How long to wait for Standard Notes to stream the note before saying so */
 const NOTE_WAIT_MS = 5000;
@@ -43,6 +44,11 @@ export default class Editor extends React.Component<Record<string, never>, Edito
 
   waitTimer?: ReturnType<typeof setTimeout>;
 
+  echoGuard = new EchoGuard();
+
+  /** The note EditorKit last streamed; setEditorRawText does not carry the id */
+  noteUuid?: string;
+
   componentDidMount() {
     this.waitTimer = setTimeout(() => this.setState({ waitTimedOut: true }), NOTE_WAIT_MS);
   }
@@ -53,7 +59,14 @@ export default class Editor extends React.Component<Record<string, never>, Edito
 
   configureEditorKit = () => {
     const delegate: EditorKitDelegate = {
+      onNoteValueChange: async (note) => {
+        this.noteUuid = note.uuid;
+      },
       setEditorRawText: (text: string) => {
+        // A late echo of an earlier save would undo what was typed since.
+        if (this.echoGuard.isStaleEcho(this.noteUuid, text, this.state.rawText)) {
+          return;
+        }
         this.setState({ rawText: text, noteReceived: true });
       },
       // EditorKit calls this after setEditorRawText when the note changed.
@@ -84,6 +97,7 @@ export default class Editor extends React.Component<Record<string, never>, Edito
   };
 
   saveNote = (text: string) => {
+    this.echoGuard.recordSave(text);
     /** This will work in an SN context, but breaks the standalone editor,
      * so we need to catch the error
      */
