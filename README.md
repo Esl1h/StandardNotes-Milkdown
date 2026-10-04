@@ -107,8 +107,15 @@ graph LR
 
 - Nothing is stored outside the note: open the same note with the built in
   editor and the content is identical
-- The visual editor writes Markdown in a normalized shape (for example `*`
-  list markers become `-`), but only after you edit the note
+- Opening a note never changes it. The first edit rewrites the whole note in the shape the visual editor writes. What changes:
+  - `*` list markers become `-`
+  - reference links become inline links and the `[1]: url` definition goes away
+  - a line break made of two trailing spaces becomes a backslash
+  - setext headings (`Title` over `=====`) become `# Title`
+  - tables are padded with spaces and their alignment row is rewritten
+  - a stray `*` is escaped (`5\*3`) and a bare URL gets angle brackets (`<https://...>`)
+  - block HTML gets a blank line before its closing tag
+- Footnotes, inline HTML, ordered lists that start at a number other than 1, inline math, `__bold__` and `_italic_`, front matter and wiki links are kept as written
 - Images are either links (`![](https://...)`), loaded from their host,
   or embedded as data URIs when uploaded, pasted or dropped. Embedded
   images up to 500 KB go in as they are; larger ones are scaled down and
