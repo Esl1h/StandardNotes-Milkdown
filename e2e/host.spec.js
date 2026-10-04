@@ -337,6 +337,21 @@ test('uploaded images are embedded in the note, large ones shrunk', async ({ pag
   expect(preview.length).toBeLessThanOrEqual(160);
 });
 
+const TINY_PNG =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+test('images without a title survive an edit with their alt text', async ({ page }) => {
+  const note = `# T\n\n![A cat](${TINY_PNG})\n\ntext ![inline](${TINY_PNG}) more\n`;
+  const plugin = await openHost(page, { text: note });
+  await expect(plugin.locator('.milkdown .editor img')).toHaveCount(2);
+  await plugin.locator('.milkdown .editor h1').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('!');
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(1);
+  const [save] = await hostLogs(page, 'save-items');
+  expect(save.text).toBe(note.replace('# T', '# T!'));
+});
+
 test('math renders with KaTeX, inline and in blocks', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));

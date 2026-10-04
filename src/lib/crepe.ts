@@ -17,6 +17,7 @@ import { frontmatter } from './frontmatter';
 import { preserveSyntaxOnSave, syntaxDecorations } from './markdownSyntax';
 import { search } from 'prosemirror-search';
 import { $prose } from '@milkdown/kit/utils';
+import { imageNullFields, keepImageAlt } from './imageMarkdown';
 
 // Latex pulls KaTeX in (about 90 KB gzipped plus fonts); it is split into
 // its own chunk, and the import starts right away so it is usually loaded
@@ -58,6 +59,8 @@ async function createCrepe(
   // Syntaxes the commonmark/GFM presets would mangle on save.
   crepe.editor
     .config(preserveSyntaxOnSave)
+    .config(keepImageAlt)
+    .use(imageNullFields)
     .use(frontmatter)
     .use(syntaxDecorations)
     .use(searchPlugin);
