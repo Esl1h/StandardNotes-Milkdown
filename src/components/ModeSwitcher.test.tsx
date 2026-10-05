@@ -32,6 +32,7 @@ function setup(overrides: Partial<React.ComponentProps<typeof ModeSwitcher>> = {
     onTopbarChange: vi.fn(),
     onTopbarPositionChange: vi.fn(),
     onCopy: vi.fn().mockResolvedValue(true),
+    onExportHtml: vi.fn() as (() => void) | null,
     outline: false,
     onOutlineChange: vi.fn(),
     onSearch: vi.fn(),
@@ -58,11 +59,26 @@ describe('on a wide bar', () => {
     mockViewport(false);
   });
 
+  it('exports the note as HTML from its own button', () => {
+    const props = setup();
+
+    fireEvent.click(screen.getByTitle('Export as HTML'));
+
+    expect(props.onExportHtml).toHaveBeenCalledTimes(1);
+  });
+
+  it('has no HTML export button where there is no rendered note', () => {
+    setup({ onExportHtml: null });
+
+    expect(screen.queryByTitle('Export as HTML')).not.toBeInTheDocument();
+  });
+
   it('shows every action inline and has no overflow menu', () => {
     setup();
 
     expect(screen.getByTitle('Copy the note as Markdown')).toBeInTheDocument();
     expect(screen.getByTitle('Print the note')).toBeInTheDocument();
+    expect(screen.getByTitle('Export as HTML')).toBeInTheDocument();
     expect(screen.getByTitle('Show or hide the fixed formatting bar')).toBeInTheDocument();
     expect(
       screen.getByTitle('The bar sticks to the top; click to move it to the bottom')
@@ -98,6 +114,7 @@ describe('on a narrow bar', () => {
     expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
       'Copy as Markdown',
       'Print',
+      'Export as HTML',
       'Hide the formatting bar',
       'Move the bar to the bottom',
     ]);
@@ -136,6 +153,23 @@ describe('on a narrow bar', () => {
     openMore();
     fireEvent.click(screen.getByRole('menuitem', { name: 'Move the bar to the bottom' }));
     expect(props.onTopbarPositionChange).toHaveBeenCalledWith('bottom');
+  });
+
+  it('exports from the menu and closes it', () => {
+    const props = setup();
+    openMore();
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Export as HTML' }));
+
+    expect(props.onExportHtml).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menuitem')).not.toBeInTheDocument();
+  });
+
+  it('offers no HTML export where there is no rendered note', () => {
+    setup({ onExportHtml: null });
+    openMore();
+
+    expect(screen.queryByRole('menuitem', { name: 'Export as HTML' })).not.toBeInTheDocument();
   });
 
   it('offers no bar position while the bar is off', () => {

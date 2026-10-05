@@ -28,6 +28,8 @@ import {
 } from '../lib/layout';
 import { formatCount, type TextStats } from '../lib/wordCount';
 import { copyText } from '../lib/clipboard';
+import { downloadFile } from '../lib/download';
+import { exportFileName, htmlDocument, noteHtml } from '../lib/exportHtml';
 
 interface MilkdownEditorProps {
   rawText: string;
@@ -110,6 +112,19 @@ function MilkdownEditor(props: MilkdownEditorProps) {
     }
   };
 
+  /** Saves the rendered note as a page of its own, named after its title. */
+  const exportHtml = () => {
+    if (!proseView) {
+      return;
+    }
+    const title = headings[0]?.text ?? '';
+    downloadFile(
+      htmlDocument(title || 'Note', noteHtml(proseView)),
+      exportFileName(title),
+      'text/html'
+    );
+  };
+
   const changeMode = (next: Mode) => {
     setMode(next);
     writeMode(next);
@@ -152,6 +167,7 @@ function MilkdownEditor(props: MilkdownEditorProps) {
           onTopbarChange={changeTopbar}
           onTopbarPositionChange={changeTopbarPosition}
           onCopy={() => copyText(rawText)}
+          onExportHtml={mode === 'source' ? null : exportHtml}
           onSearch={openSearch}
           outline={mode === 'source' ? null : outline}
           onOutlineChange={changeOutline}
