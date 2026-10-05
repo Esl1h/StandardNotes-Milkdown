@@ -547,3 +547,21 @@ test('a wide bar keeps every action inline', async ({ page }) => {
   await expect(plugin.getByTitle('Print the note')).toBeVisible();
   await expect(plugin.getByRole('button', { name: 'More actions' })).toHaveCount(0);
 });
+
+test('the outline also lists headings inside quotes and lists', async ({ page }) => {
+  const plugin = await openHost(page, {
+    text: '# Top\n\n> ## Quoted\n\n- ### Listed\n\nplain\n',
+  });
+  await plugin.getByTitle('Show the outline').click();
+  const items = plugin.locator('.outline li');
+  await expect(items).toHaveText(['Top', 'Quoted', 'Listed']);
+  await expect(items.nth(1)).toHaveClass(/outline-level-2/);
+  await expect(items.nth(2)).toHaveClass(/outline-level-3/);
+
+  // The jump puts the cursor in the quoted heading.
+  await items.nth(1).locator('button').click();
+  await page.keyboard.type('!');
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(1);
+  const [save] = await hostLogs(page, 'save-items');
+  expect(save.text).toContain('> ## !Quoted');
+});

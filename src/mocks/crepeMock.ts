@@ -50,6 +50,7 @@ class FakeCrepe {
           content: { size: markdown.length },
           textBetween: () => markdown,
           forEach: () => undefined,
+          descendants: () => undefined,
         },
         selection: { empty: true },
       },
