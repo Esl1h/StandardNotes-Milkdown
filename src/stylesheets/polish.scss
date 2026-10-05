@@ -98,3 +98,49 @@
     transition: none !important;
   }
 }
+
+// ---------- Typography ----------
+.crepe-container .milkdown .editor {
+  margin-inline: auto;
+  max-width: 920px;
+}
+
+.crepe-container .milkdown .editor p {
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.crepe-container .milkdown .editor :is(h1, h2, h3) {
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.crepe-container .milkdown .editor h1 {
+  font-weight: 700;
+}
+
+.crepe-container .milkdown .editor :is(h2, h3) {
+  font-weight: 600;
+}
+
+.crepe-container .milkdown .editor a {
+  text-decoration-color: color-mix(in srgb, var(--ed-accent) 45%, transparent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.crepe-container .milkdown .editor a:hover {
+  text-decoration-color: var(--ed-accent);
+}
+
+.crepe-container .milkdown .editor hr {
+  // Crepe draws the rule as a 1px content box (padding + background-clip);
+  // only the image changes, so that geometry is kept.
+  background-color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--crepe-color-outline) 60%, transparent),
+    transparent
+  );
+}
