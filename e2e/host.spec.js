@@ -519,3 +519,31 @@ test.describe('narrow screens', () => {
     expect(crepe.width).toBeGreaterThan(350);
   });
 });
+
+test.describe('narrow bar', () => {
+  test.use({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true });
+
+  test('the secondary actions live in a menu', async ({ page }) => {
+    const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+    await expect(plugin.locator('.milkdown-top-bar')).toBeVisible();
+    await expect(plugin.getByTitle('Print the note')).toHaveCount(0);
+
+    await plugin.getByRole('button', { name: 'More actions' }).click();
+    await expect(plugin.getByRole('menuitem')).toHaveCount(4);
+    await plugin.getByRole('menuitem', { name: 'Hide the formatting bar' }).click();
+
+    await expect(plugin.locator('.milkdown-top-bar')).toHaveCount(0);
+    await expect(plugin.getByRole('menuitem')).toHaveCount(0);
+    // Every button of the bar is within the screen.
+    const box = await plugin.locator('.mode-switcher').boundingBox();
+    const last = await plugin.getByTitle('Hide the layout bar').boundingBox();
+    expect(last.x + last.width).toBeLessThanOrEqual(box.x + box.width);
+  });
+});
+
+test('a wide bar keeps every action inline', async ({ page }) => {
+  const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+
+  await expect(plugin.getByTitle('Print the note')).toBeVisible();
+  await expect(plugin.getByRole('button', { name: 'More actions' })).toHaveCount(0);
+});
