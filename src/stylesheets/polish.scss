@@ -215,3 +215,33 @@
   text-decoration: line-through;
   text-decoration-color: color-mix(in srgb, var(--ed-accent) 60%, transparent);
 }
+
+// ---------- Tables ----------
+.crepe-container .milkdown .milkdown-table-block table {
+  border: 1px solid color-mix(in srgb, var(--crepe-color-outline) 35%, transparent);
+  border-collapse: separate;
+  border-radius: 10px;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.crepe-container .milkdown .milkdown-table-block :is(th, td) {
+  border-width: 0 0 1px 0;
+  border-color: color-mix(in srgb, var(--crepe-color-outline) 25%, transparent);
+}
+
+.crepe-container .milkdown .milkdown-table-block tr:last-child td {
+  border-bottom: none;
+}
+
+.crepe-container .milkdown .milkdown-table-block th {
+  background: var(--crepe-color-surface);
+  color: var(--crepe-color-on-surface-variant);
+  font-size: 0.8em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.crepe-container .milkdown .milkdown-table-block tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--crepe-color-surface) 50%, transparent);
+}
