@@ -18,6 +18,11 @@ function countText(text: string): Count {
   return { words, characters: text.length };
 }
 
+/** Minutes to read `words` at 200 words a minute; 0 for an empty note. */
+function readingMinutes(words: number): number {
+  return Math.ceil(words / 200);
+}
+
 function formatCount(total: Count, selection: Count | null): { label: string; title: string } {
   if (selection) {
     return {
@@ -25,11 +30,16 @@ function formatCount(total: Count, selection: Count | null): { label: string; ti
       title: `${selection.characters} of ${total.characters} characters`,
     };
   }
+  const label = `${total.words} ${total.words === 1 ? 'word' : 'words'}`;
+  const minutes = readingMinutes(total.words);
+  if (minutes === 0) {
+    return { label, title: `${total.characters} characters` };
+  }
   return {
-    label: `${total.words} ${total.words === 1 ? 'word' : 'words'}`,
-    title: `${total.characters} characters`,
+    label: `${label} · ${minutes} min`,
+    title: `${total.characters} characters, about ${minutes} min to read`,
   };
 }
 
 export type { Count, TextStats };
-export { countText, formatCount };
+export { countText, formatCount, readingMinutes };

@@ -103,12 +103,16 @@ describe('MilkdownEditor', () => {
   it('shows the word count in the formatting bar, else in the icon bar', async () => {
     const { view } = setup('# Hello brave world');
     await waitFor(() =>
-      expect(document.querySelector('.milkdown-top-bar .word-count')?.textContent).toBe('3 words')
+      expect(document.querySelector('.milkdown-top-bar .word-count')?.textContent).toBe(
+        '3 words · 1 min'
+      )
     );
 
     fireEvent.click(view.getByTitle('Show or hide the fixed formatting bar'));
     await waitFor(() =>
-      expect(document.querySelector('.mode-switcher .word-count')?.textContent).toBe('3 words')
+      expect(document.querySelector('.mode-switcher .word-count')?.textContent).toBe(
+        '3 words · 1 min'
+      )
     );
 
     fireEvent.click(view.getByTitle('Hide the layout bar'));
