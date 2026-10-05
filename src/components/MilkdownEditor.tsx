@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { type EditorView as ProseView } from '@milkdown/kit/prose/view';
 import { type EditorView as SourceEditorView } from '@codemirror/view';
 import { openSearchPanel } from '@codemirror/search';
-import { TextSelection } from '@milkdown/kit/prose/state';
 import CrepeView from './CrepeView';
-import { type Heading } from '../lib/headings';
+import { type Heading, showHeading } from '../lib/headings';
 import Outline from './Outline';
 import SourceView from './SourceView';
 import ModeSwitcher, { ShowLayoutBarButton } from './ModeSwitcher';
@@ -81,20 +80,11 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   // The outline needs the rendered document; source mode has none.
   const outlineShown = outline && mode !== 'source';
 
-  /** Scrolls the heading to the top of the pane and puts the cursor in it. */
   const goToHeading = (heading: Heading) => {
     if (!proseView) {
       return;
     }
-    const dom = proseView.nodeDOM(heading.pos);
-    if (dom instanceof HTMLElement) {
-      dom.scrollIntoView({ block: 'start' });
-    }
-    const { state } = proseView;
-    proseView.dispatch(
-      state.tr.setSelection(TextSelection.near(state.doc.resolve(heading.pos + 1)))
-    );
-    proseView.focus();
+    showHeading(proseView, heading);
     // On narrow screens the outline covers the note: get out of the way.
     if (window.matchMedia('(max-width: 899px)').matches) {
       changeOutline(false);

@@ -66,7 +66,11 @@ describe('noteHtml', () => {
         group: 'block',
         content: 'text*',
         attrs: { level: { default: 1 } },
-        toDOM: (node) => [`h${node.attrs.level}`, 0],
+        toDOM: (node) => [
+          `h${node.attrs.level}`,
+          { id: node.textContent.toLowerCase().replace(/\s+/g, '-') },
+          0,
+        ],
       },
       frontmatter: {
         group: 'block',
@@ -104,7 +108,7 @@ describe('noteHtml', () => {
           schema.text(' word & <tag>')
         )
       )
-    ).toBe('<h2>Title</h2><p>a <strong>bold</strong> word &amp; &lt;tag&gt;</p>');
+    ).toBe('<h2 id="title">Title</h2><p>a <strong>bold</strong> word &amp; &lt;tag&gt;</p>');
   });
 
   it('leaves the front matter out of the page', () => {
@@ -119,6 +123,29 @@ describe('noteHtml', () => {
   it('keeps the MathML of a formula and drops the HTML that needs KaTeX styles', () => {
     expect(html(paragraph(schema.text('E '), schema.node('math')))).toBe(
       '<p>E <span class="katex"><span class="katex-mathml">x2</span></span></p>'
+    );
+  });
+
+  it('turns a [TOC] line into links to the headings', () => {
+    const page = html(
+      schema.node('heading', { level: 1 }, [schema.text('One')]),
+      paragraph(schema.text('[TOC]')),
+      schema.node('heading', { level: 2 }, [schema.text('Two parts')])
+    );
+
+    expect(page).toBe(
+      '<h1 id="one">One</h1>' +
+        '<nav class="toc" aria-label="Table of contents"><ul>' +
+        '<li class="toc-level-1"><a href="#one">One</a></li>' +
+        '<li class="toc-level-2"><a href="#two-parts">Two parts</a></li>' +
+        '</ul></nav>' +
+        '<h2 id="two-parts">Two parts</h2>'
+    );
+  });
+
+  it('leaves a [TOC] line without headings as an empty list', () => {
+    expect(html(paragraph(schema.text('[TOC]')))).toBe(
+      '<nav class="toc" aria-label="Table of contents"></nav>'
     );
   });
 

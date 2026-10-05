@@ -431,6 +431,47 @@
 
 // Outline: a column at the right of the panes on wide screens, a drawer
 // over the note on narrow ones.
+// The table of contents drawn under a [TOC] line.
+.toc-marker {
+  color: var(--sn-stylekit-neutral-color);
+  font-size: 0.8rem;
+}
+
+.toc-list {
+  border-left: 3px solid var(--sn-stylekit-border-color);
+  color: var(--sn-stylekit-neutral-color);
+  font-family: var(--sn-stylekit-sans-serif-font, sans-serif);
+  font-size: 0.9rem;
+  margin: 0 0 1em;
+  padding: 4px 12px;
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  button {
+    background: none;
+    border: none;
+    color: var(--sn-stylekit-info-color);
+    cursor: pointer;
+    font: inherit;
+    padding: 2px 0;
+    text-align: left;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  @for $level from 2 through 6 {
+    .toc-level-#{$level} {
+      padding-left: ($level - 1) * 1rem;
+    }
+  }
+}
+
 .outline {
   background-color: var(--sn-stylekit-contrast-background-color);
   border-left: 1px solid var(--sn-stylekit-border-color);
