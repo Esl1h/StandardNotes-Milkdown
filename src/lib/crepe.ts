@@ -15,6 +15,7 @@ import { embedImage } from './image';
 import { renderMermaidPreview } from './mermaid';
 import { frontmatter } from './frontmatter';
 import { preserveSyntaxOnSave, syntaxDecorations } from './markdownSyntax';
+import { activeBlock } from './activeBlock';
 import { search } from 'prosemirror-search';
 import { $prose } from '@milkdown/kit/utils';
 import { imageNullFields, keepImageAlt } from './imageMarkdown';
@@ -65,6 +66,7 @@ async function createCrepe(
     .use(frontmatter)
     .use(syntaxDecorations)
     .use(tocDecorations)
+    .use(activeBlock)
     .use(searchPlugin);
   return withTopBar ? crepe.addFeature(topBar) : crepe;
 }
