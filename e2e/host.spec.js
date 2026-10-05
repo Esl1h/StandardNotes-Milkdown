@@ -227,7 +227,7 @@ test('the bottom bar stays pinned while a long note scrolls', async ({ page }) =
 test('the word count sits in the formatting bar and counts the selection', async ({ page }) => {
   const plugin = await openHost(page, { text: '# Title\n\nOne two three\n' });
   const count = plugin.locator('.milkdown-top-bar .word-count');
-  await expect(count).toHaveText('4 words');
+  await expect(count).toHaveText('4 words · 1 min');
 
   await plugin.locator('.milkdown .editor p').dblclick();
   await expect(count).toHaveText('1 of 4 words');
@@ -235,7 +235,7 @@ test('the word count sits in the formatting bar and counts the selection', async
   await plugin.locator('.milkdown .editor p').click();
   await page.keyboard.press('End');
   await page.keyboard.type(' four');
-  await expect(count).toHaveText('5 words');
+  await expect(count).toHaveText('5 words · 1 min');
 });
 
 test('the word count falls back to the icon bar', async ({ page }) => {
@@ -243,11 +243,11 @@ test('the word count falls back to the icon bar', async ({ page }) => {
   await expect(plugin.locator('.milkdown-top-bar .word-count')).toBeVisible();
 
   await plugin.getByTitle('Show or hide the fixed formatting bar').click();
-  await expect(plugin.locator('.mode-switcher .word-count')).toHaveText('4 words');
+  await expect(plugin.locator('.mode-switcher .word-count')).toHaveText('4 words · 1 min');
 
   await plugin.getByTitle('Show or hide the fixed formatting bar').click();
   await plugin.getByTitle('Edit the Markdown source only').click();
-  await expect(plugin.locator('.mode-switcher .word-count')).toHaveText('4 words');
+  await expect(plugin.locator('.mode-switcher .word-count')).toHaveText('4 words · 1 min');
 
   await plugin.getByTitle('Hide the layout bar').click();
   await expect(plugin.locator('.word-count')).toHaveCount(0);
