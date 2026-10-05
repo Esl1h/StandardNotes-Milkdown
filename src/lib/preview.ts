@@ -14,7 +14,7 @@ function truncatePreview(text: string): string {
  * (embedded ones are data URIs hundreds of KB long), no front matter. */
 function markdownPreview(markdown: string): string {
   const text = markdown
-    .replace(/^---\n[\s\S]*?\n---\n/, '')
+    .replace(/^(---|\+\+\+)\n[\s\S]*?\n\1\n/, '')
     .replace(/^\s*(```|~~~).*$/gm, '')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
