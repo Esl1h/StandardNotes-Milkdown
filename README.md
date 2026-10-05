@@ -20,23 +20,18 @@ plugin only changes how you edit them.
 2. A floating toolbar on the selection, a `/` slash menu and drag handles
    to add and move blocks
 3. Math with KaTeX: `$inline$` formulas and `$$` blocks
-4. Diagrams: ```` ```mermaid ```` code blocks show a live preview of the
-   diagram, while the note keeps its source
+4. Diagrams: ```` ```mermaid ```` code blocks show a live preview of the diagram, while the note keeps its source; the diagrams follow a change of the app theme without reopening the note
 5. Images uploaded, pasted or dropped are embedded in the note; large ones
    are scaled down so the note stays light
 6. Three modes, switched from the icon bar at the top: **Visual**,
    **Split** (the Markdown source next to the visual editor, side by side
    or stacked) and **Source** (a plain CodeMirror pane for fine grained
    edits)
-7. An optional fixed formatting bar, at the top or the bottom of the
-   editor, with a word count at its right end (`12 of 132 words` while
-   text is selected)
-8. **Copy as Markdown** and **Print** buttons in the icon bar; printing
-   shows only the rendered note
+7. An optional fixed formatting bar, at the top or the bottom of the editor, with a word count and the reading time at its right end (`132 words · 1 min`, or `12 of 132 words` while text is selected)
+8. **Copy as Markdown**, **Print** and **Export as HTML** buttons in the icon bar; printing shows only the rendered note, and the export saves it as a page of its own (light or dark by the system, named after the first heading; the front matter is left out and a diagram is saved as its code). Below 520 px of width these actions, and the formatting bar settings, move into a `...` menu
 9. Find and replace (`Ctrl/Cmd+F` or the search button), with highlighted
    matches and a `2/7` count; source mode uses CodeMirror's own search
-10. An outline of the note's headings in a side panel, to jump around long
-    notes
+10. An outline of the note's headings in a side panel, to jump around long notes; headings inside quotes and lists are listed too
 11. The icon bar itself folds away with the `>` button at its right end,
     leaving only a small `<` in the corner to bring it back. Layout choices
     are saved with the editor in your Standard Notes account
@@ -115,15 +110,14 @@ graph LR
   - tables are padded with spaces and their alignment row is rewritten
   - a stray `*` is escaped (`5\*3`) and a bare URL gets angle brackets (`<https://...>`)
   - block HTML gets a blank line before its closing tag
-- Footnotes, inline HTML, ordered lists that start at a number other than 1, inline math, `__bold__` and `_italic_`, front matter and wiki links are kept as written
+- Footnotes, inline HTML, ordered lists that start at a number other than 1, inline math, `__bold__` and `_italic_`, front matter, wiki links and the `[TOC]` line are kept as written
 - Images are either links (`![](https://...)`), loaded from their host,
   or embedded as data URIs when uploaded, pasted or dropped. Embedded
   images up to 500 KB go in as they are; larger ones are scaled down and
   recompressed, since the note syncs to every device
 - Images keep their alt text and title when the note is edited. One limit: Crepe stores the resize ratio of an image in its alt text, so resizing an image that has alt text replaces the alt with the ratio (for example `![0.50](https://...)`)
-- YAML front matter, GitHub alerts (`> [!NOTE]`, rendered as colored
-  callouts) and `[[wiki links]]` are kept exactly as written, so notes
-  imported from GitHub, Obsidian, Jekyll or Hugo are not rewritten
+- YAML front matter (between `---` fences), TOML front matter (between `+++` fences), GitHub alerts (`> [!NOTE]`, rendered as colored callouts) and `[[wiki links]]` are kept exactly as written, so notes imported from GitHub, Obsidian, Jekyll or Hugo are not rewritten
+- A line that says only `[TOC]` is a table of contents: add it from the `/` menu (**Table of contents**) and the editor draws a live list of the headings under it, each one a link. The note keeps just the `[TOC]` line, which Typora, GitLab and other Markdown tools read the same way
 - Math uses the `$...$` / `$$...$$` syntax and diagrams the ```` ```mermaid ````
   fence, both understood by GitHub, Obsidian and most Markdown tools
 
