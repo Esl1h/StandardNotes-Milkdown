@@ -401,6 +401,15 @@ test('YAML front matter survives editing the note', async ({ page }) => {
   expect(saved).toBe(`${frontMatter}\nBody text.!\n`);
 });
 
+test('TOML front matter survives editing the note', async ({ page }) => {
+  const frontMatter = '+++\ntitle = "Trip"\ntags = ["travel", 2026]\n+++\n';
+  const plugin = await openHost(page, { text: `${frontMatter}\nBody text.\n` });
+  await expect(plugin.locator('.milkdown .editor .frontmatter')).toContainText('title = "Trip"');
+
+  const saved = await editLastParagraph(page, plugin);
+  expect(saved).toBe(`${frontMatter}\nBody text.!\n`);
+});
+
 test('GitHub alerts render as callouts and keep their marker', async ({ page }) => {
   const text = '# T\n\n> [!WARNING]\n> Mind the gap.\n\n> Plain quote.\n\nBody text.\n';
   const plugin = await openHost(page, { text });

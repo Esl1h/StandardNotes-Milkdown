@@ -13,6 +13,14 @@ describe('markdownPreview', () => {
     expect(markdownPreview('---\ntitle: x\n---\n\n# Hello')).toBe('Hello');
   });
 
+  it('skips TOML front matter too', () => {
+    expect(markdownPreview('+++\ntitle = "x"\n+++\n\n# Hello')).toBe('Hello');
+  });
+
+  it('does not take a lone +++ line for front matter', () => {
+    expect(markdownPreview('+++\ntext')).toBe('+++ text');
+  });
+
   it('keeps the text of headings, emphasis and links', () => {
     expect(markdownPreview('# Title\n\n**bold** [link](https://e.com)')).toBe('Title bold link');
   });

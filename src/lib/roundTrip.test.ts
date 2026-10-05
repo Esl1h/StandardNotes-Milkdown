@@ -50,6 +50,7 @@ describe('syntaxes that survive unchanged', () => {
     ['inline math', 'Energy $E=mc^2$ inline\n'],
     ['underscore emphasis', '__bold__ and _italic_\n'],
     ['front matter', '---\ntitle: x\n---\n\n# Hello\n'],
+    ['TOML front matter', '+++\ntitle = "x"\ntags = ["a", "b"]\n+++\n\n# Hello\n'],
     ['wiki links', '[[Note]] and [[Other]]\n'],
   ])(
     '%s',
