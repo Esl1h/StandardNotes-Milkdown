@@ -181,3 +181,37 @@
 .crepe-container .milkdown .milkdown-slash-menu .menu-groups li.hover {
   background: color-mix(in srgb, var(--ed-accent) 12%, transparent);
 }
+
+// ---------- Task list ----------
+.crepe-container .milkdown .milkdown-list-item-block li .label-wrapper .cb-box {
+  fill: none;
+  stroke: var(--crepe-color-outline);
+  stroke-width: 1.6;
+}
+
+.crepe-container .milkdown .milkdown-list-item-block li .label-wrapper .checked .cb-box {
+  fill: var(--ed-accent);
+  stroke: var(--ed-accent);
+}
+
+.crepe-container .milkdown .milkdown-list-item-block li .label-wrapper .cb-check {
+  animation: ed-check 180ms var(--ed-ease);
+  fill: none;
+  stroke: var(--crepe-color-on-primary);
+  stroke-dasharray: 14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+@keyframes ed-check {
+  from {
+    stroke-dashoffset: 14;
+  }
+}
+
+.crepe-container .milkdown .milkdown-list-item-block li:has(> .label-wrapper .checked) > .children {
+  color: var(--crepe-color-on-surface-variant);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--ed-accent) 60%, transparent);
+}

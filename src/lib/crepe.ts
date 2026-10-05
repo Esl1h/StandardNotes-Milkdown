@@ -21,6 +21,12 @@ import { $prose } from '@milkdown/kit/utils';
 import { imageNullFields, keepImageAlt } from './imageMarkdown';
 import { addTocMenuItem, tocDecorations } from './toc';
 
+// Task list boxes drawn as rounded squares; polish.scss colors the parts.
+const CHECKBOX_UNCHECKED =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect class="cb-box" x="4" y="4" width="16" height="16" rx="5"/></svg>';
+const CHECKBOX_CHECKED =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect class="cb-box" x="4" y="4" width="16" height="16" rx="5"/><path class="cb-check" d="M8 12.5l2.6 2.6L16 9.5"/></svg>';
+
 // Latex pulls KaTeX in (about 90 KB gzipped plus fonts); it is split into
 // its own chunk, and the import starts right away so it is usually loaded
 // by the time Standard Notes has streamed the note in.
@@ -46,7 +52,10 @@ async function createCrepe(
   const { latex } = await latexFeature;
   const crepe = new CrepeBuilder({ root, defaultValue })
     .addFeature(cursor)
-    .addFeature(listItem)
+    .addFeature(listItem, {
+      checkBoxUncheckedIcon: CHECKBOX_UNCHECKED,
+      checkBoxCheckedIcon: CHECKBOX_CHECKED,
+    })
     .addFeature(linkTooltip)
     // Uploads (button, paste, drop) are embedded as data URIs: without it
     // Crepe stores a blob: URL that is gone once the note is reopened.

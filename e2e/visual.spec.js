@@ -48,3 +48,9 @@ test('the block holding the cursor is marked active, without saving', async ({ p
   await page.waitForTimeout(800);
   expect(await hostLogs(page, 'save-items')).toHaveLength(0);
 });
+
+test('task boxes are drawn with the custom icons', async ({ page }) => {
+  const plugin = await openHost(page, { text: '- [x] done\n- [ ] open\n' });
+  await expect(plugin.locator('.milkdown-list-item-block .label.checked .cb-check')).toHaveCount(1);
+  await expect(plugin.locator('.milkdown-list-item-block .label.unchecked .cb-box')).toHaveCount(1);
+});
