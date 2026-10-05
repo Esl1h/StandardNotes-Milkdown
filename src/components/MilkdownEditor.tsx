@@ -24,6 +24,8 @@ import {
   writeLayoutBar,
   readOutline,
   writeOutline,
+  readFocusMode,
+  writeFocusMode,
 } from '../lib/layout';
 import { formatCount, type TextStats } from '../lib/wordCount';
 import { copyText } from '../lib/clipboard';
@@ -65,6 +67,7 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [outline, setOutline] = useState<boolean>(() => readOutline());
   const [headings, setHeadings] = useState<Heading[]>([]);
+  const [focusMode, setFocusMode] = useState<boolean>(() => readFocusMode());
   // A search belongs to one note's editor instance; a note switch closes it.
   const [searchEpoch, setSearchEpoch] = useState(historyEpoch);
   if (searchEpoch !== historyEpoch) {
@@ -132,6 +135,11 @@ function MilkdownEditor(props: MilkdownEditorProps) {
     writeTopbarPosition(next);
   };
 
+  const changeFocusMode = (next: boolean) => {
+    setFocusMode(next);
+    writeFocusMode(next);
+  };
+
   const changeLayoutBar = (next: boolean) => {
     setLayoutBar(next);
     writeLayoutBar(next);
@@ -145,7 +153,11 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   const countInTopBar = topbar && mode !== 'source';
 
   return (
-    <div className={`milkdown-app mode-${mode}${layoutBar ? '' : ' layout-bar-hidden'}`}>
+    <div
+      className={`milkdown-app mode-${mode}${layoutBar ? '' : ' layout-bar-hidden'}${
+        focusMode ? ' focus-mode' : ''
+      }`}
+    >
       {layoutBar ? (
         <ModeSwitcher
           mode={mode}
@@ -161,6 +173,8 @@ function MilkdownEditor(props: MilkdownEditorProps) {
           onSearch={openSearch}
           outline={mode === 'source' ? null : outline}
           onOutlineChange={changeOutline}
+          focusMode={focusMode}
+          onFocusModeChange={changeFocusMode}
           onHide={() => changeLayoutBar(false)}
           trailing={
             <>

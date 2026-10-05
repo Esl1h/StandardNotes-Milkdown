@@ -12,6 +12,8 @@ import {
   writeLayoutBar,
   readOutline,
   writeOutline,
+  readFocusMode,
+  writeFocusMode,
   setPreferenceStore,
 } from './layout';
 
@@ -35,6 +37,9 @@ describe('layout preferences', () => {
     expect(readOutline()).toBe(false);
     writeOutline(true);
     expect(readOutline()).toBe(true);
+    expect(readFocusMode()).toBe(false);
+    writeFocusMode(true);
+    expect(readFocusMode()).toBe(true);
   });
 
   it('falls back to the defaults for unknown stored values', () => {
