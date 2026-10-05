@@ -144,3 +144,19 @@
     transparent
   );
 }
+
+// ---------- Icon bar ----------
+.mode-switcher {
+  gap: 2px;
+}
+
+.mode-switcher button {
+  border-radius: 8px;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.mode-switcher button.active {
+  background-color: color-mix(in srgb, var(--sn-stylekit-info-color) 14%, transparent);
+}
