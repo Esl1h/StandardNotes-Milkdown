@@ -410,6 +410,36 @@ test('mermaid diagrams follow a change of the app theme', async ({ page }) => {
   expect(pageErrors).toEqual([]);
 });
 
+/** The app switches to a dark theme: its stylesheet redefines the StyleKit colors. */
+async function applyDarkTheme(plugin) {
+  await plugin.locator('body').evaluate((body) => {
+    const style = body.ownerDocument.createElement('style');
+    style.textContent = `:root {
+      --sn-stylekit-background-color: #1b1b1f;
+      --sn-stylekit-foreground-color: #e6e6e6;
+      --sn-stylekit-contrast-background-color: #26262b;
+      --sn-stylekit-contrast-foreground-color: #dcdcdc;
+      --sn-stylekit-border-color: #44444c;
+    }`;
+    body.ownerDocument.head.appendChild(style);
+  });
+}
+
+test('the editor follows a change of the app theme', async ({ page }) => {
+  const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+  const surface = plugin.locator('.crepe-container .milkdown');
+  await expect(surface).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+
+  await applyDarkTheme(plugin);
+
+  await expect(surface).toHaveCSS('background-color', 'rgb(27, 27, 31)');
+  await expect(plugin.locator('.milkdown .editor > p').first()).toHaveCSS(
+    'color',
+    'rgb(230, 230, 230)'
+  );
+  expect(await hostLogs(page, 'save-items')).toHaveLength(0);
+});
+
 /** Types at the end of the last paragraph and returns the saved note. */
 async function editLastParagraph(page, plugin) {
   await plugin.locator('.milkdown .editor > p').last().click();
@@ -561,6 +591,20 @@ test.describe('narrow screens', () => {
     // Crepe's own 120px side padding would leave about a third of the 390px.
     const heading = await plugin.locator('.milkdown .editor h1').boundingBox();
     expect(heading.width).toBeGreaterThan(390 * 0.8);
+  });
+
+  test('the app theme covers the whole note, not just the first screen', async ({ page }) => {
+    const paragraphs = Array.from({ length: 60 }, (_, index) => `Paragraph ${index}`);
+    const plugin = await openHost(page, { text: paragraphs.join('\n\n') });
+    await applyDarkTheme(plugin);
+
+    const last = plugin.locator('.milkdown .editor p').last();
+    await last.scrollIntoViewIfNeeded();
+    const surface = await plugin.locator('.crepe-container .milkdown').boundingBox();
+    const text = await last.boundingBox();
+    // The surface carrying the theme reaches the end of the note.
+    expect(surface.y + surface.height).toBeGreaterThanOrEqual(text.y + text.height);
+    await expect(last).toHaveCSS('color', 'rgb(230, 230, 230)');
   });
 });
 
