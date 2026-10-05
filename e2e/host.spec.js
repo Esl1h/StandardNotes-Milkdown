@@ -611,6 +611,10 @@ test('the rendered note can be saved as an HTML page', async ({ page }) => {
       '',
       '# Trip plan',
       '',
+      '[TOC]',
+      '',
+      '## Packing',
+      '',
       'Pack **light**.',
       '',
       '- [x] tickets',
@@ -636,6 +640,10 @@ test('the rendered note can be saved as an HTML page', async ({ page }) => {
   expect(html).toContain('<h1 id="trip-plan">Trip plan</h1>');
   expect(html).toContain('<strong>light</strong>');
   expect(html).toContain('<td');
+  // The [TOC] line is a list of links to the headings.
+  expect(html).toContain('<nav class="toc"');
+  expect(html).toContain('<a href="#packing">Packing</a>');
+  expect(html).not.toContain('[TOC]');
   // None of the editor's own machinery, and none of the front matter.
   expect(html).not.toContain('contenteditable');
   expect(html).not.toContain('ProseMirror');
@@ -648,6 +656,8 @@ test('the rendered note can be saved as an HTML page', async ({ page }) => {
   await expect(page.locator('h1')).toHaveText('Trip plan');
   await expect(page.locator('table td').first()).toHaveText('shirt');
   await expect(page.locator('math')).toHaveCount(1);
+  await page.locator('nav.toc a', { hasText: 'Packing' }).click();
+  await expect(page).toHaveURL(/#packing$/);
 });
 
 test('there is no HTML export while only the source is shown', async ({ page }) => {
@@ -657,4 +667,39 @@ test('there is no HTML export while only the source is shown', async ({ page }) 
   await plugin.getByTitle('Edit the Markdown source only').click();
 
   await expect(plugin.getByTitle('Export as HTML')).toHaveCount(0);
+});
+
+test('a table of contents is added from the slash menu and follows the headings', async ({
+  page,
+}) => {
+  const plugin = await openHost(page, { text: '# One\n\ntext\n\n## Two\n\n' });
+  await expect(plugin.locator('.milkdown .editor h1')).toBeVisible();
+
+  // An empty line at the end of the note, then the slash menu.
+  await plugin.locator('.milkdown .editor h2').click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/Table of');
+  await plugin.locator('.milkdown-slash-menu').getByText('Table of contents').click();
+
+  const toc = plugin.locator('.milkdown .editor .toc-list');
+  await expect(toc.locator('li')).toHaveText(['One', 'Two']);
+  await expect(toc.locator('.toc-level-2')).toHaveCount(1);
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBeGreaterThan(0);
+  const saves = await hostLogs(page, 'save-items');
+  // The note holds the marker, plain and unescaped, not the list.
+  expect(saves.at(-1).text).toContain('\n[TOC]\n');
+  expect(saves.at(-1).text).not.toContain('\\[TOC');
+
+  // The list follows the headings.
+  await plugin.locator('.milkdown .editor h1').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' renamed');
+  await expect(toc.locator('li').first()).toHaveText('One renamed');
+
+  // A click on an entry takes the cursor to that heading.
+  await toc.getByRole('button', { name: 'Two' }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('!');
+  await expect(plugin.locator('.milkdown .editor h2')).toHaveText('Two!');
 });

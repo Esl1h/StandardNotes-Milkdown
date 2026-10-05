@@ -1,5 +1,6 @@
 import { DOMSerializer } from '@milkdown/kit/prose/model';
 import { type EditorView } from '@milkdown/kit/prose/view';
+import { isTocText } from './tocMarker';
 
 const STYLE = `
 :root { color-scheme: light dark; }
@@ -23,6 +24,12 @@ table { border-collapse: collapse; display: block; overflow-x: auto; }
 th, td { border: 1px solid rgba(127, 127, 127, 0.45); padding: 0.4rem 0.7rem; text-align: left; }
 th { background: rgba(127, 127, 127, 0.12); }
 hr { border: 0; border-top: 1px solid rgba(127, 127, 127, 0.45); margin: 2rem 0; }
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc-level-2 { padding-left: 1rem; }
+.toc-level-3 { padding-left: 2rem; }
+.toc-level-4 { padding-left: 3rem; }
+.toc-level-5 { padding-left: 4rem; }
+.toc-level-6 { padding-left: 5rem; }
 li > p, th > p, td > p { margin: 0.25em 0; }
 th > p, td > p { margin: 0; }
 li[data-item-type="task"] { display: flex; align-items: baseline; list-style: none; }
@@ -76,16 +83,45 @@ function exportFileName(title: string): string {
   return `${name || 'note'}.html`;
 }
 
+/** A list of links to the headings of `root`, which carry an id each. */
+function tocNav(root: ParentNode): HTMLElement {
+  const nav = document.createElement('nav');
+  nav.className = 'toc';
+  nav.setAttribute('aria-label', 'Table of contents');
+  const headings = Array.from(root.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6'));
+  if (headings.length === 0) {
+    return nav;
+  }
+  const list = document.createElement('ul');
+  for (const heading of headings) {
+    const item = document.createElement('li');
+    item.className = `toc-level-${heading.tagName.slice(1)}`;
+    const link = document.createElement('a');
+    link.href = `#${heading.id}`;
+    link.textContent = heading.textContent;
+    item.appendChild(link);
+    list.appendChild(item);
+  }
+  nav.appendChild(list);
+  return nav;
+}
+
 /** The note as the HTML its schema draws, taken from the rendered editor so
  * the Markdown is not parsed a second time. What is metadata or only works
  * with the editor's styles is left out: the front matter, the HTML half of
  * a KaTeX formula (its MathML stays, and browsers draw that themselves) and
- * the empty paragraphs the editor keeps. */
+ * the empty paragraphs the editor keeps. A [TOC] line becomes the list of
+ * links to the headings it stands for. */
 function noteHtml(view: Pick<EditorView, 'state'>): string {
   const serializer = DOMSerializer.fromSchema(view.state.schema);
   const holder = document.createElement('div');
   holder.appendChild(serializer.serializeFragment(view.state.doc.content));
   holder.querySelectorAll('pre.frontmatter, .katex-html, p:empty').forEach((node) => node.remove());
+  holder.querySelectorAll('p').forEach((paragraph) => {
+    if (isTocText(paragraph.textContent ?? '')) {
+      paragraph.replaceWith(tocNav(holder));
+    }
+  });
   return holder.innerHTML;
 }
 

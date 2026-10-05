@@ -1,4 +1,6 @@
 import { type Node } from '@milkdown/kit/prose/model';
+import { TextSelection } from '@milkdown/kit/prose/state';
+import { type EditorView } from '@milkdown/kit/prose/view';
 
 /** A heading of the document, for the outline. */
 interface Heading {
@@ -23,5 +25,16 @@ function headingsOf(doc: Node): Heading[] {
   return headings;
 }
 
+/** Scrolls the heading to the top of the pane and puts the cursor in it. */
+function showHeading(view: EditorView, heading: Heading): void {
+  const dom = view.nodeDOM(heading.pos);
+  if (dom instanceof HTMLElement) {
+    dom.scrollIntoView({ block: 'start' });
+  }
+  const { state } = view;
+  view.dispatch(state.tr.setSelection(TextSelection.near(state.doc.resolve(heading.pos + 1))));
+  view.focus();
+}
+
 export type { Heading };
-export { headingsOf };
+export { headingsOf, showHeading };

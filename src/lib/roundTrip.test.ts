@@ -52,6 +52,7 @@ describe('syntaxes that survive unchanged', () => {
     ['front matter', '---\ntitle: x\n---\n\n# Hello\n'],
     ['TOML front matter', '+++\ntitle = "x"\ntags = ["a", "b"]\n+++\n\n# Hello\n'],
     ['wiki links', '[[Note]] and [[Other]]\n'],
+    ['a table of contents marker', '# A\n\n[TOC]\n\n## B\n'],
   ])(
     '%s',
     async (_name, markdown) => {

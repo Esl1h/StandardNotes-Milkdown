@@ -18,6 +18,7 @@ import { preserveSyntaxOnSave, syntaxDecorations } from './markdownSyntax';
 import { search } from 'prosemirror-search';
 import { $prose } from '@milkdown/kit/utils';
 import { imageNullFields, keepImageAlt } from './imageMarkdown';
+import { addTocMenuItem, tocDecorations } from './toc';
 
 // Latex pulls KaTeX in (about 90 KB gzipped plus fonts); it is split into
 // its own chunk, and the import starts right away so it is usually loaded
@@ -49,7 +50,7 @@ async function createCrepe(
     // Uploads (button, paste, drop) are embedded as data URIs: without it
     // Crepe stores a blob: URL that is gone once the note is reopened.
     .addFeature(imageBlock, { onUpload: embedImage })
-    .addFeature(blockEdit)
+    .addFeature(blockEdit, { buildMenu: addTocMenuItem })
     .addFeature(placeholder, { text: 'Type / for commands' })
     .addFeature(toolbar)
     // Latex, added below, wraps this preview hook for its own blocks.
@@ -63,6 +64,7 @@ async function createCrepe(
     .use(imageNullFields)
     .use(frontmatter)
     .use(syntaxDecorations)
+    .use(tocDecorations)
     .use(searchPlugin);
   return withTopBar ? crepe.addFeature(topBar) : crepe;
 }

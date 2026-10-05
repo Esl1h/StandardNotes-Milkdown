@@ -8,7 +8,8 @@ import { Decoration, DecorationSet } from '@milkdown/kit/prose/view';
 
 /**
  * Syntaxes from other Markdown tools that CommonMark keeps as plain text:
- * GitHub alerts (`> [!NOTE]`) and wiki links (`[[Note]]`). The serializer
+ * GitHub alerts (`> [!NOTE]`), wiki links (`[[Note]]`) and the `[TOC]`
+ * marker of a table of contents. The serializer
  * escaped their opening bracket (`\[!NOTE]`, `\[\[Note]]`) on the first
  * edit, breaking them in GitHub and Obsidian. They stay plain text in the
  * document (typed alerts work too); the serializer drops the escape, and
@@ -19,6 +20,8 @@ const ALERT_MARKER = /^\[!(note|tip|important|warning|caution)\]/i;
 const ESCAPED_ALERT = /^(>[ \t]*)\\\[!(note|tip|important|warning|caution)\]/i;
 const WIKI_LINK = /\[\[[^[\]\n]+\]\]/g;
 const ESCAPED_WIKI_LINK = /\\\[\\\[([^[\]\n]+)\]\]/g;
+// A paragraph that is only the table of contents marker.
+const ESCAPED_TOC = /^\\\[(toc)\]$/i;
 
 /**
  * Wraps the serializer handlers. Milkdown passes its own handlers (text
@@ -39,7 +42,9 @@ function preserveSyntaxOnSave(ctx: Ctx): void {
         blockquote: (node, parent, state, info) =>
           quote(node, parent, state, info).replace(ESCAPED_ALERT, '$1[!$2]'),
         text: (node, parent, state, info) =>
-          text(node, parent, state, info).replace(ESCAPED_WIKI_LINK, '[[$1]]'),
+          text(node, parent, state, info)
+            .replace(ESCAPED_WIKI_LINK, '[[$1]]')
+            .replace(ESCAPED_TOC, '[$1]'),
       },
     };
   });
