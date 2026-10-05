@@ -159,9 +159,15 @@
   height: 100%;
 }
 
-.crepe-container,
-.crepe-container .milkdown {
+.crepe-container {
   height: 100%;
+}
+
+// The editor surface grows with the note, so its background and text color
+// cover what is below the first screen too; the pane is what scrolls. With a
+// fixed height only the first screen got the theme.
+.crepe-container .milkdown {
+  min-height: 100%;
 }
 
 // Two panes never fit on a phone: stack them (source on top, collapsible
