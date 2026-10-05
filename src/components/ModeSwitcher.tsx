@@ -17,6 +17,9 @@ interface ModeSwitcherProps {
   /** Whether the outline is open; null where it is not available. */
   outline: boolean | null;
   onOutlineChange: (open: boolean) => void;
+  /** Whether the focus mode dims every block but the active one. */
+  focusMode: boolean;
+  onFocusModeChange: (enabled: boolean) => void;
   /** Opens find and replace for the current mode. */
   onSearch: () => void;
   /** Collapses the whole bar into the ShowLayoutBarButton. */
@@ -93,6 +96,12 @@ const ICONS = {
     <Icon>
       <rect x="9" y="9" width="12" height="12" rx="2" />
       <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+    </Icon>
+  ),
+  focus: (
+    <Icon>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3" />
     </Icon>
   ),
   outline: (
@@ -251,6 +260,8 @@ function ModeSwitcher(props: ModeSwitcherProps) {
     onSearch,
     outline,
     onOutlineChange,
+    focusMode,
+    onFocusModeChange,
     onHide,
     trailing,
   } = props;
@@ -306,6 +317,19 @@ function ModeSwitcher(props: ModeSwitcherProps) {
       )}
       <span className="spacer" />
       {trailing}
+      {mode !== 'source' && (
+        <button
+          className={focusMode ? 'focus-button active' : 'focus-button'}
+          onClick={() => onFocusModeChange(!focusMode)}
+          title={
+            focusMode ? 'Turn the focus mode off' : 'Focus mode: dim all but the current block'
+          }
+          aria-label={focusMode ? 'Turn the focus mode off' : 'Focus mode'}
+          aria-pressed={focusMode}
+        >
+          {ICONS.focus}
+        </button>
+      )}
       {outline !== null && (
         <button
           className={outline ? 'outline-button active' : 'outline-button'}

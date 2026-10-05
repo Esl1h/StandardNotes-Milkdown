@@ -265,3 +265,19 @@
   border-radius: 10px;
   padding: 10px 14px;
 }
+
+// ---------- Focus mode ----------
+.milkdown-app.focus-mode
+  .crepe-container
+  .milkdown
+  .ProseMirror
+  > :not(.is-active):not(.ProseMirror-widget) {
+  opacity: 0.45;
+  transition: opacity 200ms var(--ed-ease);
+}
+
+@media print {
+  .milkdown-app.focus-mode .crepe-container .milkdown .ProseMirror > * {
+    opacity: 1 !important;
+  }
+}

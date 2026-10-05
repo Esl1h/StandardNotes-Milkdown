@@ -54,3 +54,19 @@ test('task boxes are drawn with the custom icons', async ({ page }) => {
   await expect(plugin.locator('.milkdown-list-item-block .label.checked .cb-check')).toHaveCount(1);
   await expect(plugin.locator('.milkdown-list-item-block .label.unchecked .cb-box')).toHaveCount(1);
 });
+
+test('the focus mode dims all but the active block and is remembered', async ({ page }) => {
+  const plugin = await openHost(page, { text: NOTE });
+  const paragraphs = plugin.locator('.milkdown .editor p');
+  await paragraphs.nth(1).click();
+
+  await plugin.locator('.focus-button').click();
+  await expect(plugin.locator('.milkdown-app')).toHaveClass(/focus-mode/);
+  await expect(paragraphs.nth(0)).toHaveCSS('opacity', '0.45');
+  await expect(paragraphs.nth(1)).toHaveCSS('opacity', '1');
+  await expect.poll(() => page.evaluate(() => window.componentData['focus-mode'])).toBe('true');
+
+  await plugin.locator('.focus-button').click();
+  await expect(plugin.locator('.milkdown-app')).not.toHaveClass(/focus-mode/);
+  await expect(paragraphs.nth(0)).toHaveCSS('opacity', '1');
+});

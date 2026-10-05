@@ -35,6 +35,8 @@ function setup(overrides: Partial<React.ComponentProps<typeof ModeSwitcher>> = {
     onExportHtml: vi.fn() as (() => void) | null,
     outline: false,
     onOutlineChange: vi.fn(),
+    focusMode: false,
+    onFocusModeChange: vi.fn(),
     onSearch: vi.fn(),
     onHide: vi.fn(),
     ...overrides,

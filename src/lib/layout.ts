@@ -23,6 +23,7 @@ const DEFAULT_TOPBAR = true;
 const DEFAULT_TOPBAR_POSITION: TopbarPosition = 'top';
 const DEFAULT_LAYOUT_BAR = true;
 const DEFAULT_OUTLINE = false;
+const DEFAULT_FOCUS_MODE = false;
 
 const STORAGE_PREFIX = 'standardnotes-milkdown';
 
@@ -129,6 +130,14 @@ function writeOutline(open: boolean): void {
   writeStored('outline', String(open));
 }
 
+function readFocusMode(): boolean {
+  return readStoredBoolean('focus-mode', DEFAULT_FOCUS_MODE);
+}
+
+function writeFocusMode(enabled: boolean): void {
+  writeStored('focus-mode', String(enabled));
+}
+
 export type { Mode, Orientation, TopbarPosition, PreferenceStore };
 export {
   DEFAULT_MODE,
@@ -149,4 +158,6 @@ export {
   writeLayoutBar,
   readOutline,
   writeOutline,
+  readFocusMode,
+  writeFocusMode,
 };
