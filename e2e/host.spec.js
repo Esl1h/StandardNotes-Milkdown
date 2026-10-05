@@ -383,6 +383,32 @@ test('mermaid code blocks render as diagrams', async ({ page }) => {
   expect(pageErrors).toEqual([]);
 });
 
+test('mermaid diagrams follow a change of the app theme', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const plugin = await openHost(page, {
+    text: '# Flow\n\n```mermaid\ngraph TD\n  Start --> Finish\n```\n',
+  });
+  const diagram = plugin.locator('.milkdown-code-block .preview svg');
+  await expect(diagram).toBeVisible({ timeout: 15000 });
+  const light = await diagram.getAttribute('id');
+  const lightStyle = await diagram.locator('style').innerHTML();
+
+  // The app switches to a dark theme: a stylesheet turns the page dark.
+  await plugin.locator('body').evaluate((body) => {
+    const style = body.ownerDocument.createElement('style');
+    style.textContent = 'body { background-color: #1a1a1a !important; }';
+    body.ownerDocument.head.appendChild(style);
+  });
+
+  await expect.poll(() => diagram.getAttribute('id'), { timeout: 15000 }).not.toBe(light);
+  await expect(diagram).toContainText('Start');
+  // The colors in the svg are the dark theme's now.
+  expect(await diagram.locator('style').innerHTML()).not.toBe(lightStyle);
+  expect(await hostLogs(page, 'save-items')).toHaveLength(0);
+  expect(pageErrors).toEqual([]);
+});
+
 /** Types at the end of the last paragraph and returns the saved note. */
 async function editLastParagraph(page, plugin) {
   await plugin.locator('.milkdown .editor > p').last().click();
