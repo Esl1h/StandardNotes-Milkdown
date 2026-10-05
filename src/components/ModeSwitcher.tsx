@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { type Mode, type Orientation, type TopbarPosition } from '../lib/layout';
 
 interface ModeSwitcherProps {
@@ -115,6 +115,13 @@ const ICONS = {
       <path d="M5 12l5 5L20 7" />
     </Icon>
   ),
+  more: (
+    <Icon>
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+    </Icon>
+  ),
   hide: (
     <Icon>
       <path d="M9 6l6 6-6 6" />
@@ -133,26 +140,89 @@ const MODE_TITLES: Record<Mode, string> = {
   source: 'Edit the Markdown source only',
 };
 
-/** Copies the note, then shows a check for a moment as the confirmation. */
-function CopyButton({ onCopy }: { onCopy: () => Promise<boolean> }) {
-  const [copied, setCopied] = useState(false);
+/** Below this width the secondary actions move into a menu. The iframe is
+ * as wide as the note pane, so this also holds on a big screen with a
+ * narrow pane. */
+const NARROW = '(max-width: 520px)';
+
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(() => window.matchMedia?.(NARROW).matches ?? false);
   useEffect(() => {
-    if (!copied) {
-      return;
+    const query = window.matchMedia?.(NARROW);
+    if (!query) {
+      return undefined;
     }
-    const timer = setTimeout(() => setCopied(false), 1500);
-    return () => clearTimeout(timer);
-  }, [copied]);
-  const title = copied ? 'Copied' : 'Copy the note as Markdown';
+    const update = (event: { matches: boolean }) => setNarrow(event.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  return narrow;
+}
+
+interface MenuAction {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  onSelect: () => void;
+}
+
+/** The "..." button and the menu of the actions that do not fit the bar. */
+function MoreMenu({ actions, copied }: { actions: MenuAction[]; copied: boolean }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    };
+    const onMouseDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('mousedown', onMouseDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('mousedown', onMouseDown);
+    };
+  }, [open]);
+
   return (
-    <button
-      className="copy-button"
-      onClick={() => void onCopy().then(setCopied)}
-      title={title}
-      aria-label={title}
-    >
-      {copied ? ICONS.copied : ICONS.copy}
-    </button>
+    <div className="more-menu" ref={rootRef}>
+      <button
+        className="more-button"
+        onClick={() => setOpen(!open)}
+        title={copied ? 'Copied' : 'More actions'}
+        aria-label="More actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        {copied ? ICONS.copied : ICONS.more}
+      </button>
+      {open && (
+        <div className="more-menu-list" role="menu">
+          {actions.map((action) => (
+            <button
+              key={action.key}
+              role="menuitem"
+              onClick={() => {
+                action.onSelect();
+                setOpen(false);
+              }}
+            >
+              {action.icon}
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -176,6 +246,20 @@ function ModeSwitcher(props: ModeSwitcherProps) {
     onHide,
     trailing,
   } = props;
+
+  const narrow = useNarrow();
+  // The check shows on whichever button copied: the inline one or the menu's.
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) {
+      return undefined;
+    }
+    const timer = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  const copy = () => void onCopy().then(setCopied);
+  // Prints this iframe only: the app's own print would capture its UI.
+  const print = () => window.print();
 
   const orientationTitle =
     orientation === 'vertical'
@@ -233,34 +317,72 @@ function ModeSwitcher(props: ModeSwitcherProps) {
       >
         {ICONS.search}
       </button>
-      <CopyButton onCopy={onCopy} />
-      <button
-        className="print-button"
-        // Prints this iframe only: the app's own print would capture its UI.
-        onClick={() => window.print()}
-        title="Print the note"
-        aria-label="Print the note"
-      >
-        {ICONS.print}
-      </button>
-      <button
-        className={topbar ? 'topbar-button active' : 'topbar-button'}
-        onClick={() => onTopbarChange(!topbar)}
-        title="Show or hide the fixed formatting bar"
-        aria-label="Show or hide the fixed formatting bar"
-        aria-pressed={topbar}
-      >
-        {ICONS.bar}
-      </button>
-      {topbar && (
-        <button
-          className="topbar-position-button"
-          onClick={() => onTopbarPositionChange(topbarPosition === 'top' ? 'bottom' : 'top')}
-          title={positionTitle}
-          aria-label={positionTitle}
-        >
-          {ICONS[topbarPosition]}
-        </button>
+      {narrow ? (
+        <MoreMenu
+          copied={copied}
+          actions={[
+            { key: 'copy', label: 'Copy as Markdown', icon: ICONS.copy, onSelect: copy },
+            { key: 'print', label: 'Print', icon: ICONS.print, onSelect: print },
+            {
+              key: 'bar',
+              label: topbar ? 'Hide the formatting bar' : 'Show the formatting bar',
+              icon: ICONS.bar,
+              onSelect: () => onTopbarChange(!topbar),
+            },
+            ...(topbar
+              ? [
+                  {
+                    key: 'position',
+                    label:
+                      topbarPosition === 'top'
+                        ? 'Move the bar to the bottom'
+                        : 'Move the bar to the top',
+                    icon: ICONS[topbarPosition === 'top' ? 'bottom' : 'top'],
+                    onSelect: () =>
+                      onTopbarPositionChange(topbarPosition === 'top' ? 'bottom' : 'top'),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      ) : (
+        <>
+          <button
+            className="copy-button"
+            onClick={copy}
+            title={copied ? 'Copied' : 'Copy the note as Markdown'}
+            aria-label={copied ? 'Copied' : 'Copy the note as Markdown'}
+          >
+            {copied ? ICONS.copied : ICONS.copy}
+          </button>
+          <button
+            className="print-button"
+            onClick={print}
+            title="Print the note"
+            aria-label="Print the note"
+          >
+            {ICONS.print}
+          </button>
+          <button
+            className={topbar ? 'topbar-button active' : 'topbar-button'}
+            onClick={() => onTopbarChange(!topbar)}
+            title="Show or hide the fixed formatting bar"
+            aria-label="Show or hide the fixed formatting bar"
+            aria-pressed={topbar}
+          >
+            {ICONS.bar}
+          </button>
+          {topbar && (
+            <button
+              className="topbar-position-button"
+              onClick={() => onTopbarPositionChange(topbarPosition === 'top' ? 'bottom' : 'top')}
+              title={positionTitle}
+              aria-label={positionTitle}
+            >
+              {ICONS[topbarPosition]}
+            </button>
+          )}
+        </>
       )}
       <button
         className="layout-bar-hide"

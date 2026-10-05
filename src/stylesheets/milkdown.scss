@@ -53,6 +53,36 @@
   .insert-sample {
     color: var(--sn-stylekit-info-color);
   }
+
+  // The "..." menu of the actions that do not fit a narrow bar.
+  .more-menu {
+    position: relative;
+  }
+
+  .more-menu-list {
+    background-color: var(--sn-stylekit-contrast-background-color);
+    border: 1px solid var(--sn-stylekit-border-color);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    min-width: 210px;
+    padding: 4px;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    // Above the Crepe top bar (10), its heading dropdown (20) and the
+    // button that brings the layout bar back (30).
+    z-index: 40;
+
+    button {
+      color: var(--sn-stylekit-foreground-color);
+      gap: 8px;
+      justify-content: flex-start;
+      padding: 8px;
+      text-align: left;
+      width: 100%;
+    }
+  }
 }
 
 // Hidden layout bar: the panes take the whole height and a small button,
