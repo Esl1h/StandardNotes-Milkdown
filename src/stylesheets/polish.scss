@@ -1,0 +1,100 @@
+/**
+ * Visual layer over the Crepe frame theme: tokens, floating surfaces,
+ * caret, active block and focus mode. Colors come from the --crepe-*
+ * mapping in milkdown.scss, so every SN theme (dark or light) applies.
+ */
+
+.crepe-container .milkdown {
+  --ed-accent: var(--crepe-color-primary);
+  --ed-glass-bg: color-mix(in srgb, var(--crepe-color-surface) 72%, transparent);
+  --ed-glass-border: color-mix(in srgb, var(--crepe-color-on-surface) 10%, transparent);
+  --ed-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 10px 30px rgb(0 0 0 / 0.14);
+  --ed-radius: 12px;
+  --ed-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ed-dur-fast: 120ms;
+}
+
+// ---------- Floating surfaces: selection toolbar and slash menu ----------
+.crepe-container .milkdown .milkdown-toolbar,
+.crepe-container .milkdown .milkdown-slash-menu {
+  background: var(--ed-glass-bg);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--ed-glass-border);
+  border-radius: var(--ed-radius);
+  box-shadow: var(--ed-shadow);
+}
+
+.crepe-container .milkdown .milkdown-toolbar[data-show='true'],
+.crepe-container .milkdown .milkdown-slash-menu[data-show='true'] {
+  animation: ed-fade var(--ed-dur-fast) var(--ed-ease);
+}
+
+// Opacity only: with a transform in this animation, a click on a slash menu
+// item soon after typing did nothing (the e2e of the table of contents item).
+@keyframes ed-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.crepe-container .milkdown .milkdown-toolbar .toolbar-item {
+  border-radius: 8px;
+}
+
+.crepe-container .milkdown .milkdown-toolbar .toolbar-item.active {
+  background: color-mix(in srgb, var(--ed-accent) 16%, transparent);
+}
+
+// No blur where it costs the most: touch devices (mobile WebViews) and
+// engines without backdrop-filter get an opaque surface.
+@media (pointer: coarse) {
+  .crepe-container .milkdown .milkdown-toolbar,
+  .crepe-container .milkdown .milkdown-slash-menu {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--crepe-color-surface);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .crepe-container .milkdown .milkdown-toolbar,
+  .crepe-container .milkdown .milkdown-slash-menu {
+    background: var(--crepe-color-surface);
+  }
+}
+
+// ---------- Caret: Crepe's virtual cursor, in the accent color ----------
+.crepe-container .milkdown .ProseMirror-focused {
+  --prosemirror-virtual-cursor-color: var(--ed-accent);
+}
+
+.crepe-container .milkdown .ProseMirror .prosemirror-virtual-cursor {
+  border-radius: 1px;
+  // Static glow: box-shadow is never animated (the blink animates opacity).
+  box-shadow: 0 0 6px color-mix(in srgb, var(--ed-accent) 55%, transparent);
+  transition:
+    left 80ms var(--ed-ease),
+    top 80ms var(--ed-ease);
+}
+
+.crepe-container .milkdown .ProseMirror ::selection {
+  background: color-mix(in srgb, var(--ed-accent) 24%, transparent);
+}
+
+// ---------- Active block ----------
+.crepe-container .milkdown .ProseMirror > .is-active {
+  border-radius: 8px;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--ed-accent) 5%, transparent);
+  background: color-mix(in srgb, var(--ed-accent) 5%, transparent);
+}
+
+// ---------- Motion preference ----------
+@media (prefers-reduced-motion: reduce) {
+  .crepe-container .milkdown *,
+  .crepe-container .milkdown *::before,
+  .crepe-container .milkdown *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

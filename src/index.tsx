@@ -5,6 +5,7 @@ import './index.scss';
 import Editor from './components/Editor';
 import './stylesheets/main.scss';
 import './stylesheets/milkdown.scss';
+import './stylesheets/polish.scss';
 
 const rootElement = document.getElementById('root') as HTMLElement;
 const root = ReactDOM.createRoot(rootElement);
