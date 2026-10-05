@@ -43,9 +43,27 @@ describe('EchoGuard', () => {
     expect(guard.isStaleEcho('n1', 'a', 'ab')).toBe(false);
   });
 
-  it('remembers only the last 5 saves', () => {
-    ['1', '2', '3', '4', '5', '6'].forEach((text) => guard.recordSave(text));
-    expect(guard.isStaleEcho('n1', '1', '6')).toBe(false);
-    expect(guard.isStaleEcho('n1', '2', '6')).toBe(true);
+  it('ignores an echo that comes back many saves later', () => {
+    const saves = Array.from({ length: 40 }, (_, index) => `text ${index}`);
+    saves.forEach((text) => {
+      guard.recordSave(text);
+      t += 700;
+    });
+    expect(guard.isStaleEcho('n1', saves[0], saves[39])).toBe(true);
+    expect(guard.isStaleEcho('n1', saves[20], saves[39])).toBe(true);
+  });
+
+  it('tells apart texts of the same length', () => {
+    guard.recordSave('abc');
+    expect(guard.isStaleEcho('n1', 'abd', 'abcd')).toBe(false);
+    expect(guard.isStaleEcho('n1', 'abc', 'abcd')).toBe(true);
+  });
+
+  it('forgets the saves that left the window', () => {
+    guard.recordSave('a');
+    t = ECHO_WINDOW_MS + 1;
+    guard.recordSave('ab');
+    expect(guard.isStaleEcho('n1', 'a', 'ab')).toBe(false);
+    expect(guard.isStaleEcho('n1', 'ab', 'abc')).toBe(true);
   });
 });

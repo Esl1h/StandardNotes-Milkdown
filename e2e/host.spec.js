@@ -75,6 +75,30 @@ test('a late echo of an earlier save does not undo newer typing', async ({ page 
   expect(saves.at(-1).text).toContain('Notes with Milkdown!?');
 });
 
+test('an echo that comes back many saves later keeps the typing and the caret', async ({
+  page,
+}) => {
+  const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+  const heading = plugin.locator('.milkdown .editor h1');
+  await heading.click();
+  await page.keyboard.press('End');
+  // A save for each digit, as when typing with pauses.
+  for (let count = 1; count <= 7; count++) {
+    await page.keyboard.type(String(count));
+    await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(count);
+  }
+  const [first] = await hostLogs(page, 'save-items');
+
+  // The app hands back the very first save, long after the newer ones.
+  await page.evaluate((text) => window.sendNote('n1', text), first.text);
+  await page.waitForTimeout(800);
+
+  await expect(heading).toHaveText('Notes with Milkdown1234567');
+  // The caret is still there: typing goes on without a click.
+  await page.keyboard.type('!');
+  await expect(heading).toHaveText('Notes with Milkdown1234567!');
+});
+
 test('an empty note invites the slash menu', async ({ page }) => {
   const plugin = await openHost(page, { text: '' });
   await plugin.locator('.ProseMirror').click();
