@@ -160,3 +160,24 @@
 .mode-switcher button.active {
   background-color: color-mix(in srgb, var(--sn-stylekit-info-color) 14%, transparent);
 }
+
+// ---------- Block handle and slash menu ----------
+.crepe-container .milkdown .milkdown-block-handle {
+  background: var(--crepe-color-surface);
+  border: 1px solid var(--ed-glass-border);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
+  padding: 2px;
+}
+
+.crepe-container .milkdown .milkdown-block-handle .operation-item {
+  border-radius: 8px;
+}
+
+.crepe-container .milkdown .milkdown-slash-menu .menu-groups li {
+  border-radius: 8px;
+}
+
+.crepe-container .milkdown .milkdown-slash-menu .menu-groups li.hover {
+  background: color-mix(in srgb, var(--ed-accent) 12%, transparent);
+}
