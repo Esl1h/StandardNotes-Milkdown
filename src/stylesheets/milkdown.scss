@@ -178,6 +178,15 @@
   }
 }
 
+// Crepe pads the note 60px 120px, which leaves about a third of a phone
+// for the text and splits words in headings. Touch only: with a mouse the
+// block handle sits in that side padding and would end up off screen.
+@media (max-width: 640px) and (pointer: coarse) {
+  .crepe-container .milkdown .ProseMirror {
+    padding: 24px 16px;
+  }
+}
+
 // Crepe palette mapped onto the StyleKit, so the visual editor follows the
 // app theme (dark or light) with no theme detection in JS.
 .crepe-container .milkdown {
