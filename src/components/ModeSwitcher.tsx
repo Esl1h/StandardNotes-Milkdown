@@ -12,6 +12,8 @@ interface ModeSwitcherProps {
   onTopbarPositionChange: (position: TopbarPosition) => void;
   /** Copies the note as Markdown; resolves to whether it worked. */
   onCopy: () => Promise<boolean>;
+  /** Saves the rendered note as an HTML file; null with no rendered note. */
+  onExportHtml: (() => void) | null;
   /** Whether the outline is open; null where it is not available. */
   outline: boolean | null;
   onOutlineChange: (open: boolean) => void;
@@ -113,6 +115,11 @@ const ICONS = {
   copied: (
     <Icon>
       <path d="M5 12l5 5L20 7" />
+    </Icon>
+  ),
+  download: (
+    <Icon>
+      <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
     </Icon>
   ),
   more: (
@@ -240,6 +247,7 @@ function ModeSwitcher(props: ModeSwitcherProps) {
     onTopbarChange,
     onTopbarPositionChange,
     onCopy,
+    onExportHtml,
     onSearch,
     outline,
     onOutlineChange,
@@ -323,6 +331,16 @@ function ModeSwitcher(props: ModeSwitcherProps) {
           actions={[
             { key: 'copy', label: 'Copy as Markdown', icon: ICONS.copy, onSelect: copy },
             { key: 'print', label: 'Print', icon: ICONS.print, onSelect: print },
+            ...(onExportHtml
+              ? [
+                  {
+                    key: 'html',
+                    label: 'Export as HTML',
+                    icon: ICONS.download,
+                    onSelect: onExportHtml,
+                  },
+                ]
+              : []),
             {
               key: 'bar',
               label: topbar ? 'Hide the formatting bar' : 'Show the formatting bar',
@@ -363,6 +381,16 @@ function ModeSwitcher(props: ModeSwitcherProps) {
           >
             {ICONS.print}
           </button>
+          {onExportHtml && (
+            <button
+              className="export-html-button"
+              onClick={onExportHtml}
+              title="Export as HTML"
+              aria-label="Export as HTML"
+            >
+              {ICONS.download}
+            </button>
+          )}
           <button
             className={topbar ? 'topbar-button active' : 'topbar-button'}
             onClick={() => onTopbarChange(!topbar)}

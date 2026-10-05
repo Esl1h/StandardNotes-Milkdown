@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { openHost, hostLogs } from './snHost.js';
 
@@ -564,7 +565,7 @@ test.describe('narrow bar', () => {
     await expect(plugin.getByTitle('Print the note')).toHaveCount(0);
 
     await plugin.getByRole('button', { name: 'More actions' }).click();
-    await expect(plugin.getByRole('menuitem')).toHaveCount(4);
+    await expect(plugin.getByRole('menuitem')).toHaveCount(5);
     await plugin.getByRole('menuitem', { name: 'Hide the formatting bar' }).click();
 
     await expect(plugin.locator('.milkdown-top-bar')).toHaveCount(0);
@@ -599,4 +600,61 @@ test('the outline also lists headings inside quotes and lists', async ({ page })
   await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(1);
   const [save] = await hostLogs(page, 'save-items');
   expect(save.text).toContain('> ## !Quoted');
+});
+
+test('the rendered note can be saved as an HTML page', async ({ page }) => {
+  const plugin = await openHost(page, {
+    text: [
+      '---',
+      'title: hidden',
+      '---',
+      '',
+      '# Trip plan',
+      '',
+      'Pack **light**.',
+      '',
+      '- [x] tickets',
+      '- [ ] visa',
+      '',
+      '| item | qty |',
+      '| ---- | --- |',
+      '| shirt | 3 |',
+      '',
+      'Energy $E=mc^2$.',
+      '',
+    ].join('\n'),
+  });
+  await expect(plugin.locator('.milkdown .editor h1')).toHaveText('Trip plan');
+
+  const downloading = page.waitForEvent('download');
+  await plugin.getByTitle('Export as HTML').click();
+  const download = await downloading;
+
+  expect(download.suggestedFilename()).toBe('Trip plan.html');
+  const html = fs.readFileSync(await download.path(), 'utf8');
+  expect(html).toContain('<title>Trip plan</title>');
+  expect(html).toContain('<h1 id="trip-plan">Trip plan</h1>');
+  expect(html).toContain('<strong>light</strong>');
+  expect(html).toContain('<td');
+  // None of the editor's own machinery, and none of the front matter.
+  expect(html).not.toContain('contenteditable');
+  expect(html).not.toContain('ProseMirror');
+  expect(html).not.toContain('hidden');
+  expect(html).not.toContain('katex-html');
+  expect(await hostLogs(page, 'save-items')).toHaveLength(0);
+
+  // The file stands on its own: open it as a page.
+  await page.setContent(html);
+  await expect(page.locator('h1')).toHaveText('Trip plan');
+  await expect(page.locator('table td').first()).toHaveText('shirt');
+  await expect(page.locator('math')).toHaveCount(1);
+});
+
+test('there is no HTML export while only the source is shown', async ({ page }) => {
+  const plugin = await openHost(page, { text: '# Title\n' });
+  await expect(plugin.getByTitle('Export as HTML')).toBeVisible();
+
+  await plugin.getByTitle('Edit the Markdown source only').click();
+
+  await expect(plugin.getByTitle('Export as HTML')).toHaveCount(0);
 });
