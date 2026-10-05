@@ -1,5 +1,5 @@
 import React from 'react';
-import { type Heading } from './CrepeView';
+import { type Heading } from '../lib/headings';
 
 interface OutlineProps {
   headings: Heading[];

@@ -9,6 +9,7 @@ import { type EditorView } from '@milkdown/kit/prose/view';
 import { replaceAll } from '@milkdown/kit/utils';
 import { createCrepe } from '../lib/crepe';
 import { countText, type TextStats } from '../lib/wordCount';
+import { headingsOf, type Heading } from '../lib/headings';
 // The common styles one by one: the aggregate style.css also pulls the
 // Latex (KaTeX, with its fonts), AI and diff styles of unused features.
 import '@milkdown/crepe/theme/common/prosemirror.css';
@@ -43,24 +44,6 @@ interface CrepeViewProps {
   onView?: (view: EditorView | null) => void;
   /** Rendered at the right end of the Crepe top bar, when it is on. */
   topBarAccessory?: React.ReactNode;
-}
-
-/** A top level heading of the document, for the outline. */
-interface Heading {
-  level: number;
-  text: string;
-  /** Document position of the heading node. */
-  pos: number;
-}
-
-function headingsOf(doc: Node): Heading[] {
-  const headings: Heading[] = [];
-  doc.forEach((node, offset) => {
-    if (node.type.name === 'heading') {
-      headings.push({ level: node.attrs.level as number, text: node.textContent, pos: offset });
-    }
-  });
-  return headings;
 }
 
 /** Counts the rendered text, so Markdown syntax never inflates the count. */
@@ -238,5 +221,4 @@ function CrepeView(props: CrepeViewProps) {
   );
 }
 
-export type { Heading };
 export default CrepeView;
