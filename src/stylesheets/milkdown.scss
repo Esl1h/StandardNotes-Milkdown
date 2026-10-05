@@ -180,28 +180,34 @@
 
 // Crepe palette mapped onto the StyleKit, so the visual editor follows the
 // app theme (dark or light) with no theme detection in JS.
-.crepe-container {
-  --crepe-color-background: var(--sn-stylekit-background-color);
-  --crepe-color-on-background: var(--sn-stylekit-foreground-color);
+.crepe-container .milkdown {
+  --crepe-color-background: var(
+    --sn-stylekit-editor-background-color,
+    var(--sn-stylekit-background-color)
+  );
+  --crepe-color-on-background: var(
+    --sn-stylekit-editor-foreground-color,
+    var(--sn-stylekit-foreground-color)
+  );
   --crepe-color-surface: var(--sn-stylekit-contrast-background-color);
   --crepe-color-on-surface: var(--sn-stylekit-contrast-foreground-color);
   --crepe-color-on-surface-variant: var(--sn-stylekit-neutral-color);
-  --crepe-color-surface-low: var(--sn-stylekit-background-color);
+  --crepe-color-surface-low: var(--sn-stylekit-secondary-background-color);
   --crepe-color-primary: var(--sn-stylekit-info-color);
   --crepe-color-on-primary: var(--sn-stylekit-info-contrast-color, #fff);
-  --crepe-color-secondary: var(--sn-stylekit-neutral-color);
+  --crepe-color-secondary: var(--sn-stylekit-secondary-contrast-background-color);
   --crepe-color-on-secondary: var(--sn-stylekit-foreground-color);
-  --crepe-color-outline: var(--sn-stylekit-border-color);
+  --crepe-color-outline: var(--sn-stylekit-neutral-color);
   --crepe-color-on-outline: var(--sn-stylekit-neutral-color);
-  --crepe-color-hover: var(--sn-stylekit-info-color-translucent);
-  --crepe-color-selected: var(--sn-stylekit-info-color-translucent);
+  --crepe-color-hover: color-mix(in srgb, var(--sn-stylekit-info-color) 10%, transparent);
+  --crepe-color-selected: color-mix(in srgb, var(--sn-stylekit-info-color) 18%, transparent);
   --crepe-color-inverse: var(--sn-stylekit-foreground-color);
   --crepe-color-on-inverse: var(--sn-stylekit-background-color);
   --crepe-color-inline-area: var(--sn-stylekit-contrast-background-color);
-  --crepe-color-inline-code: var(--sn-stylekit-contrast-background-color);
+  --crepe-color-inline-code: var(--sn-stylekit-danger-color);
   --crepe-color-error: var(--sn-stylekit-danger-color);
-  --crepe-font-default: var(--sn-stylekit-sans-serif-font);
-  --crepe-font-title: var(--sn-stylekit-sans-serif-font);
+  --crepe-font-default: var(--sn-stylekit-editor-font-family, var(--sn-stylekit-sans-serif-font));
+  --crepe-font-title: var(--sn-stylekit-editor-font-family, var(--sn-stylekit-sans-serif-font));
   --crepe-font-code: var(--sn-stylekit-monospace-font, monospace);
   --crepe-base-font-size: 1rem;
 }
@@ -295,7 +301,7 @@
     display: block !important;
   }
 
-  .crepe-container {
+  .crepe-container .milkdown {
     --crepe-color-background: #fff;
     --crepe-color-on-background: #000;
   }
