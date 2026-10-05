@@ -245,3 +245,23 @@
 .crepe-container .milkdown .milkdown-table-block tr:nth-child(even) td {
   background: color-mix(in srgb, var(--crepe-color-surface) 50%, transparent);
 }
+
+// ---------- Code blocks ----------
+.crepe-container .milkdown .milkdown-code-block {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+}
+
+.crepe-container .milkdown .milkdown-code-block .tools .language-button {
+  border-radius: 999px;
+}
+
+.crepe-container .milkdown .milkdown-code-block .tools .tools-button-group button {
+  border-radius: 999px;
+}
+
+// ---------- Callouts ----------
+.crepe-container .milkdown .editor blockquote.markdown-alert {
+  border-radius: 10px;
+  padding: 10px 14px;
+}
