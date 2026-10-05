@@ -554,6 +554,14 @@ test.describe('narrow screens', () => {
     expect(source.y).toBeLessThan(crepe.y);
     expect(crepe.width).toBeGreaterThan(350);
   });
+
+  test('the note text uses most of the screen width', async ({ page }) => {
+    const plugin = await openHost(page, { text: '# Milkdown in Standard Notes\n\nA paragraph.\n' });
+
+    // Crepe's own 120px side padding would leave about a third of the 390px.
+    const heading = await plugin.locator('.milkdown .editor h1').boundingBox();
+    expect(heading.width).toBeGreaterThan(390 * 0.8);
+  });
 });
 
 test.describe('narrow bar', () => {
