@@ -126,9 +126,13 @@ const ICONS = {
       <path d="M5 12l5 5L20 7" />
     </Icon>
   ),
+  // A page with a down arrow: the arrow over a line was the same drawing as
+  // the one that moves the formatting bar to the bottom.
   download: (
     <Icon>
-      <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M12 11v5M9.5 13.5l2.5 2.5 2.5-2.5" />
     </Icon>
   ),
   more: (
