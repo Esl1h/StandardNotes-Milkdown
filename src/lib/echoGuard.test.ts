@@ -59,6 +59,24 @@ describe('EchoGuard', () => {
     expect(guard.isStaleEcho('n1', 'abc', 'abcd')).toBe(true);
   });
 
+  it('ignores the current text handed back with other whitespace', () => {
+    const current = '# Title\n\nbody\n';
+    expect(guard.isStaleEcho('n1', '# Title\n\nbody', current)).toBe(true);
+    expect(guard.isStaleEcho('n1', `${current}\n`, current)).toBe(true);
+    expect(guard.isStaleEcho('n1', '# Title\r\n\r\nbody\r\n', current)).toBe(true);
+  });
+
+  it('ignores an earlier save handed back with other whitespace', () => {
+    guard.recordSave('first line\nsecond\n');
+    expect(guard.isStaleEcho('n1', 'first line\r\nsecond', 'first line\nsecond!\n')).toBe(true);
+  });
+
+  it('still accepts a text that differs inside', () => {
+    const current = '# Title\n\nbody\n';
+    expect(guard.isStaleEcho('n1', '# Title\n\nbody changed\n', current)).toBe(false);
+    expect(guard.isStaleEcho('n1', '# Title\n\nbo dy\n', current)).toBe(false);
+  });
+
   it('forgets the saves that left the window', () => {
     guard.recordSave('a');
     t = ECHO_WINDOW_MS + 1;
