@@ -442,7 +442,9 @@ test('uploaded images are embedded in the note, large ones shrunk', async ({ pag
     const saves = await hostLogs(page, 'save-items');
     return saves.length ? saves[saves.length - 1].text : '';
   };
-  await expect.poll(lastSave).toMatch(/\]\((data|blob):/);
+  // Scaling a 2 MB image takes about 3.5 s here and more on a CI runner: the
+  // default 5 s was too close and failed now and then.
+  await expect.poll(lastSave, { timeout: 20000 }).toMatch(/\]\((data|blob):/);
   const text = await lastSave();
   expect(text).toMatch(/!\[[^\]]*\]\(data:image\/(webp|jpeg);base64,/);
   expect(text.length).toBeLessThan(520 * 1024);
