@@ -18,7 +18,8 @@ plugin only changes how you edit them.
    source: headings, lists, todo lists, tables, links, images, blockquotes
    and code blocks with syntax highlighting
 2. A floating toolbar on the selection, a `/` slash menu and drag handles
-   to add and move blocks
+   to add and move blocks. A focus mode button in the icon bar dims every
+   block but the one with the cursor
 3. Math with KaTeX: `$inline$` formulas and `$$` blocks
 4. Diagrams: ```` ```mermaid ```` code blocks show a live preview of the diagram, while the note keeps its source; the diagrams follow a change of the app theme without reopening the note
 5. Images uploaded, pasted or dropped are embedded in the note; large ones
@@ -32,15 +33,17 @@ plugin only changes how you edit them.
 9. Find and replace (`Ctrl/Cmd+F` or the search button), with highlighted
    matches and a `2/7` count; source mode uses CodeMirror's own search
 10. An outline of the note's headings in a side panel, to jump around long notes; headings inside quotes and lists are listed too
-11. The icon bar itself folds away with the `>` button at its right end,
-    leaving only a small `<` in the corner to bring it back. Layout choices
+11. The icon bar floats at the top, centered, and folds away with the `>`
+    button at its right end, leaving only a small `<` in the corner to
+    bring it back. Layout choices
     are saved with the editor in your Standard Notes account
 12. Opening a note never rewrites it: nothing is saved until you edit
 13. Undo never reaches into the previously opened note
 14. Works with the Standard Notes web, desktop and mobile apps; follows
     the theme selected in the app. On narrow screens the split view stacks
-15. A new empty note shows an `Add sample` button that seeds it with
-    example Markdown
+15. A new empty note shows an `Add sample` button that seeds it with a tour
+    of what the editor can draw: front matter, a table of contents, lists
+    and todos, the five alerts, a table, code, math, diagrams and an image
 16. If the editor ever fails to render, the raw note text stays available
     and editable in a plain text area, and edits are still saved
 
@@ -51,10 +54,18 @@ only the note:
 
 ![Clean interface with the formatting bar at the bottom](.github/screenshots/milkdown-clean.png)
 
-The `/` slash menu on a new note, for adding lists, images, code blocks
-and tables:
+The `/` slash menu, for adding lists, images, code blocks, tables, math
+and a table of contents:
 
-![Slash menu on a new note](.github/screenshots/milkdown-slash-menu.png)
+![Slash menu](.github/screenshots/milkdown-slash-menu.png)
+
+The Split mode, with the Markdown source next to the visual editor:
+
+![Split mode with the Markdown source next to the visual editor](.github/screenshots/milkdown-split.png)
+
+Math and Mermaid diagrams, drawn live while the note keeps their source:
+
+![Math and Mermaid diagrams](.github/screenshots/milkdown-math-diagrams.png)
 
 ## Installation
 
@@ -107,6 +118,7 @@ graph LR
   - reference links become inline links and the `[1]: url` definition goes away
   - a line break made of two trailing spaces becomes a backslash
   - setext headings (`Title` over `=====`) become `# Title`
+  - a horizontal rule `---` becomes `***`
   - tables are padded with spaces and their alignment row is rewritten
   - a stray `*` is escaped (`5\*3`) and a bare URL gets angle brackets (`<https://...>`)
   - block HTML gets a blank line before its closing tag
