@@ -501,6 +501,23 @@ test('mermaid code blocks render as diagrams', async ({ page }) => {
   expect(pageErrors).toEqual([]);
 });
 
+test('mermaid draws math in a label with KaTeX', async ({ page }) => {
+  // Mermaid renders `$$...$$` through its own copy of katex, which the
+  // package overrides pin to a patched version: keep the pair working.
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const plugin = await openHost(page, {
+    text: '# Math\n\n```mermaid\ngraph LR\n  A["$$E = mc^2$$"] --> B[Done]\n```\n',
+  });
+
+  const diagram = plugin.locator('.milkdown-code-block .preview svg');
+  await expect(diagram).toBeVisible({ timeout: 15000 });
+  await expect(diagram.locator('math').first()).toBeAttached({ timeout: 15000 });
+  await expect(diagram).toContainText('Done');
+  expect(await plugin.locator('.mermaid-error').count()).toBe(0);
+  expect(pageErrors).toEqual([]);
+});
+
 test('mermaid diagrams follow a change of the app theme', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
