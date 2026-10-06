@@ -198,7 +198,14 @@ function CrepeView(props: CrepeViewProps) {
     }
     const timer = setTimeout(() => {
       const crepe = crepeRef.current;
-      if (!crepe || crepe.getMarkdown() === rawTextRef.current) {
+      // A text the editor reported itself comes back through the props. The
+      // user may have typed more since, and that is newer than this text:
+      // applying it would delete the new keys and drop the caret.
+      if (
+        !crepe ||
+        rawTextRef.current === lastAppliedRef.current ||
+        crepe.getMarkdown() === rawTextRef.current
+      ) {
         return;
       }
       suppressRef.current = true;

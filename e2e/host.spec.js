@@ -99,6 +99,22 @@ test('an echo that comes back many saves later keeps the typing and the caret', 
   await expect(heading).toHaveText('Notes with Milkdown1234567!');
 });
 
+test('typing at a relaxed pace is not undone by the sync of the previous keys', async ({
+  page,
+}) => {
+  const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+  const heading = plugin.locator('.milkdown .editor h1');
+  await heading.click();
+  await page.keyboard.press('End');
+  // A key every 250 ms: each pause lets the editor report the text, and the
+  // next key lands while that text is being applied back to the editor.
+  for (const char of 'Este e um') {
+    await page.keyboard.type(char);
+    await page.waitForTimeout(250);
+  }
+  await expect(heading).toHaveText('Notes with MilkdownEste e um');
+});
+
 for (const [name, spell] of [
   ['without the final newline', (text) => text.trimEnd()],
   ['with an extra newline', (text) => `${text}\n`],
