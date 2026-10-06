@@ -140,6 +140,26 @@ for (const [name, spell] of [
   });
 }
 
+test('Add sample fills an empty note with a tour of the features', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  const plugin = await openHost(page, { text: '' });
+
+  await plugin.getByText('Add sample').click();
+
+  const editor = plugin.locator('.milkdown .editor');
+  await expect(editor.locator('h1')).toHaveText('Milkdown feature tour');
+  await expect(editor.locator('pre.frontmatter')).toBeVisible();
+  await expect(editor.locator('.toc-list li').first()).toBeVisible();
+  await expect(editor.locator('blockquote.markdown-alert')).toHaveCount(5);
+  await expect(editor.locator('.milkdown-list-item-block .label.checked')).toHaveCount(2);
+  // Three code blocks, the math block and the two diagrams.
+  await expect(plugin.locator('.milkdown-code-block')).toHaveCount(6);
+  await expect(plugin.locator('.milkdown-image-block img')).toBeVisible();
+  await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(1);
+  expect(pageErrors).toEqual([]);
+});
+
 test('an empty note invites the slash menu', async ({ page }) => {
   const plugin = await openHost(page, { text: '' });
   await plugin.locator('.ProseMirror').click();

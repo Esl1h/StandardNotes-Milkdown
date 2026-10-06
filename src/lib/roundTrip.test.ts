@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { roundTrip } from '../mocks/roundTrip';
+import { SAMPLE_MARKDOWN_TEXT } from './sampleMarkdown';
 
 // The first edit rewrites the note in the shape of the visual editor. These
 // pairs pin that shape, so a change in Milkdown or in our config shows up
@@ -60,4 +61,25 @@ describe('syntaxes that survive unchanged', () => {
     },
     20000
   );
+});
+
+describe('the Add sample text', () => {
+  // The code blocks watch their visibility; jsdom has no IntersectionObserver.
+  beforeEach(() => {
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      }
+    );
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('is left as it is by the first edit', async () => {
+    expect(await roundTrip(SAMPLE_MARKDOWN_TEXT)).toBe(SAMPLE_MARKDOWN_TEXT);
+  }, 20000);
 });
