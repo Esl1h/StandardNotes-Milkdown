@@ -266,6 +266,36 @@ test('the layout bar hides, leaving only the button to bring it back', async ({ 
   await expect(plugin.getByTitle('Show the layout bar')).toHaveCount(0);
 });
 
+test('the layout bar floats at the top, centered and rounded', async ({ page }) => {
+  const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+  const bar = plugin.locator('.mode-switcher');
+  await expect(bar).toBeVisible();
+
+  const box = await bar.boundingBox();
+  const { width } = page.viewportSize();
+  // Centered, narrower than the screen and off its top edge.
+  expect(Math.abs(box.x + box.width / 2 - width / 2)).toBeLessThanOrEqual(2);
+  expect(box.width).toBeLessThan(width / 2);
+  expect(box.y).toBeGreaterThan(4);
+  await expect(bar).toHaveCSS('border-top-left-radius', '14px');
+});
+
+test('the formatting bars are smaller than those of the Crepe theme', async ({ page }) => {
+  const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+  // Crepe's own fixed bar is 45px tall and its floating toolbar 46px.
+  const fixed = await plugin.locator('.milkdown-top-bar').boundingBox();
+  expect(fixed.height).toBeLessThanOrEqual(40);
+
+  // A word near the start: the paragraph is as wide as the editor.
+  await plugin
+    .locator('.milkdown .editor > p')
+    .first()
+    .dblclick({ position: { x: 30, y: 10 } });
+  const floating = plugin.locator('.milkdown-toolbar[data-show="true"]');
+  await expect(floating).toBeVisible();
+  expect((await floating.boundingBox()).height).toBeLessThanOrEqual(40);
+});
+
 test('the bottom bar sits at the bottom even for a short note', async ({ page }) => {
   const plugin = await openHost(page, { text: '# Short\n' });
   await expect(plugin.locator('.milkdown-top-bar')).toBeVisible();

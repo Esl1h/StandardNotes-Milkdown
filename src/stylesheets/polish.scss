@@ -38,12 +38,36 @@
   }
 }
 
+// Smaller than Crepe's 32px buttons with 24px icons and a 6px margin.
+.crepe-container .milkdown .milkdown-toolbar {
+  padding: 0 4px;
+}
+
 .crepe-container .milkdown .milkdown-toolbar .toolbar-item {
   border-radius: 8px;
+  height: 28px;
+  margin: 4px 2px;
+  padding: 4px;
+  width: 28px;
+}
+
+.crepe-container .milkdown .milkdown-toolbar .toolbar-item svg {
+  height: 20px;
+  width: 20px;
+}
+
+.crepe-container .milkdown .milkdown-toolbar .divider {
+  height: 18px;
+  margin: 9px 5px;
 }
 
 .crepe-container .milkdown .milkdown-toolbar .toolbar-item.active {
-  background: color-mix(in srgb, var(--ed-accent) 16%, transparent);
+  background: var(--ed-accent);
+}
+
+.crepe-container .milkdown .milkdown-toolbar .toolbar-item.active svg {
+  color: var(--crepe-color-on-primary);
+  fill: var(--crepe-color-on-primary);
 }
 
 // No blur where it costs the most: touch devices (mobile WebViews) and
@@ -146,12 +170,33 @@
 }
 
 // ---------- Icon bar ----------
-.mode-switcher {
+// A rounded bar that floats at the top, centered, instead of a strip from
+// edge to edge. The app colors come straight from the StyleKit: the tokens
+// above belong to the editor, which this bar sits outside of.
+.milkdown-app > .mode-switcher {
+  align-self: center;
+  background: color-mix(in srgb, var(--sn-stylekit-contrast-background-color) 82%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid color-mix(in srgb, var(--sn-stylekit-border-color) 70%, transparent);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 8px 24px rgb(0 0 0 / 0.12);
+  flex: 0 0 auto;
   gap: 2px;
+  margin: 8px 8px 4px;
+  max-width: calc(100% - 16px);
+  min-height: 36px;
+  padding: 2px 6px;
+  position: relative;
+  // Over the formatting bar and the note, like the menus it opens.
+  z-index: 40;
 }
 
 .mode-switcher button {
-  border-radius: 8px;
+  border-radius: 9px;
+  padding: 5px 7px;
   transition:
     background-color 120ms ease,
     color 120ms ease;
@@ -159,6 +204,74 @@
 
 .mode-switcher button.active {
   background-color: color-mix(in srgb, var(--sn-stylekit-info-color) 14%, transparent);
+}
+
+// The free space that pushed the actions to the right becomes a thin divider
+// between the modes and the actions.
+.mode-switcher .spacer {
+  align-self: stretch;
+  background: color-mix(in srgb, var(--sn-stylekit-border-color) 80%, transparent);
+  flex: 0 0 1px;
+  margin: 8px 6px;
+}
+
+// No blur on touch devices, as for the other floating surfaces.
+@media (pointer: coarse) {
+  .milkdown-app > .mode-switcher {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--sn-stylekit-contrast-background-color);
+  }
+}
+
+// ---------- Fixed formatting bar ----------
+// Crepe's bar is tall (32px buttons, 24px icons, 6px margins): smaller, with
+// rounded buttons and the accent on the active one, like the floating one.
+.crepe-container .milkdown .milkdown-top-bar {
+  min-height: 36px;
+  padding: 0 8px;
+}
+
+.crepe-container .milkdown .milkdown-top-bar .top-bar-item {
+  border-radius: 8px;
+  height: 28px;
+  margin: 4px 2px;
+  padding: 4px;
+  width: 28px;
+}
+
+.crepe-container .milkdown .milkdown-top-bar .top-bar-item svg {
+  height: 20px;
+  width: 20px;
+}
+
+.crepe-container .milkdown .milkdown-top-bar .top-bar-item.active {
+  background: var(--ed-accent);
+}
+
+.crepe-container .milkdown .milkdown-top-bar .top-bar-item.active svg {
+  color: var(--crepe-color-on-primary);
+  fill: var(--crepe-color-on-primary);
+}
+
+.crepe-container .milkdown .milkdown-top-bar .top-bar-divider {
+  height: 18px;
+  margin: 9px 5px;
+}
+
+.crepe-container .milkdown .milkdown-top-bar .top-bar-heading-selector {
+  padding: 4px;
+}
+
+.crepe-container .milkdown .milkdown-top-bar .top-bar-heading-button {
+  border-radius: 8px;
+  height: 28px;
+  padding: 2px 2px 2px 8px;
+}
+
+.crepe-container .milkdown .milkdown-top-bar .top-bar-heading-button .top-bar-heading-label {
+  font-size: calc(var(--crepe-base-font-size, 16px) * 0.8125);
+  min-width: 72px;
 }
 
 // ---------- Block handle and slash menu ----------
