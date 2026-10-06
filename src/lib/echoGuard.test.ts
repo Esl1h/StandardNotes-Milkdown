@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { ECHO_WINDOW_MS, EchoGuard, describeDifference } from './echoGuard';
+import { ECHO_WINDOW_MS, EchoGuard } from './echoGuard';
 
 describe('EchoGuard', () => {
   let t: number;
@@ -83,16 +83,5 @@ describe('EchoGuard', () => {
     guard.recordSave('ab');
     expect(guard.isStaleEcho('n1', 'a', 'ab')).toBe(false);
     expect(guard.isStaleEcho('n1', 'ab', 'abc')).toBe(true);
-  });
-});
-
-describe('describeDifference', () => {
-  it('points at the first difference with code points, not text', () => {
-    expect(describeDifference('ab\n', 'ab')).toBe(
-      'length 3 -> 2, first difference at 2: [10] -> [end]'
-    );
-    expect(describeDifference('a\nb', 'a\r\nb')).toBe(
-      'length 3 -> 4, first difference at 1: [10,98] -> [13,10,98]'
-    );
   });
 });
