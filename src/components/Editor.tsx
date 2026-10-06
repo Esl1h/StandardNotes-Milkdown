@@ -7,7 +7,7 @@ import MilkdownEditor from './MilkdownEditor';
 import ErrorBoundary from './ErrorBoundary';
 import { setPreferenceStore } from '../lib/layout';
 import { markdownPreview } from '../lib/preview';
-import { EchoGuard, describeDifference } from '../lib/echoGuard';
+import { EchoGuard } from '../lib/echoGuard';
 
 /** How long to wait for Standard Notes to stream the note before saying so */
 const NOTE_WAIT_MS = 5000;
@@ -66,14 +66,6 @@ export default class Editor extends React.Component<Record<string, never>, Edito
         // A late echo of an earlier save would undo what was typed since.
         if (this.echoGuard.isStaleEcho(this.noteUuid, text, this.state.rawText)) {
           return;
-        }
-        if (this.state.noteReceived && text !== this.state.rawText) {
-          // Applying this text moves the caret out of the visual editor, so
-          // say what differs: it is how an altered echo of a save shows up.
-          console.info(
-            '[milkdown] text from the app replaces the editor text:',
-            describeDifference(this.state.rawText, text)
-          );
         }
         this.setState({ rawText: text, noteReceived: true });
       },

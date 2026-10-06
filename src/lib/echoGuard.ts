@@ -62,20 +62,4 @@ class EchoGuard {
   }
 }
 
-/**
- * Where two texts first differ, as sizes and code points: enough to see what
- * the app changed in a save (a newline, a space) without printing the note.
- */
-function describeDifference(before: string, after: string): string {
-  let at = 0;
-  while (at < before.length && at < after.length && before[at] === after[at]) {
-    at++;
-  }
-  const codes = (text: string) =>
-    Array.from(text.slice(at, at + 6), (char) => char.codePointAt(0)).join(',') || 'end';
-  return `length ${before.length} -> ${after.length}, first difference at ${at}: [${codes(
-    before
-  )}] -> [${codes(after)}]`;
-}
-
-export { EchoGuard, ECHO_WINDOW_MS, describeDifference };
+export { EchoGuard, ECHO_WINDOW_MS };

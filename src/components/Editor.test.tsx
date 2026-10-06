@@ -41,12 +41,10 @@ beforeEach(() => {
 function setup() {
   const save = vi.fn();
   kit.save = save;
-  const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
   render(<Editor />);
   const delegate = kit.delegate;
   return {
     save,
-    info,
     loadNote: (text: string) =>
       act(() => {
         delegate.setEditorRawText(text);
@@ -71,19 +69,6 @@ describe('Editor', () => {
     syncRemote('# One changed');
 
     expect(save).not.toHaveBeenCalled();
-  });
-
-  it('says what differs when the app sends text that replaces the editor text', async () => {
-    const { info, loadNote, syncRemote } = setup();
-    loadNote('# One\n');
-    await waitFor(() => expect(FakeCrepe.all[FakeCrepe.all.length - 1]?.created).toBe(true));
-    expect(info).not.toHaveBeenCalled();
-
-    syncRemote('# One changed\n');
-
-    expect(info).toHaveBeenCalledTimes(1);
-    expect(info.mock.calls[0][1]).toContain('first difference at 5');
-    expect(String(info.mock.calls[0][1])).not.toContain('changed');
   });
 
   it('saves exactly once per visual edit', async () => {
