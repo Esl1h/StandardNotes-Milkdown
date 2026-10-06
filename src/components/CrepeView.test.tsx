@@ -106,6 +106,28 @@ describe('CrepeView', () => {
     expect(onTextChange).not.toHaveBeenCalled();
   });
 
+  it('does not undo typing that follows an edit it just reported', async () => {
+    const { onTextChange, view } = setup();
+    await booted();
+    vi.useFakeTimers();
+    const rerender = (rawText: string) =>
+      view.rerender(
+        <CrepeView rawText={rawText} epoch={0} topbar={true} onTextChange={onTextChange} />
+      );
+
+    // The user types, the editor reports the text and the parent hands it back.
+    lastCrepe().markdown = '# Hello w';
+    lastCrepe().emit('# Hello w');
+    rerender('# Hello w');
+    // More keys land before the delayed apply of that text runs.
+    lastCrepe().markdown = '# Hello wo';
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+
+    expect(lastCrepe().getMarkdown()).toBe('# Hello wo');
+  });
+
   it('drops a pending apply when the view unmounts', async () => {
     const { onTextChange, view } = setup();
     await booted();
