@@ -8,20 +8,25 @@ const ECHO_WINDOW_MS = 60000;
 /**
  * Length plus a 32 bit FNV-1a hash of the text: enough to tell saves apart
  * without keeping a copy of the note for every save inside the window.
+ * Line endings and the whitespace around the note are left out: the app may
+ * hand a save back with its final newline trimmed or its endings changed,
+ * and that is still the same save.
  */
 function fingerprint(text: string): string {
+  const same = text.replace(/\r\n?/g, '\n').trim();
   let hash = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) {
-    hash ^= text.charCodeAt(i);
+  for (let i = 0; i < same.length; i++) {
+    hash ^= same.charCodeAt(i);
     hash = Math.imul(hash, 0x01000193);
   }
-  return `${text.length}:${hash >>> 0}`;
+  return `${same.length}:${hash >>> 0}`;
 }
 
 /**
  * Remembers the saves of the open note made within the window, so a late
  * echo of an earlier one is not applied over text typed after it: that would
- * revert the typing and move the caret out of the editor. Any other text (a
+ * revert the typing and move the caret out of the editor. The same goes for
+ * a text that only spells the current one differently. Any other text (a
  * remote edit, another note) passes through.
  */
 class EchoGuard {
@@ -48,8 +53,11 @@ class EchoGuard {
     if (text === current) {
       return false;
     }
-    const cutoff = this.now() - ECHO_WINDOW_MS;
     const key = fingerprint(text);
+    if (key === fingerprint(current)) {
+      return true;
+    }
+    const cutoff = this.now() - ECHO_WINDOW_MS;
     return this.saves.some((save) => save.at >= cutoff && save.key === key);
   }
 }

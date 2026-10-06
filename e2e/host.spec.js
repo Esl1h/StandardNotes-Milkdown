@@ -99,6 +99,31 @@ test('an echo that comes back many saves later keeps the typing and the caret', 
   await expect(heading).toHaveText('Notes with Milkdown1234567!');
 });
 
+for (const [name, spell] of [
+  ['without the final newline', (text) => text.trimEnd()],
+  ['with an extra newline', (text) => `${text}\n`],
+  ['with CRLF line endings', (text) => text.replace(/\n/g, '\r\n')],
+]) {
+  test(`a save handed back ${name} keeps the typing and the caret`, async ({ page }) => {
+    const plugin = await openHost(page, { text: MARKDOWN_NOTE });
+    const heading = plugin.locator('.milkdown .editor h1');
+    await heading.click();
+    await page.keyboard.press('End');
+    await page.keyboard.type('1');
+    await expect.poll(async () => (await hostLogs(page, 'save-items')).length).toBe(1);
+    const [first] = await hostLogs(page, 'save-items');
+
+    // The app returns what was saved, spelled a little differently.
+    await page.evaluate((text) => window.sendNote('n1', text), spell(first.text));
+    await page.waitForTimeout(800);
+
+    await expect(heading).toHaveText('Notes with Milkdown1');
+    // The caret is still there: typing goes on without a click.
+    await page.keyboard.type('2');
+    await expect(heading).toHaveText('Notes with Milkdown12');
+  });
+}
+
 test('an empty note invites the slash menu', async ({ page }) => {
   const plugin = await openHost(page, { text: '' });
   await plugin.locator('.ProseMirror').click();
