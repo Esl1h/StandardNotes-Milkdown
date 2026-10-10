@@ -45,7 +45,7 @@
     "@standardnotes/editor-kit": "github:standardnotes/editor-kit#626d7a6e63d4ada48be36676c466fea46d7709d3",
     "@standardnotes/stylekit": "^5.29.3",
     "codemirror": "^6.0.2",
-    "mdast-util-to-markdown": "^2.1.3",
+    "mdast-util-to-markdown": "^2.2.0",
     "mermaid": "^12.1.0",
     "prosemirror-search": "^1.1.1",
     "react": "^18.3.1",
