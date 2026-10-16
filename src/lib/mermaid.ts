@@ -8,6 +8,8 @@
  * the new theme.
  */
 
+import DOMPurify from 'dompurify';
+
 type Mermaid = (typeof import('mermaid'))['default'];
 
 let mermaidLoad: Promise<Mermaid> | null = null;
@@ -57,6 +59,31 @@ function loadMermaid(): Promise<Mermaid> {
   return mermaidLoad;
 }
 
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+let purify: ReturnType<typeof DOMPurify> | null = null;
+
+/**
+ * The same cleanup Crepe's preview panel gives the first drawing, for the
+ * redraws that bypass it: mermaid sanitizes its own output in strict mode,
+ * but a config regression there would otherwise reach innerHTML unchecked.
+ * Flowchart labels need foreignObject, which is kept only inside an svg.
+ */
+function sanitizeSvg(markup: string): string {
+  if (!purify) {
+    purify = DOMPurify();
+    purify.addHook('uponSanitizeElement', (node, data) => {
+      if (data.tagName === 'foreignobject' && node.parentElement?.namespaceURI !== SVG_NAMESPACE) {
+        node.parentNode?.removeChild(node);
+      }
+    });
+  }
+  return purify.sanitize(markup, {
+    ADD_TAGS: ['foreignObject'],
+    ADD_ATTR: ['xmlns'],
+    HTML_INTEGRATION_POINTS: { foreignobject: true },
+  });
+}
+
 /** Draws the diagrams on screen again with the current theme. A diagram
  * that fails to draw keeps the one it has. */
 function redrawDiagrams(): void {
@@ -72,7 +99,7 @@ function redrawDiagrams(): void {
       try {
         const { svg: markup } = await mermaid.render(id, source);
         remember(id, source);
-        container.innerHTML = markup;
+        container.innerHTML = sanitizeSvg(markup);
       } catch {
         // Keep what is shown.
       }
