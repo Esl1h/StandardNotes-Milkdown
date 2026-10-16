@@ -42,6 +42,11 @@ li[data-item-type="task"][data-checked="true"]::before { content: "\\2611"; }
 @media print { main { max-width: none; padding: 0; } }
 `;
 
+// The page only needs its own styles and the note's images: anything that
+// slipped past the schema serializer still could not run or load.
+const CSP =
+  "default-src 'none'; img-src data: https: http:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'";
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -56,6 +61,7 @@ function htmlDocument(title: string, body: string): string {
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="${CSP}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
 <style>${STYLE}</style>

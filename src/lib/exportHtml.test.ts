@@ -28,6 +28,18 @@ describe('htmlDocument', () => {
     expect(page).not.toContain('<title><script>');
   });
 
+  it('allows no script and only the page styles and images', () => {
+    const policy = new DOMParser()
+      .parseFromString(html, 'text/html')
+      .querySelector('meta[http-equiv="Content-Security-Policy"]')
+      ?.getAttribute('content');
+
+    expect(policy).toContain("default-src 'none'");
+    expect(policy).toContain('img-src data: https: http:');
+    expect(policy).toContain("style-src 'unsafe-inline'");
+    expect(policy).not.toContain('script-src');
+  });
+
   it('has a light and a dark look', () => {
     expect(html).toContain('prefers-color-scheme: dark');
     expect(html).toContain('color-scheme: light dark');
