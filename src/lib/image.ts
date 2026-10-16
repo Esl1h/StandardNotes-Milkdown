@@ -59,4 +59,27 @@ async function embedImage(file: File): Promise<string> {
   throw new Error(`The image "${file.name}" is too large to embed in the note.`);
 }
 
-export { embedImage, MAX_DATA_URI_LENGTH };
+/**
+ * The image address when it is one an image can be loaded from: http(s), a
+ * data URI of an image or a relative path; otherwise empty. A note can say
+ * `![x](javascript:...)`, harmless in an <img> but not for whatever else
+ * reads the address later. Only the start is read, a data URI can be long,
+ * and as browsers do, leading control characters and spaces and every tab
+ * or newline are skipped.
+ */
+function safeImageSrc(src: string): string {
+  let head = '';
+  for (const char of src) {
+    if ((head === '' && char <= ' ') || /[\t\n\r]/.test(char)) {
+      continue;
+    }
+    head += char;
+    if (head.length === 32) {
+      break;
+    }
+  }
+  const hasScheme = /^[a-z][a-z\d+.-]*:/i.test(head);
+  return !hasScheme || /^(https?:|data:image\/)/i.test(head) ? src : '';
+}
+
+export { embedImage, MAX_DATA_URI_LENGTH, safeImageSrc };

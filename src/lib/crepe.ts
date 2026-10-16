@@ -11,7 +11,7 @@ import { toolbar } from '@milkdown/crepe/feature/toolbar';
 import { topBar } from '@milkdown/crepe/feature/top-bar';
 import { languages } from '@codemirror/language-data';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { embedImage } from './image';
+import { embedImage, safeImageSrc } from './image';
 import { renderMermaidPreview } from './mermaid';
 import { frontmatter } from './frontmatter';
 import { preserveSyntaxOnSave, syntaxDecorations } from './markdownSyntax';
@@ -59,7 +59,8 @@ async function createCrepe(
     .addFeature(linkTooltip)
     // Uploads (button, paste, drop) are embedded as data URIs: without it
     // Crepe stores a blob: URL that is gone once the note is reopened.
-    .addFeature(imageBlock, { onUpload: embedImage })
+    // proxyDomURL covers inline images and image blocks alike.
+    .addFeature(imageBlock, { onUpload: embedImage, proxyDomURL: safeImageSrc })
     .addFeature(blockEdit, { buildMenu: addTocMenuItem })
     .addFeature(placeholder, { text: 'Type / for commands' })
     .addFeature(toolbar)

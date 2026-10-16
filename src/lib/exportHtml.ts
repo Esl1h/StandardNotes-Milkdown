@@ -1,5 +1,6 @@
 import { DOMSerializer } from '@milkdown/kit/prose/model';
 import { type EditorView } from '@milkdown/kit/prose/view';
+import { safeImageSrc } from './image';
 import { isTocText } from './tocMarker';
 
 const STYLE = `
@@ -116,13 +117,17 @@ function tocNav(root: ParentNode): HTMLElement {
  * the Markdown is not parsed a second time. What is metadata or only works
  * with the editor's styles is left out: the front matter, the HTML half of
  * a KaTeX formula (its MathML stays, and browsers draw that themselves) and
- * the empty paragraphs the editor keeps. A [TOC] line becomes the list of
+ * the empty paragraphs the editor keeps; an image address that is not one
+ * an image loads from is emptied. A [TOC] line becomes the list of
  * links to the headings it stands for. */
 function noteHtml(view: Pick<EditorView, 'state'>): string {
   const serializer = DOMSerializer.fromSchema(view.state.schema);
   const holder = document.createElement('div');
   holder.appendChild(serializer.serializeFragment(view.state.doc.content));
   holder.querySelectorAll('pre.frontmatter, .katex-html, p:empty').forEach((node) => node.remove());
+  holder.querySelectorAll('img').forEach((image) => {
+    image.setAttribute('src', safeImageSrc(image.getAttribute('src') ?? ''));
+  });
   holder.querySelectorAll('p').forEach((paragraph) => {
     if (isTocText(paragraph.textContent ?? '')) {
       paragraph.replaceWith(tocNav(holder));

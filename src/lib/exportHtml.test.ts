@@ -90,6 +90,12 @@ describe('noteHtml', () => {
         toDOM: () => ['pre', { class: 'frontmatter' }, ['code', 0]],
       },
       text: { group: 'inline' },
+      image: {
+        group: 'inline',
+        inline: true,
+        attrs: { src: {} },
+        toDOM: (node) => ['img', { src: node.attrs.src }],
+      },
       math: {
         group: 'inline',
         inline: true,
@@ -121,6 +127,22 @@ describe('noteHtml', () => {
         )
       )
     ).toBe('<h2 id="title">Title</h2><p>a <strong>bold</strong> word &amp; &lt;tag&gt;</p>');
+  });
+
+  it('empties image addresses an image does not load from', () => {
+    const image = (src: string) => schema.node('image', { src });
+
+    expect(
+      html(
+        schema.node('paragraph', null, [
+          image('https://example.com/a.png'),
+          image('data:image/png;base64,iVBORw=='),
+          image('javascript:alert(1)'),
+        ])
+      )
+    ).toBe(
+      '<p><img src="https://example.com/a.png"><img src="data:image/png;base64,iVBORw=="><img src=""></p>'
+    );
   });
 
   it('leaves the front matter out of the page', () => {
