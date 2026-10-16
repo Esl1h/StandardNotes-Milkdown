@@ -168,6 +168,22 @@ describe('when the app theme changes', () => {
     expect(render).not.toHaveBeenCalled();
   });
 
+  it('sanitizes a diagram drawn again', async () => {
+    const { renderMermaidPreview } = await load();
+    const { applyPreview, preview } = codeBlock();
+    renderMermaidPreview('mermaid', 'graph LR', applyPreview);
+    await vi.waitFor(() => expect(preview.innerHTML).toContain('graph LR|default'));
+    render.mockResolvedValueOnce({
+      svg: '<svg id="mermaid-preview-9" onload="alert(1)"><script>alert(2)</script><desc>x|dark</desc></svg>',
+    });
+
+    setBackground(DARK);
+    await vi.waitFor(() => expect(preview.innerHTML).toContain('x|dark'));
+
+    expect(preview.innerHTML).not.toContain('onload');
+    expect(preview.querySelector('script')).toBeNull();
+  });
+
   it('keeps the old diagram when drawing it again fails', async () => {
     const { renderMermaidPreview } = await load();
     const { applyPreview, preview } = codeBlock();

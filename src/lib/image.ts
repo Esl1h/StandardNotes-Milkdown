@@ -40,12 +40,35 @@ function encode(bitmap: ImageBitmap, side: number): string {
   return canvas.toDataURL('image/jpeg', 0.82);
 }
 
-async function embedImage(file: File): Promise<string> {
-  const original = await readAsDataUri(file);
-  if (original.length <= MAX_DATA_URI_LENGTH) {
-    return original;
+/** An SVG drawn as pixels: browsers do not decode SVG files into an
+ * ImageBitmap directly, only through an <img>. One without a size of its
+ * own is drawn at the size browsers give such an image. */
+async function svgBitmap(file: File): Promise<ImageBitmap> {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    return await createImageBitmap(image, {
+      resizeWidth: image.naturalWidth || 300,
+      resizeHeight: image.naturalHeight || 150,
+    });
+  } finally {
+    URL.revokeObjectURL(url);
   }
-  const bitmap = await createImageBitmap(file);
+}
+
+async function embedImage(file: File): Promise<string> {
+  // An SVG is a document that can carry scripts: it is stored as pixels,
+  // so the note never holds one, whatever later opens the image.
+  const isSvg = file.type === 'image/svg+xml';
+  if (!isSvg) {
+    const original = await readAsDataUri(file);
+    if (original.length <= MAX_DATA_URI_LENGTH) {
+      return original;
+    }
+  }
+  const bitmap = isSvg ? await svgBitmap(file) : await createImageBitmap(file);
   try {
     for (let side = MAX_SIDE; side >= MIN_SIDE; side = Math.floor(side * 0.75)) {
       const encoded = encode(bitmap, side);
@@ -59,4 +82,27 @@ async function embedImage(file: File): Promise<string> {
   throw new Error(`The image "${file.name}" is too large to embed in the note.`);
 }
 
-export { embedImage, MAX_DATA_URI_LENGTH };
+/**
+ * The image address when it is one an image can be loaded from: http(s), a
+ * data URI of an image or a relative path; otherwise empty. A note can say
+ * `![x](javascript:...)`, harmless in an <img> but not for whatever else
+ * reads the address later. Only the start is read, a data URI can be long,
+ * and as browsers do, leading control characters and spaces and every tab
+ * or newline are skipped.
+ */
+function safeImageSrc(src: string): string {
+  let head = '';
+  for (const char of src) {
+    if ((head === '' && char <= ' ') || /[\t\n\r]/.test(char)) {
+      continue;
+    }
+    head += char;
+    if (head.length === 32) {
+      break;
+    }
+  }
+  const hasScheme = /^[a-z][a-z\d+.-]*:/i.test(head);
+  return !hasScheme || /^(https?:|data:image\/)/i.test(head) ? src : '';
+}
+
+export { embedImage, MAX_DATA_URI_LENGTH, safeImageSrc };
