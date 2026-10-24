@@ -889,3 +889,17 @@ test('a table of contents is added from the slash menu and follows the headings'
   await page.keyboard.type('!');
   await expect(plugin.locator('.milkdown .editor h2')).toHaveText('Two!');
 });
+
+test('a Mermaid diagram starts from a template in the slash menu', async ({ page }) => {
+  const plugin = await openHost(page, { text: '# Title\n\ntext\n' });
+  await plugin.locator('.milkdown .editor p').click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('/mermaid');
+  await plugin.locator('.milkdown-slash-menu').getByText('Mermaid sequence diagram').click();
+
+  await expect(plugin.locator('.milkdown-code-block svg[id^="mermaid"]')).toBeVisible();
+  await expect
+    .poll(async () => (await hostLogs(page, 'save-items')).at(-1)?.text)
+    .toContain('```mermaid\nsequenceDiagram\n');
+});

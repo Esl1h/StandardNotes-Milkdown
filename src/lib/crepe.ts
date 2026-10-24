@@ -20,6 +20,7 @@ import { search } from 'prosemirror-search';
 import { $prose } from '@milkdown/kit/utils';
 import { imageNullFields, keepImageAlt } from './imageMarkdown';
 import { addTocMenuItem, tocDecorations } from './toc';
+import { addMermaidMenuItems } from './mermaidMenu';
 
 // Task list boxes drawn as rounded squares; polish.scss colors the parts.
 const CHECKBOX_UNCHECKED =
@@ -62,7 +63,13 @@ async function createCrepe(
     // proxyDomURL covers inline images and image blocks alike.
     .addFeature(imageBlock, { onUpload: embedImage, proxyDomURL: safeImageSrc })
     // A close handle lets the note's side padding stay at its width.
-    .addFeature(blockEdit, { buildMenu: addTocMenuItem, blockHandle: { getOffset: () => 6 } })
+    .addFeature(blockEdit, {
+      buildMenu: (builder) => {
+        addTocMenuItem(builder);
+        addMermaidMenuItems(builder);
+      },
+      blockHandle: { getOffset: () => 6 },
+    })
     .addFeature(placeholder, { text: 'Type / for commands' })
     .addFeature(toolbar)
     // Latex, added below, wraps this preview hook for its own blocks.
