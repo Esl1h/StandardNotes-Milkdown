@@ -231,7 +231,7 @@
   --crepe-font-default: var(--sn-stylekit-editor-font-family, var(--sn-stylekit-sans-serif-font));
   --crepe-font-title: var(--sn-stylekit-editor-font-family, var(--sn-stylekit-sans-serif-font));
   --crepe-font-code: var(--sn-stylekit-monospace-font, monospace);
-  --crepe-base-font-size: 1rem;
+  --crepe-base-font-size: var(--sn-stylekit-font-size-editor, 1rem);
 }
 
 // The Crepe top bar sticks to the top of the editor. In the bottom
@@ -279,8 +279,12 @@
   white-space: nowrap;
 }
 
+// The first thing to give way on a narrow bar, before the buttons.
 .mode-switcher .word-count {
+  min-width: 0;
+  overflow: hidden;
   padding: 0 8px;
+  text-overflow: ellipsis;
 }
 
 // Printing shows the rendered note only: no bars, no source pane, no
