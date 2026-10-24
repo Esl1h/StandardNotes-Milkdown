@@ -184,6 +184,13 @@
   }
 }
 
+// Crepe pads the note 60px 120px. The text takes the full pane width, so
+// the sides keep only the room the block handle needs: 48px wide, 6px from
+// the text (crepe.ts) and 6px from the pane edge.
+.crepe-container .milkdown .ProseMirror {
+  padding: 60px;
+}
+
 // Crepe pads the note 60px 120px, which leaves about a third of a phone
 // for the text and splits words in headings. Touch only: with a mouse the
 // block handle sits in that side padding and would end up off screen.

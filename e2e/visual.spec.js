@@ -70,3 +70,13 @@ test('the focus mode dims all but the active block and is remembered', async ({ 
   await expect(plugin.locator('.milkdown-app')).not.toHaveClass(/focus-mode/);
   await expect(paragraphs.nth(0)).toHaveCSS('opacity', '1');
 });
+
+test('an empty note with the bar at the bottom keeps the full column', async ({ page }) => {
+  await page.setViewportSize({ width: 1000, height: 700 });
+  const plugin = await openHost(page, { text: '', componentData: { 'topbar-position': 'bottom' } });
+  const editor = plugin.locator('.milkdown .editor');
+  await expect(editor).toBeVisible();
+
+  const box = await editor.boundingBox();
+  expect(box.width).toBe(1000);
+});

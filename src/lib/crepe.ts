@@ -61,7 +61,8 @@ async function createCrepe(
     // Crepe stores a blob: URL that is gone once the note is reopened.
     // proxyDomURL covers inline images and image blocks alike.
     .addFeature(imageBlock, { onUpload: embedImage, proxyDomURL: safeImageSrc })
-    .addFeature(blockEdit, { buildMenu: addTocMenuItem })
+    // A close handle lets the note's side padding stay at its width.
+    .addFeature(blockEdit, { buildMenu: addTocMenuItem, blockHandle: { getOffset: () => 6 } })
     .addFeature(placeholder, { text: 'Type / for commands' })
     .addFeature(toolbar)
     // Latex, added below, wraps this preview hook for its own blocks.
