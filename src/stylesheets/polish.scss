@@ -1,6 +1,6 @@
 /**
  * Visual layer over the Crepe frame theme: tokens, floating surfaces,
- * caret, active block and focus mode. Colors come from the --crepe-*
+ * caret and focus mode. Colors come from the --crepe-*
  * mapping in milkdown.scss, so every SN theme (dark or light) applies.
  */
 
@@ -104,13 +104,6 @@
 
 .crepe-container .milkdown .ProseMirror ::selection {
   background: color-mix(in srgb, var(--ed-accent) 24%, transparent);
-}
-
-// ---------- Active block ----------
-.crepe-container .milkdown .ProseMirror > .is-active {
-  border-radius: 8px;
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--ed-accent) 5%, transparent);
-  background: color-mix(in srgb, var(--ed-accent) 5%, transparent);
 }
 
 // ---------- Motion preference ----------
