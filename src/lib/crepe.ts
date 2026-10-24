@@ -21,6 +21,7 @@ import { $prose } from '@milkdown/kit/utils';
 import { imageNullFields, keepImageAlt } from './imageMarkdown';
 import { addTocMenuItem, tocDecorations } from './toc';
 import { addMermaidMenuItems } from './mermaidMenu';
+import { buildTopBar } from './topBarItems';
 
 // Task list boxes drawn as rounded squares; polish.scss colors the parts.
 const CHECKBOX_UNCHECKED =
@@ -86,7 +87,7 @@ async function createCrepe(
     .use(tocDecorations)
     .use(activeBlock)
     .use(searchPlugin);
-  return withTopBar ? crepe.addFeature(topBar) : crepe;
+  return withTopBar ? crepe.addFeature(topBar, { buildTopBar }) : crepe;
 }
 
 export { createCrepe };

@@ -903,3 +903,51 @@ test('a Mermaid diagram starts from a template in the slash menu', async ({ page
     .poll(async () => (await hostLogs(page, 'save-items')).at(-1)?.text)
     .toContain('```mermaid\nsequenceDiagram\n');
 });
+
+/** The formatting bar button whose icon carries `title`. */
+const topBarButton = (plugin, title) =>
+  plugin
+    .locator('.milkdown-top-bar .top-bar-item')
+    .filter({ has: plugin.locator(`title:text-is("${title}")`) });
+
+test('the formatting bar adds a callout, saved as a GitHub alert', async ({ page }) => {
+  const plugin = await openHost(page, { text: 'text\n' });
+  await plugin.locator('.milkdown .editor p').click();
+  await topBarButton(plugin, 'Callout').click();
+
+  await expect(plugin.locator('.milkdown .editor blockquote.markdown-alert')).toBeVisible();
+  await expect
+    .poll(async () => (await hostLogs(page, 'save-items')).at(-1)?.text)
+    .toBe('> [!NOTE]\n> text\n');
+});
+
+test('the formatting bar indents list items and adds a table of contents', async ({ page }) => {
+  const plugin = await openHost(page, { text: '# Title\n\n- a\n- b\n' });
+  const lastSave = async () => (await hostLogs(page, 'save-items')).at(-1)?.text;
+  await plugin.locator('.milkdown .editor li').nth(1).click();
+
+  await topBarButton(plugin, 'Increase indent').click();
+  await expect.poll(lastSave).toBe('# Title\n\n- a\n  - b\n');
+  await topBarButton(plugin, 'Decrease indent').click();
+  await expect.poll(lastSave).toBe('# Title\n\n- a\n- b\n');
+
+  await plugin.locator('.milkdown .editor h1').click();
+  await page.keyboard.press('End');
+  await topBarButton(plugin, 'Table of contents').click();
+  await expect(plugin.locator('.milkdown .editor .toc-list li')).toHaveText(['Title']);
+  await expect.poll(lastSave).toBe('# Title\n\n[TOC]\n\n- a\n- b\n');
+});
+
+test('the formatting bar undoes and redoes', async ({ page }) => {
+  const plugin = await openHost(page, { text: 'text\n' });
+  const paragraph = plugin.locator('.milkdown .editor p');
+  await paragraph.click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('!');
+  await expect(paragraph).toHaveText('text!');
+
+  await topBarButton(plugin, 'Undo').click();
+  await expect(paragraph).toHaveText('text');
+  await topBarButton(plugin, 'Redo').click();
+  await expect(paragraph).toHaveText('text!');
+});
