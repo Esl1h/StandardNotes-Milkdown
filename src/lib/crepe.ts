@@ -20,6 +20,8 @@ import { search } from 'prosemirror-search';
 import { $prose } from '@milkdown/kit/utils';
 import { imageNullFields, keepImageAlt } from './imageMarkdown';
 import { addTocMenuItem, tocDecorations } from './toc';
+import { addMermaidMenuItems } from './mermaidMenu';
+import { buildTopBar } from './topBarItems';
 
 // Task list boxes drawn as rounded squares; polish.scss colors the parts.
 const CHECKBOX_UNCHECKED =
@@ -61,7 +63,14 @@ async function createCrepe(
     // Crepe stores a blob: URL that is gone once the note is reopened.
     // proxyDomURL covers inline images and image blocks alike.
     .addFeature(imageBlock, { onUpload: embedImage, proxyDomURL: safeImageSrc })
-    .addFeature(blockEdit, { buildMenu: addTocMenuItem })
+    // A close handle lets the note's side padding stay at its width.
+    .addFeature(blockEdit, {
+      buildMenu: (builder) => {
+        addTocMenuItem(builder);
+        addMermaidMenuItems(builder);
+      },
+      blockHandle: { getOffset: () => 6 },
+    })
     .addFeature(placeholder, { text: 'Type / for commands' })
     .addFeature(toolbar)
     // Latex, added below, wraps this preview hook for its own blocks.
@@ -78,7 +87,7 @@ async function createCrepe(
     .use(tocDecorations)
     .use(activeBlock)
     .use(searchPlugin);
-  return withTopBar ? crepe.addFeature(topBar) : crepe;
+  return withTopBar ? crepe.addFeature(topBar, { buildTopBar }) : crepe;
 }
 
 export { createCrepe };

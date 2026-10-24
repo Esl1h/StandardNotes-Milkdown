@@ -184,6 +184,13 @@
   }
 }
 
+// Crepe pads the note 60px 120px. The text takes the full pane width, so
+// the sides keep only the room the block handle needs: 48px wide, 6px from
+// the text (crepe.ts) and 6px from the pane edge.
+.crepe-container .milkdown .ProseMirror {
+  padding: 60px;
+}
+
 // Crepe pads the note 60px 120px, which leaves about a third of a phone
 // for the text and splits words in headings. Touch only: with a mouse the
 // block handle sits in that side padding and would end up off screen.
@@ -224,7 +231,7 @@
   --crepe-font-default: var(--sn-stylekit-editor-font-family, var(--sn-stylekit-sans-serif-font));
   --crepe-font-title: var(--sn-stylekit-editor-font-family, var(--sn-stylekit-sans-serif-font));
   --crepe-font-code: var(--sn-stylekit-monospace-font, monospace);
-  --crepe-base-font-size: 1rem;
+  --crepe-base-font-size: var(--sn-stylekit-font-size-editor, 1rem);
 }
 
 // The Crepe top bar sticks to the top of the editor. In the bottom
@@ -272,8 +279,12 @@
   white-space: nowrap;
 }
 
+// The first thing to give way on a narrow bar, before the buttons.
 .mode-switcher .word-count {
+  min-width: 0;
+  overflow: hidden;
   padding: 0 8px;
+  text-overflow: ellipsis;
 }
 
 // Printing shows the rendered note only: no bars, no source pane, no

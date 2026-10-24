@@ -1,6 +1,6 @@
 /**
  * Visual layer over the Crepe frame theme: tokens, floating surfaces,
- * caret, active block and focus mode. Colors come from the --crepe-*
+ * caret and focus mode. Colors come from the --crepe-*
  * mapping in milkdown.scss, so every SN theme (dark or light) applies.
  */
 
@@ -106,13 +106,6 @@
   background: color-mix(in srgb, var(--ed-accent) 24%, transparent);
 }
 
-// ---------- Active block ----------
-.crepe-container .milkdown .ProseMirror > .is-active {
-  border-radius: 8px;
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--ed-accent) 5%, transparent);
-  background: color-mix(in srgb, var(--ed-accent) 5%, transparent);
-}
-
 // ---------- Motion preference ----------
 @media (prefers-reduced-motion: reduce) {
   .crepe-container .milkdown *,
@@ -124,11 +117,6 @@
 }
 
 // ---------- Typography ----------
-.crepe-container .milkdown .editor {
-  margin-inline: auto;
-  max-width: 920px;
-}
-
 .crepe-container .milkdown .editor p {
   line-height: 1.7;
   text-wrap: pretty;
@@ -173,7 +161,7 @@
 // A rounded bar that floats at the top, centered, instead of a strip from
 // edge to edge. The app colors come straight from the StyleKit: the tokens
 // above belong to the editor, which this bar sits outside of.
-.milkdown-app > .mode-switcher {
+:is(.milkdown-app, .panes) > .mode-switcher {
   align-self: center;
   background: color-mix(in srgb, var(--sn-stylekit-contrast-background-color) 82%, transparent);
   -webkit-backdrop-filter: blur(12px) saturate(160%);
@@ -192,6 +180,23 @@
   position: relative;
   // Over the formatting bar and the note, like the menus it opens.
   z-index: 40;
+}
+
+// With the formatting bar on top (visual mode), that bar keeps the top edge
+// and this one floats right below it, over the note's top padding.
+.panes > .mode-switcher {
+  left: 0;
+  margin: 0 auto;
+  position: absolute;
+  right: 0;
+  top: calc(var(--top-bar-height) + 8px);
+  width: fit-content;
+  // Under the formatting bar's heading dropdown (20), which can open over it.
+  z-index: 15;
+}
+
+.panes:has(> .mode-switcher) .milkdown .editor :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: calc(var(--top-bar-height) + 64px);
 }
 
 .mode-switcher button {
@@ -217,7 +222,7 @@
 
 // No blur on touch devices, as for the other floating surfaces.
 @media (pointer: coarse) {
-  .milkdown-app > .mode-switcher {
+  :is(.milkdown-app, .panes) > .mode-switcher {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background: var(--sn-stylekit-contrast-background-color);
@@ -275,16 +280,26 @@
 }
 
 // ---------- Block handle and slash menu ----------
+// Crepe's 32px items with 24px icons dwarf the body text.
 .crepe-container .milkdown .milkdown-block-handle {
   background: var(--crepe-color-surface);
   border: 1px solid var(--ed-glass-border);
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
-  padding: 2px;
+  gap: 0;
+  padding: 1px;
 }
 
 .crepe-container .milkdown .milkdown-block-handle .operation-item {
-  border-radius: 8px;
+  border-radius: 6px;
+  height: 22px;
+  padding: 3px;
+  width: 22px;
+}
+
+.crepe-container .milkdown .milkdown-block-handle .operation-item svg {
+  height: 16px;
+  width: 16px;
 }
 
 .crepe-container .milkdown .milkdown-slash-menu .menu-groups li {

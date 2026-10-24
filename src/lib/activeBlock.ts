@@ -4,7 +4,7 @@ import { Decoration, DecorationSet } from '@milkdown/kit/prose/view';
 
 /**
  * Marks the top level block holding the cursor with `is-active`, for the
- * active block highlight and the focus mode (both pure CSS on that class).
+ * focus mode (pure CSS on that class).
  *
  * Decorations never touch the document, so moving the cursor around never
  * produces a save. The set is rebuilt only when the active block changes.
