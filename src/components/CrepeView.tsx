@@ -44,6 +44,8 @@ interface CrepeViewProps {
   onView?: (view: EditorView | null) => void;
   /** Rendered at the right end of the Crepe top bar, when it is on. */
   topBarAccessory?: React.ReactNode;
+  /** Receives the Crepe top bar height whenever it changes (it wraps). */
+  onTopBarHeight?: (height: number) => void;
 }
 
 /** Counts the rendered text, so Markdown syntax never inflates the count. */
@@ -80,8 +82,10 @@ function CrepeView(props: CrepeViewProps) {
   const onStatsRef = useRef(props.onStats);
   const onViewRef = useRef(props.onView);
   const onHeadingsRef = useRef(props.onHeadings);
+  const onTopBarHeightRef = useRef(props.onTopBarHeight);
   useEffect(() => {
     onHeadingsRef.current = props.onHeadings;
+    onTopBarHeightRef.current = props.onTopBarHeight;
     onTextChangeRef.current = onTextChange;
     onStatsRef.current = props.onStats;
     onViewRef.current = props.onView;
@@ -218,6 +222,22 @@ function CrepeView(props: CrepeViewProps) {
     }, APPLY_DELAY_MS);
     return () => clearTimeout(timer);
   }, [rawText, epoch]);
+
+  useEffect(() => {
+    // jsdom has no ResizeObserver.
+    if (!topBarElement || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+    // A recreated instance removes the old bar, which then reports 0 and
+    // could land after the new bar's height.
+    const observer = new ResizeObserver(() => {
+      if (topBarElement.isConnected) {
+        onTopBarHeightRef.current?.(topBarElement.offsetHeight);
+      }
+    });
+    observer.observe(topBarElement);
+    return () => observer.disconnect();
+  }, [topBarElement]);
 
   return (
     <div className="crepe-container" ref={containerRef}>

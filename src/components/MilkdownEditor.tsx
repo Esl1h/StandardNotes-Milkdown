@@ -64,6 +64,7 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   const [sourceStats, setSourceStats] = useState<TextStats | null>(null);
   const [proseView, setProseView] = useState<ProseView | null>(null);
   const [sourceView, setSourceView] = useState<SourceEditorView | null>(null);
+  const [topBarHeight, setTopBarHeight] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [outline, setOutline] = useState<boolean>(() => readOutline());
   const [headings, setHeadings] = useState<Heading[]>([]);
@@ -152,44 +153,49 @@ function MilkdownEditor(props: MilkdownEditorProps) {
   // icon bar; with both gone the interface stays clean.
   const countInTopBar = topbar && mode !== 'source';
 
+  const switcher = layoutBar ? (
+    <ModeSwitcher
+      mode={mode}
+      orientation={orientation}
+      topbar={topbar}
+      topbarPosition={topbarPosition}
+      onModeChange={changeMode}
+      onOrientationChange={changeOrientation}
+      onTopbarChange={changeTopbar}
+      onTopbarPositionChange={changeTopbarPosition}
+      onCopy={() => copyText(rawText)}
+      onExportHtml={mode === 'source' ? null : exportHtml}
+      onSearch={openSearch}
+      outline={mode === 'source' ? null : outline}
+      onOutlineChange={changeOutline}
+      focusMode={focusMode}
+      onFocusModeChange={changeFocusMode}
+      onHide={() => changeLayoutBar(false)}
+      trailing={
+        <>
+          {empty && (
+            <button className="insert-sample" onClick={onInsertSample}>
+              Add sample
+            </button>
+          )}
+          {!countInTopBar && wordCount}
+        </>
+      }
+    />
+  ) : (
+    <ShowLayoutBarButton onShow={() => changeLayoutBar(true)} />
+  );
+  // Visual mode with the formatting bar on top: that bar takes the top edge
+  // and the icon bar floats right below it, over the note.
+  const switcherBelowTopBar = layoutBar && topbar && topbarPosition === 'top' && mode === 'visual';
+
   return (
     <div
       className={`milkdown-app mode-${mode}${layoutBar ? '' : ' layout-bar-hidden'}${
         focusMode ? ' focus-mode' : ''
       }`}
     >
-      {layoutBar ? (
-        <ModeSwitcher
-          mode={mode}
-          orientation={orientation}
-          topbar={topbar}
-          topbarPosition={topbarPosition}
-          onModeChange={changeMode}
-          onOrientationChange={changeOrientation}
-          onTopbarChange={changeTopbar}
-          onTopbarPositionChange={changeTopbarPosition}
-          onCopy={() => copyText(rawText)}
-          onExportHtml={mode === 'source' ? null : exportHtml}
-          onSearch={openSearch}
-          outline={mode === 'source' ? null : outline}
-          onOutlineChange={changeOutline}
-          focusMode={focusMode}
-          onFocusModeChange={changeFocusMode}
-          onHide={() => changeLayoutBar(false)}
-          trailing={
-            <>
-              {empty && (
-                <button className="insert-sample" onClick={onInsertSample}>
-                  Add sample
-                </button>
-              )}
-              {!countInTopBar && wordCount}
-            </>
-          }
-        />
-      ) : (
-        <ShowLayoutBarButton onShow={() => changeLayoutBar(true)} />
-      )}
+      {!switcherBelowTopBar && switcher}
       {searchOpen && mode !== 'source' && proseView && (
         <SearchBar view={proseView} onClose={() => setSearchOpen(false)} />
       )}
@@ -198,7 +204,9 @@ function MilkdownEditor(props: MilkdownEditorProps) {
           outlineShown ? ' with-outline' : ''
         }`}
         data-topbar={topbarPosition}
+        style={{ '--top-bar-height': `${topBarHeight}px` } as React.CSSProperties}
       >
+        {switcherBelowTopBar && switcher}
         {mode !== 'visual' && (
           <div className="source-pane">
             <SourceView
@@ -229,6 +237,7 @@ function MilkdownEditor(props: MilkdownEditorProps) {
               onView={setProseView}
               onHeadings={setHeadings}
               topBarAccessory={countInTopBar ? wordCount : null}
+              onTopBarHeight={setTopBarHeight}
             />
           </div>
         )}

@@ -161,7 +161,7 @@
 // A rounded bar that floats at the top, centered, instead of a strip from
 // edge to edge. The app colors come straight from the StyleKit: the tokens
 // above belong to the editor, which this bar sits outside of.
-.milkdown-app > .mode-switcher {
+:is(.milkdown-app, .panes) > .mode-switcher {
   align-self: center;
   background: color-mix(in srgb, var(--sn-stylekit-contrast-background-color) 82%, transparent);
   -webkit-backdrop-filter: blur(12px) saturate(160%);
@@ -180,6 +180,23 @@
   position: relative;
   // Over the formatting bar and the note, like the menus it opens.
   z-index: 40;
+}
+
+// With the formatting bar on top (visual mode), that bar keeps the top edge
+// and this one floats right below it, over the note's top padding.
+.panes > .mode-switcher {
+  left: 0;
+  margin: 0 auto;
+  position: absolute;
+  right: 0;
+  top: calc(var(--top-bar-height) + 8px);
+  width: fit-content;
+  // Under the formatting bar's heading dropdown (20), which can open over it.
+  z-index: 15;
+}
+
+.panes:has(> .mode-switcher) .milkdown .editor :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: calc(var(--top-bar-height) + 64px);
 }
 
 .mode-switcher button {
@@ -205,7 +222,7 @@
 
 // No blur on touch devices, as for the other floating surfaces.
 @media (pointer: coarse) {
-  .milkdown-app > .mode-switcher {
+  :is(.milkdown-app, .panes) > .mode-switcher {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background: var(--sn-stylekit-contrast-background-color);

@@ -80,3 +80,18 @@ test('an empty note with the bar at the bottom keeps the full column', async ({ 
   const box = await editor.boundingBox();
   expect(box.width).toBe(1000);
 });
+
+test('the formatting bar on top takes the top edge, above the icon bar', async ({ page }) => {
+  // From an empty note through Add sample, which recreates the editor.
+  const plugin = await openHost(page, { text: '' });
+  await plugin.getByText('Add sample').click();
+  await expect(plugin.locator('.milkdown .editor h1')).toBeVisible();
+  const topBar = plugin.locator('.milkdown .milkdown-top-bar');
+  const iconBar = plugin.locator('.mode-switcher');
+  await expect(topBar).toBeVisible();
+
+  const bar = await topBar.boundingBox();
+  const icons = await iconBar.boundingBox();
+  expect(bar.y).toBe(0);
+  expect(icons.y).toBeGreaterThanOrEqual(bar.y + bar.height);
+});
