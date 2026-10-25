@@ -20,8 +20,9 @@ function markdownPreview(markdown: string): string {
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/<[^>]+>/g, '')
     // An unclosed tag survives the line above; drop any < that could
-    // still open one, but keep a plain "a < b".
-    .replace(/<(?=[a-zA-Z/!?])/g, '')
+    // still open one, but keep a plain "a < b". A < before another < goes
+    // too, or "<<script" would leave "<script" behind.
+    .replace(/<(?=[a-zA-Z/!?<])/g, '')
     .replace(/^\s*(?:#{1,6}\s+|>\s?|[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+)/gm, '')
     .replace(/[*_~`]+/g, '');
   return truncatePreview(text);

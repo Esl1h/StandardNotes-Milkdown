@@ -30,6 +30,8 @@ describe('markdownPreview', () => {
     expect(markdownPreview('text <script')).toBe('text script');
     expect(markdownPreview('a <img src=x onerror=alert(1)')).not.toMatch(/<[a-z]/i);
     expect(markdownPreview('<a><script')).toBe('script');
+    expect(markdownPreview('<<script')).toBe('script');
+    expect(markdownPreview('<<<img src=x')).toBe('img src=x');
   });
 
   it('keeps a less-than sign that cannot open a tag', () => {
