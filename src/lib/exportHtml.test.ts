@@ -59,6 +59,10 @@ describe('exportFileName', () => {
     expect(exportFileName('  a   b  ')).toBe('a b.html');
   });
 
+  it('cuts a long title at 80 characters without splitting one', () => {
+    expect(exportFileName(`${'a'.repeat(79)}😀😀`)).toBe(`${'a'.repeat(79)}😀.html`);
+  });
+
   it('falls back to a generic name for an empty or unusable title', () => {
     expect(exportFileName('')).toBe('note.html');
     expect(exportFileName('///')).toBe('note.html');
