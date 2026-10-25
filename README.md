@@ -1,6 +1,7 @@
 # StandardNotes Milkdown
 
 [![CI](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml/badge.svg)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/github-code-scanning/codeql)
 [![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Esl1h/StandardNotes-Milkdown/badges/coverage.json)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/coverage.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Esl1h/StandardNotes-Milkdown/badge)](https://scorecard.dev/viewer/?uri=github.com/Esl1h/StandardNotes-Milkdown)
 [![Release](https://img.shields.io/github/v/release/Esl1h/StandardNotes-Milkdown)](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest)
@@ -88,6 +89,10 @@ The app checks that URL for updates, so new releases arrive on their own.
 Each [release](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest)
 also carries the packaged build as `extension.zip`.
 
+### Self-hosting
+
+The hosted build is plain static files, so it can be served from anywhere. Unzip `extension.zip` from a release (or run `npm run build` and take `build/`), serve the files over HTTPS with CORS enabled, and change `url`, `download_url` and `latest_url` in `ext.json` to your host. Install your `ext.json` URL as above. To keep both the hosted and your copy installed, also change `identifier`.
+
 ## Verifying a release
 
 Releases published from November 2026 on attach a `SHA256SUMS` file and a build provenance attestation next to `extension.zip`, the package the desktop app installs. To check a downloaded zip, run in the folder that holds both files:
@@ -146,12 +151,18 @@ graph LR
 - Math uses the `$...$` / `$$...$$` syntax and diagrams the ` ```mermaid `
   fence, both understood by GitHub, Obsidian and most Markdown tools
 
-## Privacy
+## Compatibility
 
-Everything is stored inside your Standard Notes note, so it is encrypted
-with the rest of your data. The editor has no AI features and no network
-access of its own; the only remote content it loads is images linked by
-URL in the note. Mermaid renders diagrams with its strict security level.
+- Standard Notes web app and desktop app (Windows, macOS, Linux)
+- Standard Notes mobile apps (iOS and Android): on narrow screens the split view stacks and the bar actions move into a `...` menu, and the e2e suite drives the editor through a host with the mobile app's opaque origin and a throttled CPU
+- Follows the theme selected in the app, light or dark, including the Mermaid diagrams
+- The note stays plain Markdown, so the built in editor, other Markdown editors and tools such as GitHub and Obsidian read it as written
+
+## Privacy and network
+
+Everything is stored inside your Standard Notes note, so it is encrypted with the rest of your data. The editor has no telemetry, no AI features and no network access of its own: the only remote content it loads is images linked by URL in the note. Uploaded, pasted or dropped images are embedded in the note instead of being sent anywhere. Mermaid renders diagrams with its strict security level.
+
+The page's Content Security Policy allows scripts and connections only from the plugin's own origin, and the HTML export carries a policy of its own that blocks scripts entirely.
 
 ## Development and running locally
 
@@ -193,22 +204,19 @@ If you run into issues, please refer to the
 CI runs these on every push and pull request; run them before opening a PR:
 
 ```
-npm run typecheck   # TypeScript
-npm run lint        # ESLint
-npm test            # unit tests (Vitest)
-npm run build       # production build
-npm run e2e         # end to end tests (Playwright)
+npm run typecheck       # TypeScript
+npm run lint            # ESLint
+npm run format:check    # Prettier
+npm test                # unit and property tests (Vitest, fast-check)
+npm run build           # production build
+npm run check:build     # no unreferenced file in build/
+npm run check:lockfile  # git dependencies only at the known commits
+npm run e2e             # end to end tests (Playwright)
 ```
 
-Run `npx playwright install chromium` once before the first `npm run e2e`.
-The e2e suite builds the plugin and drives it through a fake Standard Notes
-host (`e2e/snHost.js`), including a throttled CPU (slow mobile WebView) and
-the opaque origin of the mobile app.
+Run `npx playwright install chromium` once before the first `npm run e2e`. The e2e suite builds the plugin and drives it through a fake Standard Notes host (`e2e/snHost.js`), including a throttled CPU (slow mobile WebView) and the opaque origin of the mobile app.
 
-Only the Crepe features in use are bundled (no AI): the main chunk is
-about 390 KB gzipped. KaTeX (about 80 KB gzipped) loads in its own chunk
-at startup, Mermaid only when a note has a diagram, and code block
-languages on demand.
+Only the Crepe features in use are bundled (no AI): the main chunk is about 390 KB gzipped. KaTeX (about 80 KB gzipped) loads in its own chunk at startup, Mermaid only when a note has a diagram, and code block languages on demand.
 
 ### Releases
 
