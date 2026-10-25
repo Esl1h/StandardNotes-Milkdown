@@ -87,6 +87,17 @@ The app checks that URL for updates, so new releases arrive on their own.
 Each [release](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest)
 also carries the packaged build as `extension.zip`.
 
+## Verifying a release
+
+Releases published from November 2026 on attach a `SHA256SUMS` file and a build provenance attestation next to `extension.zip`, the package the desktop app installs. To check a downloaded zip, run in the folder that holds both files:
+
+```
+sha256sum -c SHA256SUMS
+gh attestation verify extension.zip -R Esl1h/StandardNotes-Milkdown
+```
+
+The second command confirms that the zip was built by this repository's release workflow from the tagged commit. Releases are immutable: once published, their tag and files cannot be changed.
+
 ## Note format
 
 The note body is plain Markdown: CommonMark plus GitHub Flavored Markdown
