@@ -4,6 +4,8 @@ Thanks for helping out. This is a small, focused editor: a WYSIWYG Markdown
 editor for Standard Notes, powered by Milkdown Crepe, that keeps the note
 as plain Markdown.
 
+By taking part you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Development setup
 
 ```
