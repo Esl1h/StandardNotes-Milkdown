@@ -19,12 +19,13 @@ function markdownPreview(markdown: string): string {
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/<[^>]+>/g, '')
-    // An unclosed tag survives the line above; drop any < that could
-    // still open one, but keep a plain "a < b". A < before another < goes
-    // too, or "<<script" would leave "<script" behind.
-    .replace(/<(?=[a-zA-Z/!?<])/g, '')
     .replace(/^\s*(?:#{1,6}\s+|>\s?|[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+)/gm, '')
-    .replace(/[*_~`]+/g, '');
+    .replace(/[*_~`]+/g, '')
+    // An unclosed tag survives the tag strip; drop any < that could still
+    // open one, but keep a plain "a < b". A < before another < goes too, or
+    // "<<script" would leave "<script" behind. Last, so no later removal
+    // (the ** of "<**script") can bring a letter next to a kept <.
+    .replace(/<(?=[a-zA-Z/!?<])/g, '');
   return truncatePreview(text);
 }
 

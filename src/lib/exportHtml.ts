@@ -78,15 +78,15 @@ ${body}
 
 /** The title as a file name: no path or reserved characters, 80 at most. */
 function exportFileName(title: string): string {
-  const name = [...title]
+  const cleaned = [...title]
     // Control characters are not allowed in a file name either.
     .filter((char) => char.charCodeAt(0) >= 32)
     .join('')
     .replace(/[\\/:*?"<>|]/g, '')
     .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 80)
     .trim();
+  // Cut by code point, so an emoji at the limit is not split in half.
+  const name = [...cleaned].slice(0, 80).join('').trim();
   return `${name || 'note'}.html`;
 }
 

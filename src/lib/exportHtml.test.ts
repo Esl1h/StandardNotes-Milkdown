@@ -1,3 +1,4 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { Schema } from '@milkdown/kit/prose/model';
 import { exportFileName, htmlDocument, noteHtml } from './exportHtml';
@@ -57,6 +58,10 @@ describe('exportFileName', () => {
 
   it('collapses spaces and trims the ends', () => {
     expect(exportFileName('  a   b  ')).toBe('a b.html');
+  });
+
+  it('cuts a long title at 80 characters without splitting one', () => {
+    expect(exportFileName(`${'a'.repeat(79)}😀😀`)).toBe(`${'a'.repeat(79)}😀.html`);
   });
 
   it('falls back to a generic name for an empty or unusable title', () => {
@@ -185,5 +190,48 @@ describe('noteHtml', () => {
 
   it('drops the empty paragraphs the editor keeps', () => {
     expect(html(paragraph(schema.text('a')), schema.node('paragraph'))).toBe('<p>a</p>');
+  });
+});
+
+// Any text, plus titles around the 80 character cut made of letters and
+// emoji (two UTF-16 units each), where a cut by code unit splits one.
+const titles = fc.oneof(
+  fc.string({ unit: 'binary' }),
+  fc
+    .array(fc.constantFrom('a', ' ', '😀', '/', ':', '\u0001', '\t'), { maxLength: 120 })
+    .map((chars) => chars.join('')),
+  fc
+    .array(fc.constantFrom('a', '😀'), { minLength: 41, maxLength: 90 })
+    .map((chars) => chars.join(''))
+);
+
+describe('export properties', () => {
+  it('turns any title into a safe file name', () => {
+    fc.assert(
+      fc.property(titles, (title) => {
+        const file = exportFileName(title);
+        expect(file.endsWith('.html')).toBe(true);
+        const name = file.slice(0, -'.html'.length);
+        expect(name.length).toBeGreaterThan(0);
+        expect([...name].length).toBeLessThanOrEqual(80);
+        expect(name).not.toMatch(/[\\/:*?"<>|]/);
+        expect([...name].every((char) => char.charCodeAt(0) >= 32)).toBe(true);
+        expect(name).toBe(name.trim());
+        // No half of a surrogate pair left at the cut.
+        expect(name).not.toMatch(
+          /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/
+        );
+      })
+    );
+  });
+
+  it('keeps the title from adding markup to the page', () => {
+    fc.assert(
+      fc.property(fc.string(), (title) => {
+        const page = htmlDocument(title, '<p>x</p>');
+        const inTitle = page.slice(page.indexOf('<title>') + 7, page.indexOf('</title>'));
+        expect(inTitle).not.toMatch(/[<>"]/);
+      })
+    );
   });
 });
