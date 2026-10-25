@@ -25,6 +25,17 @@ describe('markdownPreview', () => {
     expect(markdownPreview('# Title\n\n**bold** [link](https://e.com)')).toBe('Title bold link');
   });
 
+  it('leaves no tag opening behind, even when it is never closed', () => {
+    expect(markdownPreview('<b>bold</b> text')).toBe('bold text');
+    expect(markdownPreview('text <script')).toBe('text script');
+    expect(markdownPreview('a <img src=x onerror=alert(1)')).not.toMatch(/<[a-z]/i);
+    expect(markdownPreview('<a><script')).toBe('script');
+  });
+
+  it('keeps a less-than sign that cannot open a tag', () => {
+    expect(markdownPreview('a < b')).toBe('a < b');
+  });
+
   it('is a single space for an empty note, never an empty string', () => {
     expect(markdownPreview('')).toBe(' ');
     expect(markdownPreview('  \n')).toBe(' ');
