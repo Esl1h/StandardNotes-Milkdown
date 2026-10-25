@@ -1,9 +1,20 @@
 {
   "name": "standardnotes-milkdown",
-  "version": "0.8.1",
+  "version": "1.0.0",
   "description": "WYSIWYG Markdown editor for Standard Notes, powered by Milkdown Crepe",
+  "keywords": [
+    "Standard Notes",
+    "Standard Notes Extensions"
+  ],
   "private": true,
   "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Esl1h/StandardNotes-Milkdown.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Esl1h/StandardNotes-Milkdown/issues"
+  },
   "sn": {
     "main": "index.html"
   }
