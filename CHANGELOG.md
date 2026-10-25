@@ -4,17 +4,25 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.0] - 2026-10-25
+
+### Added
+
+- Set a Content Security Policy on the page
 
 ### Fixed
 
 - Sync the stale dev manifest version
 - Drop unclosed tag openings from the preview
 - Drop repeated < before a tag in the preview
+- Drop a < that emphasis markers hid
+- **export:** Keep emoji whole in the file name
 
 ### Documentation
 
 - Adopt the Contributor Covenant
+- Record the shared decisions as ADRs
+- Align the README with the other plugins
 
 ## [0.8.1] - 2026-10-25
 
