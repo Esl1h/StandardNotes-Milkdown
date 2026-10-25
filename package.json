@@ -38,6 +38,7 @@
     "lint": "eslint src",
     "version:bump": "node scripts/version-bump.mjs",
     "version:check": "node scripts/version-bump.mjs --check",
+    "changelog": "git-cliff -o CHANGELOG.md && prettier --write CHANGELOG.md",
     "check:build": "node scripts/check-build.mjs",
     "check:lockfile": "node scripts/check-lockfile.mjs"
   },
@@ -77,6 +78,7 @@
     "@vitest/coverage-v8": "^5.0.3",
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "git-cliff": "^2.14.2",
     "jsdom": "^30.1.1",
     "prettier": "^3.9.10",
     "typescript": "^5.9.3",
