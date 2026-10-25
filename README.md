@@ -1,6 +1,7 @@
 # StandardNotes Milkdown
 
 [![CI](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml/badge.svg)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Esl1h/StandardNotes-Milkdown/badges/coverage.json)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/coverage.yml)
 [![Release](https://img.shields.io/github/v/release/Esl1h/StandardNotes-Milkdown)](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest)
 [![License](https://img.shields.io/github/license/Esl1h/StandardNotes-Milkdown)](LICENSE)
 
@@ -21,7 +22,7 @@ plugin only changes how you edit them.
    to add and move blocks. A focus mode button in the icon bar dims every
    block but the one with the cursor
 3. Math with KaTeX: `$inline$` formulas and `$$` blocks
-4. Diagrams: ```` ```mermaid ```` code blocks show a live preview of the diagram, while the note keeps its source; the diagrams follow a change of the app theme without reopening the note
+4. Diagrams: ` ```mermaid ` code blocks show a live preview of the diagram, while the note keeps its source; the diagrams follow a change of the app theme without reopening the note
 5. Images uploaded, pasted or dropped are embedded in the note; large ones
    are scaled down so the note stays light
 6. Three modes, switched from the icon bar at the top: **Visual**,
@@ -130,7 +131,7 @@ graph LR
 - Images keep their alt text and title when the note is edited. One limit: Crepe stores the resize ratio of an image in its alt text, so resizing an image that has alt text replaces the alt with the ratio (for example `![0.50](https://...)`)
 - YAML front matter (between `---` fences), TOML front matter (between `+++` fences), GitHub alerts (`> [!NOTE]`, rendered as colored callouts) and `[[wiki links]]` are kept exactly as written, so notes imported from GitHub, Obsidian, Jekyll or Hugo are not rewritten
 - A line that says only `[TOC]` is a table of contents: add it from the `/` menu (**Table of contents**) and the editor draws a live list of the headings under it, each one a link. The note keeps just the `[TOC]` line, which Typora, GitLab and other Markdown tools read the same way
-- Math uses the `$...$` / `$$...$$` syntax and diagrams the ```` ```mermaid ````
+- Math uses the `$...$` / `$$...$$` syntax and diagrams the ` ```mermaid `
   fence, both understood by GitHub, Obsidian and most Markdown tools
 
 ## Privacy

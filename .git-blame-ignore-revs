@@ -1,0 +1,5 @@
+# Formatting-only commits; git blame skips them when
+# blame.ignoreRevsFile points here (GitHub reads this file by default).
+
+# style: apply prettier to the README
+f056d5a35144755cbc189706e3a9f0a1ee20b404
