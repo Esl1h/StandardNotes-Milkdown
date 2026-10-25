@@ -32,6 +32,8 @@ describe('markdownPreview', () => {
     expect(markdownPreview('<a><script')).toBe('script');
     expect(markdownPreview('<<script')).toBe('script');
     expect(markdownPreview('<<<img src=x')).toBe('img src=x');
+    expect(markdownPreview('<**script')).toBe('script');
+    expect(markdownPreview('<_img src=x')).toBe('img src=x');
   });
 
   it('keeps a less-than sign that cannot open a tag', () => {
