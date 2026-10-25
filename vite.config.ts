@@ -23,5 +23,12 @@ export default defineConfig({
     setupFiles: './src/setupTests.ts',
     // e2e/ specs belong to Playwright, not to Vitest.
     include: ['src/**/*.test.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/lib/**', 'src/components/**'],
+      exclude: ['src/**/*.test.*'],
+      reporter: ['text', 'json-summary'],
+      reportsDirectory: './coverage',
+    },
   },
 });
