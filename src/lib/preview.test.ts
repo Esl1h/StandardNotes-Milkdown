@@ -1,3 +1,4 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { PREVIEW_LIMIT, markdownPreview } from './preview';
 
@@ -49,5 +50,58 @@ describe('markdownPreview', () => {
     const preview = markdownPreview('x'.repeat(500));
     expect(preview).toHaveLength(PREVIEW_LIMIT);
     expect(preview.endsWith('…')).toBe(true);
+  });
+});
+
+// Random text rarely looks like Markdown, so also draw notes from the
+// fragments the preview has to take apart.
+const fragment = fc.constantFrom(
+  '<',
+  '<<',
+  '>',
+  'script',
+  '<img src=x onerror=alert(1)',
+  '</b>',
+  '<!--',
+  '# ',
+  '> ',
+  '- [x] ',
+  '1. ',
+  '**',
+  '_',
+  '`',
+  '```js\n',
+  '![a](data:image/png;base64,AAAA)',
+  '[x](https://e.com)',
+  '---\n',
+  '+++\n',
+  '\n',
+  ' ',
+  'a < b',
+  'text'
+);
+const note = fc.oneof(
+  fc.string(),
+  fc.array(fragment, { maxLength: 40 }).map((parts) => parts.join(''))
+);
+
+describe('markdownPreview properties', () => {
+  it('is one non-empty line within the limit', () => {
+    fc.assert(
+      fc.property(note, (text) => {
+        const preview = markdownPreview(text);
+        expect(preview.length).toBeGreaterThan(0);
+        expect(preview.length).toBeLessThanOrEqual(PREVIEW_LIMIT);
+        expect(preview).not.toMatch(/\n/);
+      })
+    );
+  });
+
+  it('never leaves a < that could open a tag', () => {
+    fc.assert(
+      fc.property(note, (text) => {
+        expect(markdownPreview(text)).not.toMatch(/<[a-zA-Z/!?]/);
+      })
+    );
   });
 });

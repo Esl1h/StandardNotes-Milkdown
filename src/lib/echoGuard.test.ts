@@ -1,3 +1,4 @@
+import fc from 'fast-check';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ECHO_WINDOW_MS, EchoGuard } from './echoGuard';
 
@@ -83,5 +84,44 @@ describe('EchoGuard', () => {
     guard.recordSave('ab');
     expect(guard.isStaleEcho('n1', 'a', 'ab')).toBe(false);
     expect(guard.isStaleEcho('n1', 'ab', 'abc')).toBe(true);
+  });
+});
+
+describe('EchoGuard properties', () => {
+  const same = (text: string) => text.replace(/\r\n?/g, '\n').trim();
+
+  it('never holds back the text already on screen', () => {
+    fc.assert(
+      fc.property(fc.array(fc.string()), fc.string(), (saves, current) => {
+        const guard = new EchoGuard(() => 0);
+        guard.isStaleEcho('n1', current, current);
+        saves.forEach((text) => guard.recordSave(text));
+        expect(guard.isStaleEcho('n1', current, current)).toBe(false);
+      })
+    );
+  });
+
+  it('knows a save of its own however the app spells it back', () => {
+    fc.assert(
+      fc.property(fc.string(), fc.string(), (saved, current) => {
+        fc.pre(same(saved) !== same(current));
+        const guard = new EchoGuard(() => 0);
+        guard.isStaleEcho('n1', current, current);
+        guard.recordSave(saved);
+        const echo = `${saved.replace(/\n/g, '\r\n')}\n`;
+        expect(guard.isStaleEcho('n1', echo, current)).toBe(echo !== current);
+      })
+    );
+  });
+
+  it('lets through text from another note', () => {
+    fc.assert(
+      fc.property(fc.string(), fc.string(), (saved, current) => {
+        const guard = new EchoGuard(() => 0);
+        guard.isStaleEcho('n1', current, current);
+        guard.recordSave(saved);
+        expect(guard.isStaleEcho('n2', saved, current)).toBe(false);
+      })
+    );
   });
 });
