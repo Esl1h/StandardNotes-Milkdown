@@ -32,6 +32,7 @@
     "server": "vite preview --port 3000",
     "server-cors": "vite preview --port 3000",
     "pretty": "prettier --write 'src/**/*.{html,css,scss,js,jsx,ts,tsx,json}' README.md",
+    "format:check": "prettier --check 'src/**/*.{html,css,scss,js,jsx,ts,tsx,json}' README.md",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "version:bump": "node scripts/version-bump.mjs",
