@@ -1,4 +1,5 @@
 import { commandsCtx, editorViewCtx } from '@milkdown/kit/core';
+import { type Ctx } from '@milkdown/kit/ctx';
 import { redoCommand, undoCommand } from '@milkdown/kit/plugin/history';
 import {
   addBlockTypeCommand,
@@ -57,7 +58,7 @@ const buildTopBar: NonNullable<TopBarFeatureConfig['buildTopBar']> = (builder) =
     .addItem('indent', {
       icon: INDENT_ICON,
       active: () => false,
-      onRun: (ctx) => ctx.get(commandsCtx).call(sinkListItemCommand.key),
+      onRun: (ctx: Ctx) => ctx.get(commandsCtx).call(sinkListItemCommand.key),
     });
 
   builder
@@ -84,7 +85,7 @@ const buildTopBar: NonNullable<TopBarFeatureConfig['buildTopBar']> = (builder) =
     .addItem('toc', {
       icon: TOC_ICON,
       active: () => false,
-      onRun: (ctx) => {
+      onRun: (ctx: Ctx) => {
         const { schema } = ctx.get(editorViewCtx).state;
         ctx.get(commandsCtx).call(addBlockTypeCommand.key, {
           nodeType: paragraphSchema.type(ctx).create(null, schema.text('[TOC]')),
@@ -102,7 +103,7 @@ const buildTopBar: NonNullable<TopBarFeatureConfig['buildTopBar']> = (builder) =
     .addItem('redo', {
       icon: REDO_ICON,
       active: () => false,
-      onRun: (ctx) => ctx.get(commandsCtx).call(redoCommand.key),
+      onRun: (ctx: Ctx) => ctx.get(commandsCtx).call(redoCommand.key),
     });
 };
 
