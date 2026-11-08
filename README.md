@@ -1,5 +1,7 @@
 # StandardNotes Milkdown
 
+![StandardNotes Milkdown: visual editing, plain Markdown](assets/head.png)
+
 [![CI](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml/badge.svg)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/github-code-scanning/codeql)
 [![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Esl1h/StandardNotes-Milkdown/badges/coverage.json)](https://github.com/Esl1h/StandardNotes-Milkdown/actions/workflows/coverage.yml)
@@ -7,6 +9,8 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15958/badge)](https://www.bestpractices.dev/projects/15958)
 [![Release](https://img.shields.io/github/v/release/Esl1h/StandardNotes-Milkdown)](https://github.com/Esl1h/StandardNotes-Milkdown/releases/latest)
 [![License](https://img.shields.io/github/license/Esl1h/StandardNotes-Milkdown)](LICENSE)
+
+<img src="assets/logo.png" alt="StandardNotes Milkdown logo" width="200" align="right">
 
 A WYSIWYG Markdown editor for [Standard Notes](https://standardnotes.com), a
 free, open-source, end-to-end encrypted notes app, powered by
