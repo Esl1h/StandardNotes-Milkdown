@@ -7,10 +7,41 @@
 
 /** Largest data URI embedded in a note, in characters (about 375 KB of image). */
 const MAX_DATA_URI_LENGTH = 500 * 1024;
+/** All the embedded images of one note, in characters (about 3.75 MB of images). */
+const MAX_NOTE_IMAGE_LENGTH = 5 * 1024 * 1024;
 /** Longest side of a recompressed image, in pixels. */
 const MAX_SIDE = 1600;
 /** Below this longest side the image is too degraded to be worth keeping. */
 const MIN_SIDE = 200;
+
+// The note's current Markdown, to see how much of the budget its images use.
+// The editor sets it per instance; null means no note, so no limit applies.
+let noteText: (() => string) | null = null;
+
+function setNoteTextSource(source: (() => string) | null): void {
+  noteText = source;
+}
+
+function embeddedLength(text: string): number {
+  let total = 0;
+  for (const match of text.matchAll(/data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+/g)) {
+    total += match[0].length;
+  }
+  return total;
+}
+
+/** Refuses an image that would take the note past its image budget. The
+ * upload error only reaches the console, so the person is told directly. */
+function checkNoteBudget(file: File, embedded: string): void {
+  if (!noteText || embeddedLength(noteText()) + embedded.length <= MAX_NOTE_IMAGE_LENGTH) {
+    return;
+  }
+  const message = `The note already holds about ${Math.round(
+    MAX_NOTE_IMAGE_LENGTH / 1024 / 1024
+  )} MB of images, the limit for one note. "${file.name}" was not added; remove an image first.`;
+  window.alert(message);
+  throw new Error(message);
+}
 
 function readAsDataUri(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -59,10 +90,19 @@ async function svgBitmap(file: File): Promise<ImageBitmap> {
 }
 
 async function embedImage(file: File): Promise<string> {
+  const embedded = await embedFile(file);
+  checkNoteBudget(file, embedded);
+  return embedded;
+}
+
+async function embedFile(file: File): Promise<string> {
   // An SVG is a document that can carry scripts: it is stored as pixels,
-  // so the note never holds one, whatever later opens the image.
-  const isSvg = file.type === 'image/svg+xml';
-  if (!isSvg) {
+  // so the note never holds one, whatever later opens the image. Some
+  // systems give a dropped .svg no type at all, so the name counts too.
+  const isSvg = file.type === 'image/svg+xml' || (file.type === '' && /\.svg$/i.test(file.name));
+  // Base64 is a third bigger than the file: one that cannot fit is not read
+  // into memory only to be thrown away.
+  if (!isSvg && (file.size * 4) / 3 <= MAX_DATA_URI_LENGTH) {
     const original = await readAsDataUri(file);
     if (original.length <= MAX_DATA_URI_LENGTH) {
       return original;
@@ -105,4 +145,4 @@ function safeImageSrc(src: string): string {
   return !hasScheme || /^(https?:|data:image\/)/i.test(head) ? src : '';
 }
 
-export { embedImage, MAX_DATA_URI_LENGTH, safeImageSrc };
+export { embedImage, MAX_DATA_URI_LENGTH, MAX_NOTE_IMAGE_LENGTH, safeImageSrc, setNoteTextSource };

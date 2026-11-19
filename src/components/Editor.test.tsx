@@ -9,6 +9,7 @@ import { FakeCrepe } from '../mocks/crepeMock';
 const kit = vi.hoisted(() => ({
   delegate: undefined as unknown as EditorKitDelegate,
   save: undefined as unknown as (text: string) => void,
+  sentMessages: [] as Array<{ action: string; data: unknown }>,
 }));
 
 vi.mock('@standardnotes/editor-kit', () => ({
@@ -17,6 +18,8 @@ vi.mock('@standardnotes/editor-kit', () => ({
       kit.delegate = delegate;
     }
     onEditorValueChanged = (text: string) => kit.save(text);
+    // What the real relay keeps of every message it posted.
+    componentRelay = { sentMessages: kit.sentMessages };
   },
 }));
 
@@ -80,6 +83,17 @@ describe('Editor', () => {
 
     expect(save).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledWith('# One and more');
+  });
+
+  it('releases the note copies the relay keeps of earlier saves', async () => {
+    const { loadNote, typeInCrepe } = setup();
+    loadNote('# One');
+    await waitFor(() => expect(FakeCrepe.all[FakeCrepe.all.length - 1]?.created).toBe(true));
+    kit.sentMessages.push({ action: 'save-items', data: { items: ['a whole note'] } });
+
+    typeInCrepe('# One and more');
+
+    expect(kit.sentMessages[0].data).toEqual({});
   });
 
   it('recreates the visual editor when the note changes', async () => {

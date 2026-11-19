@@ -70,10 +70,19 @@ const buildTopBar: NonNullable<TopBarFeatureConfig['buildTopBar']> = (builder) =
       // line between them is a soft break, which Milkdown keeps as an
       // inline hardbreak node (a "\n" in the text would save as a space).
       onRun: (ctx) => {
-        ctx
+        const view = ctx.get(editorViewCtx);
+        // A heading or other text block would take the marker inside itself.
+        if (view.state.selection.$from.parent.type !== paragraphSchema.type(ctx)) {
+          return;
+        }
+        // Where the paragraph cannot be wrapped (a list item, a table cell)
+        // nothing changed, and the marker must not be added either.
+        const wrapped = ctx
           .get(commandsCtx)
           .call(wrapInBlockTypeCommand.key, { nodeType: blockquoteSchema.type(ctx) });
-        const view = ctx.get(editorViewCtx);
+        if (!wrapped) {
+          return;
+        }
         const { state } = view;
         const marker = Fragment.from([
           state.schema.text('[!NOTE]'),

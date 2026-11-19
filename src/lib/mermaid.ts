@@ -51,11 +51,17 @@ function applyTheme(mermaid: Mermaid): void {
 }
 
 function loadMermaid(): Promise<Mermaid> {
-  mermaidLoad ??= import('mermaid').then(({ default: mermaid }) => {
-    applyTheme(mermaid);
-    watchTheme();
-    return mermaid;
-  });
+  mermaidLoad ??= import('mermaid')
+    .then(({ default: mermaid }) => {
+      applyTheme(mermaid);
+      watchTheme();
+      return mermaid;
+    })
+    .catch((error: unknown) => {
+      // A failed chunk download must not stay cached: the next diagram retries.
+      mermaidLoad = null;
+      throw error;
+    });
   return mermaidLoad;
 }
 
@@ -87,24 +93,28 @@ function sanitizeSvg(markup: string): string {
 /** Draws the diagrams on screen again with the current theme. A diagram
  * that fails to draw keeps the one it has. */
 function redrawDiagrams(): void {
-  queue = queue.then(loadMermaid).then(async (mermaid) => {
-    applyTheme(mermaid);
-    for (const svg of document.querySelectorAll<SVGElement>('svg[id^="mermaid-preview-"]')) {
-      const source = sources.get(svg.id);
-      const container = svg.parentElement;
-      if (source === undefined || !container) {
-        continue;
+  // The catch keeps one failure from rejecting every render queued after it.
+  queue = queue
+    .then(loadMermaid)
+    .then(async (mermaid) => {
+      applyTheme(mermaid);
+      for (const svg of document.querySelectorAll<SVGElement>('svg[id^="mermaid-preview-"]')) {
+        const source = sources.get(svg.id);
+        const container = svg.parentElement;
+        if (source === undefined || !container) {
+          continue;
+        }
+        const id = `mermaid-preview-${++renderCount}`;
+        try {
+          const { svg: markup } = await mermaid.render(id, source);
+          remember(id, source);
+          container.innerHTML = sanitizeSvg(markup);
+        } catch {
+          // Keep what is shown.
+        }
       }
-      const id = `mermaid-preview-${++renderCount}`;
-      try {
-        const { svg: markup } = await mermaid.render(id, source);
-        remember(id, source);
-        container.innerHTML = sanitizeSvg(markup);
-      } catch {
-        // Keep what is shown.
-      }
-    }
-  });
+    })
+    .catch(() => undefined);
 }
 
 function remember(id: string, source: string): void {

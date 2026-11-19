@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, render } from '@testing-library/react';
 import { EditorView } from '@codemirror/view';
 import { undo } from '@codemirror/commands';
@@ -11,6 +11,10 @@ function setup(rawText: string) {
     EditorView.findFromDOM(view.container.querySelector('.cm-editor') as HTMLElement)!;
   return { getView, onTextChange, view };
 }
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('SourceView', () => {
   it('renders the raw text', () => {
@@ -81,5 +85,58 @@ describe('SourceView', () => {
     expect(second).not.toBe(first);
     expect(second.state.doc.toString()).toBe('# Other note');
     expect(onTextChange).not.toHaveBeenCalled();
+  });
+
+  it('counts a burst of typing once, after a pause', () => {
+    vi.useFakeTimers();
+    const onTextChange = vi.fn();
+    const onStats = vi.fn();
+    const view = render(
+      <SourceView rawText="a" epoch={0} onTextChange={onTextChange} onStats={onStats} />
+    );
+    const editor = EditorView.findFromDOM(
+      view.container.querySelector('.cm-editor') as HTMLElement
+    )!;
+    // The first report is immediate, so the counter is never empty.
+    expect(onStats).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      for (const insert of ['b', 'c', 'd']) {
+        editor.dispatch({ changes: { from: editor.state.doc.length, insert } });
+      }
+    });
+    expect(onStats).toHaveBeenCalledTimes(1);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(onStats).toHaveBeenCalledTimes(2);
+    expect(onStats).toHaveBeenLastCalledWith({
+      total: { characters: 4, words: 1 },
+      selection: null,
+    });
+  });
+
+  it('hides a long data URI behind a placeholder without touching the text', () => {
+    const uri = `data:image/png;base64,${'A'.repeat(5000)}`;
+    const text = `before ![pic](${uri}) after\n`;
+    const onTextChange = vi.fn();
+    const view = render(<SourceView rawText={text} epoch={0} onTextChange={onTextChange} />);
+    const editor = EditorView.findFromDOM(
+      view.container.querySelector('.cm-editor') as HTMLElement
+    )!;
+
+    expect(view.container.querySelector('.cm-content')!.textContent).not.toContain('AAAAAAAAAA');
+    expect(view.container.querySelector('.cm-image-data')?.textContent).toBe('[image data]');
+    expect(editor.state.doc.toString()).toBe(text);
+    expect(onTextChange).not.toHaveBeenCalled();
+  });
+
+  it('leaves short data URIs and plain URLs visible', () => {
+    const text = '![dot](data:image/png;base64,AAAA) and https://example.com/a.png\n';
+    const view = render(<SourceView rawText={text} epoch={0} onTextChange={vi.fn()} />);
+
+    expect(view.container.querySelector('.cm-image-data')).toBeNull();
+    expect(view.container.querySelector('.cm-content')!.textContent).toContain('data:image/png');
   });
 });

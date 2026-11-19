@@ -1,6 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { Annotation, EditorState, Transaction } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
+import {
+  Decoration,
+  EditorView,
+  MatchDecorator,
+  ViewPlugin,
+  WidgetType,
+  keymap,
+  type DecorationSet,
+  type ViewUpdate,
+} from '@codemirror/view';
 import { defaultKeymap, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { minimalSetup } from 'codemirror';
 import { search, searchKeymap } from '@codemirror/search';
@@ -29,6 +38,45 @@ function statsOf(state: EditorState): TextStats {
   };
 }
 
+/** How long typing must pause before the word count is recomputed. */
+const STATS_DELAY_MS = 300;
+
+/** Placeholder for an embedded image, so a multi-megabyte line stays light. */
+class ImageDataWidget extends WidgetType {
+  eq() {
+    return true;
+  }
+  toDOM() {
+    const span = document.createElement('span');
+    span.className = 'cm-image-data';
+    span.textContent = '[image data]';
+    return span;
+  }
+}
+
+// Only the display changes: the document, the saves and the copy are untouched.
+const imageDataMatcher = new MatchDecorator({
+  regexp: /data:[\w.+-]+\/[\w.+-]+;base64,[A-Za-z0-9+/=]{1000,}/g,
+  decoration: () => Decoration.replace({ widget: new ImageDataWidget() }),
+});
+
+const hideImageData = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet;
+    constructor(view: EditorView) {
+      this.decorations = imageDataMatcher.createDeco(view);
+    }
+    update(update: ViewUpdate) {
+      this.decorations = imageDataMatcher.updateDeco(update, this.decorations);
+    }
+  },
+  {
+    decorations: (plugin) => plugin.decorations,
+    provide: (plugin) =>
+      EditorView.atomicRanges.of((view) => view.plugin(plugin)?.decorations ?? Decoration.none),
+  }
+);
+
 const sourceTheme = () =>
   EditorView.theme({
     '&': {
@@ -41,6 +89,7 @@ const sourceTheme = () =>
     '&.cm-focused': { outline: 'none' },
     '.cm-scroller': { overflow: 'auto' },
     '.cm-line': { padding: '0 10px' },
+    '.cm-image-data': { opacity: 0.6, fontStyle: 'italic' },
     '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
       backgroundColor: 'var(--sn-stylekit-info-color-translucent)',
     },
@@ -70,6 +119,7 @@ function SourceView(props: SourceViewProps) {
   const onTextChangeRef = useRef(onTextChange);
   const onStatsRef = useRef(props.onStats);
   const onViewRef = useRef(props.onView);
+  const statsTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     onTextChangeRef.current = onTextChange;
     onStatsRef.current = props.onStats;
@@ -84,6 +134,7 @@ function SourceView(props: SourceViewProps) {
         minimalSetup,
         markdown({ base: markdownLanguage }),
         EditorView.lineWrapping,
+        hideImageData,
         sourceTheme(),
         EditorView.updateListener.of((update) => {
           if (
@@ -93,7 +144,14 @@ function SourceView(props: SourceViewProps) {
             onTextChangeRef.current(update.state.doc.toString());
           }
           if (update.docChanged || update.selectionSet) {
-            onStatsRef.current?.(statsOf(update.state));
+            // Counting walks the whole document: once per pause, not per key.
+            clearTimeout(statsTimer.current);
+            statsTimer.current = setTimeout(() => {
+              const view = viewRef.current;
+              if (view) {
+                onStatsRef.current?.(statsOf(view.state));
+              }
+            }, STATS_DELAY_MS);
           }
         }),
         search({ top: true }),
@@ -110,6 +168,7 @@ function SourceView(props: SourceViewProps) {
     onStatsRef.current?.(statsOf(view.state));
     onViewRef.current?.(view);
     return () => {
+      clearTimeout(statsTimer.current);
       onViewRef.current?.(null);
       view.destroy();
       viewRef.current = null;

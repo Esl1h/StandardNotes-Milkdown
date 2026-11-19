@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, waitFor } from '@testing-library/react';
 import CrepeView from './CrepeView';
+import ErrorBoundary from './ErrorBoundary';
+import { MAX_NOTE_IMAGE_LENGTH, embedImage } from '../lib/image';
 import { FakeCrepe } from '../mocks/crepeMock';
 
 vi.mock('../lib/crepe', async () => {
@@ -202,6 +204,51 @@ describe('CrepeView', () => {
     await booted();
 
     expect(lastCrepe().config.topBar).toBe(false);
+  });
+
+  it('surfaces a failed boot to the error boundary', async () => {
+    const spy = vi.spyOn(FakeCrepe.prototype, 'create').mockRejectedValueOnce(new Error('boom'));
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const onRawTextChange = vi.fn();
+    const { getByRole } = render(
+      <ErrorBoundary rawText={'# Hello'} onRawTextChange={onRawTextChange} resetKey={0}>
+        <CrepeView rawText={'# Hello'} epoch={0} topbar={true} onTextChange={vi.fn()} />
+      </ErrorBoundary>
+    );
+
+    await waitFor(() => expect(getByRole('alert').textContent).toContain('boom'));
+    expect(getByRole('textbox')).toHaveValue('# Hello');
+    spy.mockRestore();
+    errors.mockRestore();
+  });
+
+  it('lets uploads see the note text, until the editor goes', async () => {
+    vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+    const { view } = setup();
+    await booted();
+    lastCrepe().markdown = `![a](data:image/png;base64,${'A'.repeat(MAX_NOTE_IMAGE_LENGTH)})`;
+    const png = () => new File([new Uint8Array([1])], 'dot.png', { type: 'image/png' });
+
+    await expect(embedImage(png())).rejects.toThrow(/limit/);
+    view.unmount();
+
+    await expect(embedImage(png())).resolves.toMatch(/^data:image\/png/);
+  });
+
+  it('reports the headings only when they change', async () => {
+    const onHeadings = vi.fn();
+    setup({ onHeadings });
+    await booted();
+    onHeadings.mockClear();
+    const title = [{ level: 1, text: 'Title' }];
+
+    lastCrepe().emitUpdated(title);
+    lastCrepe().emitUpdated(title);
+    expect(onHeadings).toHaveBeenCalledTimes(1);
+    expect(onHeadings).toHaveBeenCalledWith([{ level: 1, text: 'Title', pos: 0 }]);
+
+    lastCrepe().emitUpdated([{ level: 1, text: 'Title!' }]);
+    expect(onHeadings).toHaveBeenCalledTimes(2);
   });
 
   it('destroys the editor on unmount', async () => {
