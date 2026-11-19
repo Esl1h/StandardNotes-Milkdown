@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { randomBytes } from 'node:crypto';
 import { openHost } from './snHost.js';
 
 /**
@@ -45,11 +46,20 @@ function bigNote() {
   return lines.join('\n');
 }
 
+/** The large note plus three embedded images near the per image limit: the
+ * data URIs are what slowed the source pane and the host messages down.
+ * The bytes are random, so the pictures do not decode; the text is what counts. */
+function imageNote() {
+  const image = (name) =>
+    `![${name}](data:image/png;base64,${randomBytes(270 * 1024).toString('base64')})`;
+  return `${bigNote()}\n\n${image('one')}\n\n${image('two')}\n\n${image('three')}\n`;
+}
+
 const percentile = (sorted, p) =>
   sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))];
 
-async function measure(page, throttle) {
-  const plugin = await openHost(page, { text: bigNote(), throttle });
+async function measure(page, throttle, text) {
+  const plugin = await openHost(page, { text, throttle });
   await plugin.locator('.milkdown .editor h1').first().waitFor({ timeout: 60000 });
   const frame = page.frames().find((candidate) => candidate.url().includes('/index.html'));
   await plugin.locator('.milkdown .editor p').nth(3).click();
@@ -97,11 +107,16 @@ test.describe('performance', () => {
 
   test('typing and scrolling stay within the baseline', async ({ browser }) => {
     const results = {};
-    for (const throttle of [1, 6]) {
-      const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-      const page = await context.newPage();
-      results[`cpu${throttle}x`] = await measure(page, throttle);
-      await context.close();
+    for (const [suffix, text] of [
+      ['', bigNote()],
+      ['-images', imageNote()],
+    ]) {
+      for (const throttle of [1, 6]) {
+        const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+        const page = await context.newPage();
+        results[`cpu${throttle}x${suffix}`] = await measure(page, throttle, text);
+        await context.close();
+      }
     }
     console.log('perf', JSON.stringify(results));
 
@@ -111,6 +126,10 @@ test.describe('performance', () => {
     }
     const baseline = JSON.parse(fs.readFileSync(BASELINE_FILE, 'utf8'));
     for (const [run, metrics] of Object.entries(results)) {
+      // A baseline recorded before the image note existed has no entry for it.
+      if (!baseline[run]) {
+        continue;
+      }
       for (const [metric, value] of Object.entries(metrics)) {
         // The scroll p95 swings by +-50% between identical runs: logged
         // above for comparison, never asserted.
