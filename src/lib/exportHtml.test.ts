@@ -95,6 +95,19 @@ describe('noteHtml', () => {
         toDOM: () => ['pre', { class: 'frontmatter' }, ['code', 0]],
       },
       text: { group: 'inline' },
+      // Whatever a hostile note could get a node view or plugin to emit.
+      rawmeta: {
+        group: 'block',
+        toDOM: () => ['meta', { 'http-equiv': 'refresh', content: '0;url=https://evil.test' }],
+      },
+      rawsvg: {
+        group: 'block',
+        toDOM: () => [
+          'svg',
+          { viewBox: '0 0 4 4', onload: 'alert(1)' },
+          ['path', { d: 'M0 0L4 4' }],
+        ],
+      },
       image: {
         group: 'inline',
         inline: true,
@@ -114,7 +127,10 @@ describe('noteHtml', () => {
         ],
       },
     },
-    marks: { strong: { toDOM: () => ['strong', 0] } },
+    marks: {
+      strong: { toDOM: () => ['strong', 0] },
+      link: { attrs: { href: {} }, toDOM: (mark) => ['a', { href: mark.attrs.href }, 0] },
+    },
   });
   const html = (...blocks: ReturnType<Schema['node']>[]) =>
     noteHtml({ state: { schema, doc: schema.node('doc', null, blocks) } } as never);
@@ -147,6 +163,31 @@ describe('noteHtml', () => {
       )
     ).toBe(
       '<p><img src="https://example.com/a.png"><img src="data:image/png;base64,iVBORw=="><img src=""></p>'
+    );
+  });
+
+  it('drops a javascript: link but keeps a normal one', () => {
+    const link = (href: string) => schema.marks.link.create({ href });
+
+    expect(
+      html(
+        paragraph(
+          schema.text('bad', [link('javascript:alert(1)')]),
+          schema.text('good', [link('https://example.com/')])
+        )
+      )
+    ).toBe('<p><a>bad</a><a href="https://example.com/">good</a></p>');
+  });
+
+  it('drops a meta refresh and event handlers, keeping inline svg drawings', () => {
+    expect(html(schema.node('rawmeta'), schema.node('rawsvg'))).toBe(
+      '<svg viewBox="0 0 4 4"><path d="M0 0L4 4"></path></svg>'
+    );
+  });
+
+  it('keeps data URI images', () => {
+    expect(html(paragraph(schema.node('image', { src: 'data:image/png;base64,iVBORw==' })))).toBe(
+      '<p><img src="data:image/png;base64,iVBORw=="></p>'
     );
   });
 

@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { DOMSerializer } from '@milkdown/kit/prose/model';
 import { type EditorView } from '@milkdown/kit/prose/view';
 import { safeImageSrc } from './image';
@@ -133,7 +134,11 @@ function noteHtml(view: Pick<EditorView, 'state'>): string {
       paragraph.replaceWith(tocNav(holder));
     }
   });
-  return holder.innerHTML;
+  // The CSP above is the second layer; this keeps script URLs, handlers and
+  // meta refresh out of the file itself. SANITIZE_DOM would strip heading ids
+  // such as "title" (a document property), which the TOC links rely on; the
+  // page runs no script, so there is nothing for them to clobber.
+  return DOMPurify.sanitize(holder.innerHTML, { SANITIZE_DOM: false });
 }
 
 export { exportFileName, htmlDocument, noteHtml };
