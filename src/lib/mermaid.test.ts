@@ -114,6 +114,47 @@ describe('renderMermaidPreview', () => {
   });
 });
 
+describe('a failed load', () => {
+  it('is tried again by the next diagram', async () => {
+    vi.resetModules();
+    let attempts = 0;
+    vi.doMock('mermaid', () => {
+      if (++attempts === 1) {
+        throw new Error('chunk failed');
+      }
+      return { default: { initialize, render } };
+    });
+    const { renderMermaidPreview } = await import('./mermaid');
+    const first = codeBlock();
+    renderMermaidPreview('mermaid', 'one', first.applyPreview);
+    await vi.waitFor(() => expect(first.applied).toHaveLength(1));
+    expect(first.applied[0]).toBeInstanceOf(HTMLElement);
+
+    const second = codeBlock();
+    renderMermaidPreview('mermaid', 'two', second.applyPreview);
+
+    await vi.waitFor(() => expect(second.preview.innerHTML).toContain('two|default'));
+  });
+
+  it('does not stop the redraws that follow a failed one', async () => {
+    const { renderMermaidPreview } = await load();
+    const { applyPreview, preview } = codeBlock();
+    renderMermaidPreview('mermaid', 'graph LR', applyPreview);
+    await vi.waitFor(() => expect(preview.innerHTML).toContain('graph LR|default'));
+    // A failure outside the per diagram try/catch rejects the whole queue.
+    initialize.mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+    setBackground(DARK);
+    await vi.advanceTimersByTimeAsync(3000);
+
+    const next = codeBlock();
+    renderMermaidPreview('mermaid', 'later', next.applyPreview);
+
+    await vi.waitFor(() => expect(next.preview.innerHTML).toContain('later|dark'));
+  });
+});
+
 describe('when the app theme changes', () => {
   it('draws the diagrams on screen again with the new theme', async () => {
     const { renderMermaidPreview } = await load();
