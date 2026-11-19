@@ -65,6 +65,43 @@ interface MenuAction {
 function MoreMenu({ actions, copied }: { actions: MenuAction[]; copied: boolean }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  // The focus goes back to the button: the menu is about to unmount, and a
+  // keyboard user would otherwise lose their place.
+  const close = () => {
+    setOpen(false);
+    buttonRef.current?.focus();
+  };
+
+  useEffect(() => {
+    if (open) {
+      listRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    }
+  }, [open]);
+
+  const onMenuKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Tab') {
+      // No preventDefault: the Tab goes on from the button.
+      close();
+      return;
+    }
+    const items = Array.from(
+      listRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []
+    );
+    const current = items.indexOf(document.activeElement as HTMLElement);
+    const target = {
+      ArrowDown: (current + 1) % items.length,
+      ArrowUp: (current - 1 + items.length) % items.length,
+      Home: 0,
+      End: items.length - 1,
+    }[event.key];
+    if (target !== undefined) {
+      event.preventDefault();
+      items[target]?.focus();
+    }
+  };
 
   useEffect(() => {
     if (!open) {
@@ -72,7 +109,7 @@ function MoreMenu({ actions, copied }: { actions: MenuAction[]; copied: boolean 
     }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setOpen(false);
+        close();
       }
     };
     const onMouseDown = (event: MouseEvent) => {
@@ -91,6 +128,7 @@ function MoreMenu({ actions, copied }: { actions: MenuAction[]; copied: boolean 
   return (
     <div className="more-menu" ref={rootRef}>
       <button
+        ref={buttonRef}
         className="more-button"
         onClick={() => setOpen(!open)}
         title={copied ? 'Copied' : 'More actions'}
@@ -101,7 +139,7 @@ function MoreMenu({ actions, copied }: { actions: MenuAction[]; copied: boolean 
         {copied ? ICONS.copied : ICONS.more}
       </button>
       {open && (
-        <div className="more-menu-list" role="menu">
+        <div className="more-menu-list" role="menu" ref={listRef} onKeyDown={onMenuKeyDown}>
           {actions.map((action) => (
             <button
               key={action.key}
