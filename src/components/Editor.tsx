@@ -8,6 +8,7 @@ import ErrorBoundary from './ErrorBoundary';
 import { setPreferenceStore } from '../lib/layout';
 import { markdownPreview } from '../lib/preview';
 import { EchoGuard } from '../lib/echoGuard';
+import { releaseSavedPayloads } from '../lib/sentMessages';
 
 /** How long to wait for Standard Notes to stream the note before saying so */
 const NOTE_WAIT_MS = 5000;
@@ -102,6 +103,7 @@ export default class Editor extends React.Component<Record<string, never>, Edito
      * so we need to catch the error
      */
     try {
+      releaseSavedPayloads(this.editorKit);
       this.editorKit.onEditorValueChanged(text);
     } catch (error) {
       console.log('Error saving note:', error);
