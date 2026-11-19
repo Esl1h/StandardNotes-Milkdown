@@ -1358,7 +1358,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-## @codemirror/view - 6.43.14 (MIT)
+## @codemirror/view - 6.43.15 (MIT)
 
 MIT License
 
@@ -1931,7 +1931,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/components - 7.22.3 (MIT)
+## @milkdown/components - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -1955,7 +1955,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/core - 7.22.3 (MIT)
+## @milkdown/core - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -1979,7 +1979,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/crepe - 7.22.3 (MIT)
+## @milkdown/crepe - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2003,7 +2003,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/ctx - 7.22.3 (MIT)
+## @milkdown/ctx - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2027,7 +2027,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/exception - 7.22.3 (MIT)
+## @milkdown/exception - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2051,7 +2051,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-block - 7.22.3 (MIT)
+## @milkdown/plugin-block - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2075,7 +2075,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-clipboard - 7.22.3 (MIT)
+## @milkdown/plugin-clipboard - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2099,7 +2099,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-cursor - 7.22.3 (MIT)
+## @milkdown/plugin-cursor - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2123,7 +2123,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-diff - 7.22.3 (MIT)
+## @milkdown/plugin-diff - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2147,7 +2147,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-history - 7.22.3 (MIT)
+## @milkdown/plugin-history - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2171,7 +2171,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-indent - 7.22.3 (MIT)
+## @milkdown/plugin-indent - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2195,7 +2195,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-listener - 7.22.3 (MIT)
+## @milkdown/plugin-listener - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2219,7 +2219,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-slash - 7.22.3 (MIT)
+## @milkdown/plugin-slash - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2243,7 +2243,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-streaming - 7.22.3 (MIT)
+## @milkdown/plugin-streaming - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2267,7 +2267,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-tooltip - 7.22.3 (MIT)
+## @milkdown/plugin-tooltip - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2291,7 +2291,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-trailing - 7.22.3 (MIT)
+## @milkdown/plugin-trailing - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2315,7 +2315,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/plugin-upload - 7.22.3 (MIT)
+## @milkdown/plugin-upload - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2339,7 +2339,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/preset-commonmark - 7.22.3 (MIT)
+## @milkdown/preset-commonmark - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2363,7 +2363,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/preset-gfm - 7.22.3 (MIT)
+## @milkdown/preset-gfm - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2387,7 +2387,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/prose - 7.22.3 (MIT)
+## @milkdown/prose - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2411,7 +2411,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/transformer - 7.22.3 (MIT)
+## @milkdown/transformer - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2435,7 +2435,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @milkdown/utils - 7.22.3 (MIT)
+## @milkdown/utils - 7.23.0 (MIT)
 
 The MIT License (MIT)
 
@@ -2459,7 +2459,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @ocavue/utils - 1.9.0 (MIT)
+## @ocavue/utils - 1.12.0 (MIT)
 
 MIT License
 
@@ -5022,7 +5022,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## markdown-table - 3.0.4 (MIT)
+## markdown-table - 3.1.0 (MIT)
 
 (The MIT License)
 
@@ -5119,7 +5119,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## mdast-util-find-and-replace - 3.0.3 (MIT)
+## mdast-util-find-and-replace - 3.0.4 (MIT)
 
 (The MIT License)
 
@@ -5194,11 +5194,11 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## mdast-util-gfm-autolink-literal - 2.0.1 (MIT)
+## mdast-util-gfm-autolink-literal - 2.1.0 (MIT)
 
 (The MIT License)
 
-Copyright (c) 2020 Titus Wormer <tituswormer@gmail.com>
+Copyright (c) Titus Wormer <tituswormer@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -5269,11 +5269,11 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## mdast-util-gfm-table - 2.0.0 (MIT)
+## mdast-util-gfm-table - 2.0.1 (MIT)
 
 (The MIT License)
 
-Copyright (c) 2020 Titus Wormer <tituswormer@gmail.com>
+Copyright (c) Titus Wormer <tituswormer@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -5294,11 +5294,11 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## mdast-util-gfm-task-list-item - 2.0.0 (MIT)
+## mdast-util-gfm-task-list-item - 2.0.1 (MIT)
 
 (The MIT License)
 
-Copyright (c) 2020 Titus Wormer <tituswormer@gmail.com>
+Copyright (c) Titus Wormer <tituswormer@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -5395,7 +5395,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## mdast-util-to-markdown - 2.2.0 (MIT)
+## mdast-util-to-markdown - 2.2.3 (MIT)
 
 (The MIT License)
 
@@ -6164,7 +6164,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-## prosemirror-changeset - 2.4.4 (MIT)
+## prosemirror-changeset - 2.4.6 (MIT)
 
 Copyright (C) 2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
 
@@ -6276,7 +6276,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-## prosemirror-inputrules - 1.5.1 (MIT)
+## prosemirror-inputrules - 1.6.0 (MIT)
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
 
@@ -6366,7 +6366,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## prosemirror-schema-list - 1.5.1 (MIT)
+## prosemirror-schema-list - 1.6.0 (MIT)
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
 
@@ -6933,11 +6933,11 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## unist-util-visit-parents - 6.0.2 (MIT)
+## unist-util-visit-parents - 6.1.0 (MIT)
 
 (The MIT License)
 
-Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+Copyright (c) Titus Wormer <tituswormer@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
