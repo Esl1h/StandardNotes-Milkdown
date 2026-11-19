@@ -4,6 +4,32 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-11-19
+
+### Added
+
+- **image:** Cap the images a note carries
+
+### Fixed
+
+- **visual:** Show the note if the editor fails
+- **mermaid:** Retry after a failed load
+- **save:** Release payloads kept by the relay
+- **source:** Keep image data off the pane
+- **export:** Sanitize the exported page
+- **preview:** Bound the scan of a long note
+- **callout:** Leave non-paragraph blocks alone
+
+### Changed
+
+- **modeswitcher:** Move icons to a module
+
+### Documentation
+
+- State the test policy for contributions
+- Add the OpenSSF Best Practices badge
+- Add logo and header assets to README
+
 ## [1.0.0] - 2026-10-25
 
 ### Added
