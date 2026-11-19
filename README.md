@@ -75,6 +75,18 @@ Math and Mermaid diagrams, drawn live while the note keeps their source:
 
 ![Math and Mermaid diagrams](.github/screenshots/milkdown-math-diagrams.png)
 
+## Quick start
+
+1. In Standard Notes, open **Preferences > Plugins** and paste
+   `https://esli.cafe/StandardNotes-Milkdown/ext.json` into **Install Custom Plugin**
+   (the full steps are under [Installation](#installation)).
+2. Create a note, open the **Editor** menu and pick **Milkdown**.
+3. Type `/` for the block menu, or click **Add sample** in an empty note to see what the editor
+   can draw. Switch between **Visual**, **Split** and **Source** from the icon bar.
+
+Your note is still plain Markdown. To remove the plugin, uninstall it under
+**Preferences > Plugins**.
+
 ## Installation
 
 1. Run the Standard Notes web or desktop app.
@@ -235,6 +247,36 @@ git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z
 ```
 
 The `Release` workflow fails unless the tag matches every version file. It runs the checks, attaches `extension.zip` (the package the desktop app installs) with `SHA256SUMS` and a provenance attestation to the GitHub release, writes the release notes with git-cliff and publishes the hosted build to Pages. The app finds the update by comparing the version in the `ext.json` at `latest_url`.
+
+## Roadmap
+
+What the project intends to do over the next 12 months:
+
+- Keep up with Standard Notes, Milkdown and the dependencies: Dependabot updates reviewed weekly,
+  a release when something users see changes
+- Test in the real Standard Notes apps: long sessions on notes with images, the image limit
+  warning inside the app's iframe, and the web, desktop and mobile hosts
+- Add screenshots in the dark theme
+
+What it will not do:
+
+- Add a backend, accounts or telemetry
+- Change the plain Markdown note format, or store anything outside the note
+
+## Project documents
+
+- [ARCHITECTURE.md](ARCHITECTURE.md): components, data flow and trust boundaries
+- [SECURITY.md](SECURITY.md): security requirements, how to report, and the assurance case
+- [GOVERNANCE.md](GOVERNANCE.md): who decides, roles, support policy and continuity
+- [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md)
+- [CHANGELOG.md](CHANGELOG.md) and the decision records in [`docs/adr/`](docs/adr/)
+
+## Achievements
+
+- [OpenSSF Best Practices](https://www.bestpractices.dev/projects/15958): passing level reached,
+  working toward silver
+- [OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/Esl1h/StandardNotes-Milkdown):
+  checked weekly (the badges are at the top of this page)
 
 ## Credits and license
 
