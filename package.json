@@ -53,7 +53,6 @@
     "@milkdown/crepe": "7.23.0",
     "@milkdown/kit": "7.23.0",
     "@standardnotes/editor-kit": "github:standardnotes/editor-kit#626d7a6e63d4ada48be36676c466fea46d7709d3",
-    "@standardnotes/stylekit": "^5.29.3",
     "codemirror": "^6.0.2",
     "dompurify": "^3.4.17",
     "mdast-util-to-markdown": "^2.2.3",
@@ -66,6 +65,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
+    "@standardnotes/stylekit": "^5.29.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
