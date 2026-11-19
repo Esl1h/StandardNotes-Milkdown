@@ -1,6 +1,7 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import ModeSwitcher from './ModeSwitcher';
 
 type Listener = (event: { matches: boolean }) => void;
@@ -180,6 +181,70 @@ describe('on a narrow bar', () => {
 
     expect(screen.getByRole('menuitem', { name: 'Show the formatting bar' })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Move the bar/ })).not.toBeInTheDocument();
+  });
+
+  describe('keyboard', () => {
+    const items = () => screen.getAllByRole('menuitem');
+
+    it('focuses the first item on open', async () => {
+      setup();
+
+      await userEvent.click(more());
+
+      expect(items()[0]).toHaveFocus();
+    });
+
+    it('moves with the arrows and wraps at both ends', async () => {
+      setup();
+      await userEvent.click(more());
+      const last = items().length - 1;
+
+      await userEvent.keyboard('{ArrowDown}');
+      expect(items()[1]).toHaveFocus();
+      await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+      expect(items()[last]).toHaveFocus();
+      await userEvent.keyboard('{ArrowDown}');
+      expect(items()[0]).toHaveFocus();
+    });
+
+    it('jumps with Home and End', async () => {
+      setup();
+      await userEvent.click(more());
+
+      await userEvent.keyboard('{End}');
+      expect(items()[items().length - 1]).toHaveFocus();
+      await userEvent.keyboard('{Home}');
+      expect(items()[0]).toHaveFocus();
+    });
+
+    it('closes on Escape and gives the focus back to the button', async () => {
+      setup();
+      await userEvent.click(more());
+
+      await userEvent.keyboard('{Escape}');
+
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+      expect(more()).toHaveFocus();
+    });
+
+    it('closes on Tab', async () => {
+      setup();
+      await userEvent.click(more());
+
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    it('activates the focused item with Enter', async () => {
+      const props = setup();
+      await userEvent.click(more());
+
+      await userEvent.keyboard('{ArrowDown}{Enter}');
+
+      expect(window.print).toHaveBeenCalledTimes(1);
+      expect(props.onCopy).not.toHaveBeenCalled();
+    });
   });
 
   it('closes on Escape and on a click elsewhere', () => {

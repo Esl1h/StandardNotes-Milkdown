@@ -77,4 +77,44 @@ describe('toc button', () => {
   it('adds a [TOC] paragraph', async () => {
     expect(await run('toc', 'Some text\n', 'Some')).toContain('[TOC]');
   });
+
+  // Splitting would leave "Some" and "text" as two paragraphs in the note.
+  it('does not split the paragraph when used mid-paragraph', async () => {
+    expect(await run('toc', 'Some text\n\nOther\n', 'Some')).toBe('Some text\n\n[TOC]\n\nOther\n');
+  });
+
+  it('adds the marker after a paragraph when the caret is at its end', async () => {
+    expect(await run('toc', 'Some text\n', 'text')).toBe('Some text\n\n[TOC]\n');
+  });
+
+  it('goes after the list, not inside the item', async () => {
+    expect(await run('toc', '- item one\n- item two\n', 'item')).toBe(
+      '- item one\n- item two\n\n[TOC]\n'
+    );
+  });
+});
+
+describe('toc button on an empty paragraph', () => {
+  it('turns it into the marker', async () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    const crepe = await createCrepe(root, 'Before\n', false);
+    await crepe.create();
+    try {
+      crepe.editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const { schema } = view.state;
+        const end = view.state.doc.content.size;
+        const tr = view.state.tr.insert(end, schema.nodes.paragraph.create());
+        tr.setSelection(TextSelection.create(tr.doc, tr.doc.content.size - 1));
+        view.dispatch(tr);
+        topBarActions().toc(ctx);
+        expect(view.state.doc.childCount).toBe(2);
+      });
+      expect(crepe.getMarkdown()).toBe('Before\n\n[TOC]\n');
+    } finally {
+      await crepe.destroy();
+      root.remove();
+    }
+  });
 });

@@ -2,7 +2,6 @@ import { commandsCtx, editorViewCtx } from '@milkdown/kit/core';
 import { type Ctx } from '@milkdown/kit/ctx';
 import { redoCommand, undoCommand } from '@milkdown/kit/plugin/history';
 import {
-  addBlockTypeCommand,
   blockquoteSchema,
   hardbreakSchema,
   liftListItemCommand,
@@ -95,10 +94,20 @@ const buildTopBar: NonNullable<TopBarFeatureConfig['buildTopBar']> = (builder) =
       icon: TOC_ICON,
       active: () => false,
       onRun: (ctx: Ctx) => {
-        const { schema } = ctx.get(editorViewCtx).state;
-        ctx.get(commandsCtx).call(addBlockTypeCommand.key, {
-          nodeType: paragraphSchema.type(ctx).create(null, schema.text('[TOC]')),
-        });
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const { $from, $to } = state.selection;
+        const marker = paragraphSchema.type(ctx).create(null, state.schema.text('[TOC]'));
+        const top = $from.depth > 0 ? $from.node(1) : null;
+        // Replacing the selection would split the paragraph at the caret, so
+        // the marker goes after the top-level block (inside a list item or a
+        // quote it would nest and no longer read as a TOC); an empty
+        // paragraph is replaced instead of left behind.
+        if (top && top.type === marker.type && top.content.size === 0) {
+          view.dispatch(state.tr.replaceWith($from.before(1), $from.after(1), marker));
+          return;
+        }
+        view.dispatch(state.tr.insert($from.depth > 0 ? $from.after(1) : $to.pos, marker));
       },
     });
 
