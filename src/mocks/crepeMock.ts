@@ -21,6 +21,7 @@ class FakeCrepe {
   /** Current markdown, as getMarkdown would return it. */
   markdown: string;
   listeners: Array<(ctx: unknown, markdown: string) => void> = [];
+  updatedListeners: Array<(ctx: unknown, doc: unknown) => void> = [];
   constructor(public config: Record<string, unknown>) {
     this.markdown = (config.defaultValue as string) ?? '';
     FakeCrepe.all.push(this);
@@ -76,16 +77,37 @@ class FakeCrepe {
   on(
     fn: (api: {
       markdownUpdated: (cb: (ctx: unknown, markdown: string) => void) => void;
-      updated: (cb: (ctx: unknown) => void) => void;
+      updated: (cb: (ctx: unknown, doc: unknown) => void) => void;
       selectionUpdated: (cb: (ctx: unknown) => void) => void;
     }) => void
   ) {
     fn({
       markdownUpdated: (cb) => this.listeners.push(cb),
-      updated: () => undefined,
+      updated: (cb) => this.updatedListeners.push(cb),
       selectionUpdated: () => undefined,
     });
     return this;
+  }
+  /** Fires the `updated` listeners with a document made of these headings. */
+  emitUpdated(headings: Array<{ level: number; text: string }>) {
+    const doc = {
+      content: { size: 0 },
+      textBetween: () => '',
+      descendants: (visit: (node: unknown, pos: number) => void) =>
+        headings.forEach((heading, index) =>
+          visit(
+            {
+              type: { name: 'heading' },
+              attrs: { level: heading.level },
+              textContent: heading.text,
+            },
+            index * 10
+          )
+        ),
+    };
+    for (const listener of this.updatedListeners) {
+      listener(this.ctx(), doc);
+    }
   }
   emit(markdown: string) {
     for (const listener of this.listeners) {

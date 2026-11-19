@@ -8,6 +8,7 @@ import { type Selection } from '@milkdown/kit/prose/state';
 import { type EditorView } from '@milkdown/kit/prose/view';
 import { replaceAll } from '@milkdown/kit/utils';
 import { createCrepe } from '../lib/crepe';
+import { setNoteTextSource } from '../lib/image';
 import { countText, type TextStats } from '../lib/wordCount';
 import { headingsOf, type Heading } from '../lib/headings';
 // The common styles one by one: the aggregate style.css also pulls the
@@ -92,6 +93,12 @@ function CrepeView(props: CrepeViewProps) {
   });
   // The Crepe top bar element of the current instance, for the portal.
   const [topBarElement, setTopBarElement] = useState<HTMLElement | null>(null);
+  // An error boundary only catches errors thrown while rendering, not a
+  // rejected boot promise: the failure is rethrown from render below.
+  const [bootError, setBootError] = useState<unknown>(null);
+  if (bootError) {
+    throw bootError instanceof Error ? bootError : new Error(String(bootError));
+  }
 
   const rawTextRef = useRef(rawText);
   useEffect(() => {
@@ -104,6 +111,17 @@ function CrepeView(props: CrepeViewProps) {
     // What the prop was when this boot started; only a change during the
     // async boot needs the catch-up replaceAll below.
     const bootText = rawTextRef.current;
+    // Typing in a paragraph leaves the headings alone: telling the layout
+    // shell each time would re-render it on every key.
+    let headingsSignature: string | null = null;
+    const reportHeadings = (doc: Node) => {
+      const headings = headingsOf(doc);
+      const signature = headings.map((h) => `${h.level}:${h.pos}:${h.text}`).join('\n');
+      if (signature !== headingsSignature) {
+        headingsSignature = signature;
+        onHeadingsRef.current?.(headings);
+      }
+    };
     const boot = async () => {
       const crepe = await createCrepe(
         containerRef.current as HTMLElement,
@@ -143,11 +161,13 @@ function CrepeView(props: CrepeViewProps) {
         listener.updated((ctx, doc) => {
           report(doc, ctx.get(editorViewCtx).state.selection);
           if (!disposed) {
-            onHeadingsRef.current?.(headingsOf(doc));
+            reportHeadings(doc);
           }
         });
       });
       crepeRef.current = crepe;
+      // Uploads count the images the note already holds.
+      setNoteTextSource(() => crepe.getMarkdown());
       suppressRef.current = false;
       // The serializer normalizes (list markers, table padding), so the
       // reference for echoes is the serialized form, not the raw input.
@@ -165,17 +185,22 @@ function CrepeView(props: CrepeViewProps) {
       crepe.editor.action((ctx: Ctx) => {
         const view = ctx.get(editorViewCtx);
         onStatsRef.current?.(statsOf(view.state.doc, view.state.selection));
-        onHeadingsRef.current?.(headingsOf(view.state.doc));
+        reportHeadings(view.state.doc);
         onViewRef.current?.(view);
       });
       setTopBarElement(
         containerRef.current?.querySelector<HTMLElement>('.milkdown-top-bar') ?? null
       );
     };
-    void boot();
+    boot().catch((error: unknown) => {
+      if (!disposed) {
+        setBootError(error);
+      }
+    });
     return () => {
       disposed = true;
       setTopBarElement(null);
+      setNoteTextSource(null);
       onViewRef.current?.(null);
       const crepe = crepeRef.current;
       if (crepe) {

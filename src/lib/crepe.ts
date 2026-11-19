@@ -32,7 +32,17 @@ const CHECKBOX_CHECKED =
 // Latex pulls KaTeX in (about 90 KB gzipped plus fonts); it is split into
 // its own chunk, and the import starts right away so it is usually loaded
 // by the time Standard Notes has streamed the note in.
-const latexFeature = import('./latex');
+let latexLoad: Promise<typeof import('./latex')> | null = null;
+
+function loadLatex(): Promise<typeof import('./latex')> {
+  latexLoad ??= import('./latex').catch((error: unknown) => {
+    // A failed download must not stay cached: the next note tries again.
+    latexLoad = null;
+    throw error;
+  });
+  return latexLoad;
+}
+loadLatex().catch(() => undefined);
 
 /** Match highlighting and the find/replace commands the SearchBar drives. */
 const searchPlugin = $prose(() => search());
@@ -51,7 +61,7 @@ async function createCrepe(
   defaultValue: string,
   withTopBar: boolean
 ): Promise<CrepeBuilder> {
-  const { latex } = await latexFeature;
+  const { latex } = await loadLatex();
   const crepe = new CrepeBuilder({ root, defaultValue })
     .addFeature(cursor)
     .addFeature(listItem, {
@@ -90,4 +100,4 @@ async function createCrepe(
   return withTopBar ? crepe.addFeature(topBar, { buildTopBar }) : crepe;
 }
 
-export { createCrepe };
+export { createCrepe, loadLatex };
