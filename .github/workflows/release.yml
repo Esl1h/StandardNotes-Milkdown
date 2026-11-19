@@ -16,7 +16,29 @@ jobs:
       contents: write
       id-token: write
       attestations: write
+      # Reads the CI run of the tagged commit.
+      actions: read
     steps:
+      # The release only re-runs part of CI (no format check, no e2e): the CI
+      # run for this commit must have passed, so no step is duplicated here.
+      # A run still in progress is waited for, up to about 10 minutes.
+      - name: Require green CI for the tagged commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for _ in $(seq 1 20); do
+            RUN=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${GITHUB_SHA}&event=push" \
+              --jq '.workflow_runs[0] | "\(.status) \(.conclusion)"')
+            echo "CI run for ${GITHUB_SHA}: ${RUN:-none}"
+            case "$RUN" in
+              "completed success") exit 0 ;;
+              "completed "*) echo "CI did not pass for this commit"; exit 1 ;;
+            esac
+            sleep 30
+          done
+          echo "No finished CI run for this commit"
+          exit 1
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # git-cliff needs the tags and the history between them.
