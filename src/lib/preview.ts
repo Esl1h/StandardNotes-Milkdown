@@ -1,4 +1,6 @@
 const PREVIEW_LIMIT = 160;
+/** How much of the note the preview looks at, after the images are gone. */
+const SCAN_LIMIT = 2000;
 
 /** One line of at most PREVIEW_LIMIT characters; never empty, or the app
  * would fall back to showing the whole note text. */
@@ -17,6 +19,9 @@ function markdownPreview(markdown: string): string {
     .replace(/^(---|\+\+\+)\n[\s\S]*?\n\1\n/, '')
     .replace(/^\s*(```|~~~).*$/gm, '')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    // The preview shows 160 characters: the later patterns would otherwise
+    // rescan the whole note (the tag one is quadratic on many < without >).
+    .slice(0, SCAN_LIMIT)
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/<[^>]+>/g, '')
     .replace(/^\s*(?:#{1,6}\s+|>\s?|[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+)/gm, '')

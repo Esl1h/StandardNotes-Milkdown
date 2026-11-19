@@ -105,3 +105,19 @@ describe('markdownPreview properties', () => {
     );
   });
 });
+
+describe('markdownPreview on a huge note', () => {
+  it('stays fast with many < and no >', () => {
+    const start = performance.now();
+
+    markdownPreview(`start ${'<a '.repeat(150_000)}`);
+
+    expect(performance.now() - start).toBeLessThan(500);
+  });
+
+  it('is not slowed by an embedded image before the text', () => {
+    const image = `![x](data:image/png;base64,${'A'.repeat(600_000)})`;
+
+    expect(markdownPreview(`${image}\n\nHello`)).toBe('Hello');
+  });
+});
