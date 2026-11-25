@@ -22,6 +22,7 @@ import { schemaCtx, SchemaReady } from '@milkdown/kit/core';
 import { type MilkdownPlugin } from '@milkdown/kit/ctx';
 import { imageNullFields, keepImageAlt, writeImageDataAsIs } from './imageMarkdown';
 import { addTocMenuItem, tocDecorations } from './toc';
+import { pasteImageLimits } from './paste';
 import { addMermaidMenuItems } from './mermaidMenu';
 import { buildTopBar } from './topBarItems';
 
@@ -113,6 +114,7 @@ async function createCrepe(
     .use(tocDecorations)
     .use(activeBlock)
     .use(searchPlugin)
+    .use(pasteImageLimits)
     .use(fasterSave);
   return withTopBar ? crepe.addFeature(topBar, { buildTopBar }) : crepe;
 }
