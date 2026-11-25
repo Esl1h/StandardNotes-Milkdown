@@ -251,6 +251,66 @@ describe('CrepeView', () => {
     expect(onHeadings).toHaveBeenCalledTimes(2);
   });
 
+  it('counts nothing while the cursor only moves', async () => {
+    const onStats = vi.fn();
+    setup({ onStats });
+    await booted();
+    onStats.mockClear();
+    lastCrepe().textReads = [];
+
+    lastCrepe().select(1);
+    lastCrepe().select(2);
+
+    expect(onStats).not.toHaveBeenCalled();
+    expect(lastCrepe().textReads).toEqual([]);
+  });
+
+  it('counts only the selected text, next to the count already made', async () => {
+    const onStats = vi.fn();
+    setup({ rawText: 'one two three', onStats });
+    await booted();
+    onStats.mockClear();
+    lastCrepe().textReads = [];
+
+    lastCrepe().select(0, 7);
+    expect(lastCrepe().textReads).toEqual([[0, 7]]);
+    expect(onStats).toHaveBeenLastCalledWith({
+      total: { words: 3, characters: 13 },
+      selection: { words: 2, characters: 7 },
+    });
+
+    lastCrepe().select(3);
+    lastCrepe().select(4);
+    expect(onStats).toHaveBeenCalledTimes(2);
+    expect(onStats).toHaveBeenLastCalledWith({
+      total: { words: 3, characters: 13 },
+      selection: null,
+    });
+  });
+
+  it('counts the document again after external text replaces it', async () => {
+    const onStats = vi.fn();
+    const { view } = setup({ rawText: 'one', onStats });
+    await booted();
+
+    view.rerender(
+      <CrepeView
+        rawText={'one two'}
+        epoch={0}
+        topbar={true}
+        onTextChange={vi.fn()}
+        onStats={onStats}
+      />
+    );
+
+    await waitFor(() =>
+      expect(onStats).toHaveBeenLastCalledWith({
+        total: { words: 2, characters: 7 },
+        selection: null,
+      })
+    );
+  });
+
   it('destroys the editor on unmount', async () => {
     const { view } = setup();
     await booted();

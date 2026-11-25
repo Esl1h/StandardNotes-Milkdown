@@ -9,7 +9,7 @@ import { type EditorView } from '@milkdown/kit/prose/view';
 import { replaceAll } from '@milkdown/kit/utils';
 import { createCrepe } from '../lib/crepe';
 import { setNoteTextSource } from '../lib/image';
-import { countText, type TextStats } from '../lib/wordCount';
+import { countText, type Count, type TextStats } from '../lib/wordCount';
 import { headingsOf, type Heading } from '../lib/headings';
 // The common styles one by one: the aggregate style.css also pulls the
 // Latex (KaTeX, with its fonts), AI and diff styles of unused features.
@@ -49,13 +49,32 @@ interface CrepeViewProps {
   onTopBarHeight?: (height: number) => void;
 }
 
-/** Counts the rendered text, so Markdown syntax never inflates the count. */
-function statsOf(doc: Node, selection: Selection): TextStats {
+/**
+ * The word counts of one editor, over the rendered text, so Markdown syntax
+ * never inflates them. Walking the whole note on every key made large ones
+ * slow: `document` counts it and is for the pauses, `selection` counts the
+ * selected text alone.
+ */
+function createStats(report: (stats: TextStats) => void) {
+  let total: Count = { words: 0, characters: 0 };
+  let selecting = false;
+  const count = (doc: Node, from: number, to: number) =>
+    countText(doc.textBetween(from, to, '\n', ' '));
+  const publish = (doc: Node, selection: Selection) => {
+    selecting = !selection.empty;
+    report({ total, selection: selecting ? count(doc, selection.from, selection.to) : null });
+  };
   return {
-    total: countText(doc.textBetween(0, doc.content.size, '\n', ' ')),
-    selection: selection.empty
-      ? null
-      : countText(doc.textBetween(selection.from, selection.to, '\n', ' ')),
+    document(doc: Node, selection: Selection) {
+      total = count(doc, 0, doc.content.size);
+      publish(doc, selection);
+    },
+    selection(doc: Node, selection: Selection) {
+      // A cursor moving about changes neither count.
+      if (!selection.empty || selecting) {
+        publish(doc, selection);
+      }
+    },
   };
 }
 
@@ -73,6 +92,7 @@ function CrepeView(props: CrepeViewProps) {
   const { rawText, epoch, topbar, onTextChange, topBarAccessory } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const crepeRef = useRef<CrepeBuilder | null>(null);
+  const statsRef = useRef<ReturnType<typeof createStats> | null>(null);
   const suppressRef = useRef(false);
   // The serialized text the note holds, from a programmatic apply or the
   // last saved user edit; an identical markdownUpdated echo is dropped even
@@ -122,6 +142,12 @@ function CrepeView(props: CrepeViewProps) {
         onHeadingsRef.current?.(headings);
       }
     };
+    const stats = createStats((value) => {
+      if (!disposed) {
+        onStatsRef.current?.(value);
+      }
+    });
+    statsRef.current = stats;
     const boot = async () => {
       const crepe = await createCrepe(
         containerRef.current as HTMLElement,
@@ -150,17 +176,16 @@ function CrepeView(props: CrepeViewProps) {
           lastAppliedRef.current = markdown;
           onTextChangeRef.current(markdown);
         });
-        const report = (doc: Node, selection: Selection) => {
-          if (!disposed) {
-            onStatsRef.current?.(statsOf(doc, selection));
-          }
-        };
         // selectionUpdated runs while the transaction is being applied, so
         // view.state is still the old one: count from what it hands over.
-        listener.selectionUpdated((_ctx, selection) => report(selection.$from.doc, selection));
+        listener.selectionUpdated((_ctx, selection) =>
+          stats.selection(selection.$from.doc, selection)
+        );
+        // Debounced by Milkdown (200 ms): once per pause, not per key.
         listener.updated((ctx, doc) => {
-          report(doc, ctx.get(editorViewCtx).state.selection);
           if (!disposed) {
+            const { state } = ctx.get(editorViewCtx);
+            stats.document(state.doc, state.selection);
             reportHeadings(doc);
           }
         });
@@ -184,7 +209,7 @@ function CrepeView(props: CrepeViewProps) {
       }
       crepe.editor.action((ctx: Ctx) => {
         const view = ctx.get(editorViewCtx);
-        onStatsRef.current?.(statsOf(view.state.doc, view.state.selection));
+        stats.document(view.state.doc, view.state.selection);
         reportHeadings(view.state.doc);
         onViewRef.current?.(view);
       });
@@ -244,6 +269,11 @@ function CrepeView(props: CrepeViewProps) {
       } finally {
         suppressRef.current = false;
       }
+      // A flushed replace fires no `updated`: count the new text here.
+      crepe.editor.action((ctx: Ctx) => {
+        const { state } = ctx.get(editorViewCtx);
+        statsRef.current?.document(state.doc, state.selection);
+      });
     }, APPLY_DELAY_MS);
     return () => clearTimeout(timer);
   }, [rawText, epoch]);

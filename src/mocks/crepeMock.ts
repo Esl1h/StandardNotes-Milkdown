@@ -22,6 +22,10 @@ class FakeCrepe {
   markdown: string;
   listeners: Array<(ctx: unknown, markdown: string) => void> = [];
   updatedListeners: Array<(ctx: unknown, doc: unknown) => void> = [];
+  selectionListeners: Array<(ctx: unknown, selection: unknown) => void> = [];
+  /** The ranges of the document that were read as text. */
+  textReads: Array<[number, number]> = [];
+  selection: { empty: boolean; from: number; to: number } = { empty: true, from: 0, to: 0 };
   constructor(public config: Record<string, unknown>) {
     this.markdown = (config.defaultValue as string) ?? '';
     FakeCrepe.all.push(this);
@@ -43,19 +47,20 @@ class FakeCrepe {
     return this as unknown as object;
   }
   /** Enough of ctx.get(editorViewCtx) for the word count. */
-  ctx() {
+  doc() {
     const markdown = this.markdown;
-    const view = {
-      state: {
-        doc: {
-          content: { size: markdown.length },
-          textBetween: () => markdown,
-          forEach: () => undefined,
-          descendants: () => undefined,
-        },
-        selection: { empty: true },
+    return {
+      content: { size: markdown.length },
+      textBetween: (from: number, to: number) => {
+        this.textReads.push([from, to]);
+        return markdown.slice(from, to);
       },
+      forEach: () => undefined,
+      descendants: () => undefined,
     };
+  }
+  ctx() {
+    const view = { state: { doc: this.doc(), selection: this.selection } };
     return {
       get: () => view,
       __replace: (next: string) => {
@@ -78,13 +83,13 @@ class FakeCrepe {
     fn: (api: {
       markdownUpdated: (cb: (ctx: unknown, markdown: string) => void) => void;
       updated: (cb: (ctx: unknown, doc: unknown) => void) => void;
-      selectionUpdated: (cb: (ctx: unknown) => void) => void;
+      selectionUpdated: (cb: (ctx: unknown, selection: unknown) => void) => void;
     }) => void
   ) {
     fn({
       markdownUpdated: (cb) => this.listeners.push(cb),
       updated: (cb) => this.updatedListeners.push(cb),
-      selectionUpdated: () => undefined,
+      selectionUpdated: (cb) => this.selectionListeners.push(cb),
     });
     return this;
   }
@@ -107,6 +112,14 @@ class FakeCrepe {
     };
     for (const listener of this.updatedListeners) {
       listener(this.ctx(), doc);
+    }
+  }
+  /** Moves the cursor, or selects `from` to `to`, as the user would. */
+  select(from: number, to = from) {
+    this.selection = { empty: from === to, from, to };
+    const selection = { ...this.selection, $from: { doc: this.doc() } };
+    for (const listener of this.selectionListeners) {
+      listener(this.ctx(), selection);
     }
   }
   emit(markdown: string) {
