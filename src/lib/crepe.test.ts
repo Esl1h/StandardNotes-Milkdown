@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { schemaCtx } from '@milkdown/kit/core';
 import { createCrepe } from './crepe';
 
 describe('caret', () => {
@@ -12,6 +13,23 @@ describe('caret', () => {
 
     await crepe.destroy();
     root.remove();
+  }, 20000);
+});
+
+describe('saving', () => {
+  it('keeps the schema types in ordinary objects, quick to copy per node', async () => {
+    const root = document.createElement('div');
+    const crepe = await createCrepe(root, '**text**', false);
+    await crepe.create();
+
+    crepe.editor.action((ctx) => {
+      const { nodes, marks } = ctx.get(schemaCtx);
+      expect(Object.getPrototypeOf(nodes)).toBe(Object.prototype);
+      expect(Object.getPrototypeOf(marks)).toBe(Object.prototype);
+    });
+    expect(crepe.getMarkdown()).toBe('**text**\n');
+
+    await crepe.destroy();
   }, 20000);
 });
 

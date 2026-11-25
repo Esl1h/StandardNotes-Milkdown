@@ -18,6 +18,8 @@ import { preserveSyntaxOnSave, syntaxDecorations } from './markdownSyntax';
 import { activeBlock } from './activeBlock';
 import { search } from 'prosemirror-search';
 import { $prose } from '@milkdown/kit/utils';
+import { schemaCtx, SchemaReady } from '@milkdown/kit/core';
+import { type MilkdownPlugin } from '@milkdown/kit/ctx';
 import { imageNullFields, keepImageAlt } from './imageMarkdown';
 import { addTocMenuItem, tocDecorations } from './toc';
 import { addMermaidMenuItems } from './mermaidMenu';
@@ -46,6 +48,18 @@ loadLatex().catch(() => undefined);
 
 /** Match highlighting and the find/replace commands the SearchBar drives. */
 const searchPlugin = $prose(() => search());
+
+/**
+ * The Milkdown serializer copies the node and mark types for every node it
+ * writes. ProseMirror keeps them in objects without a prototype, which V8
+ * copies about ten times slower than ordinary ones: that was a third of the
+ * time to save a large note. The types themselves stay the same.
+ */
+const fasterSave: MilkdownPlugin = (ctx) => async () => {
+  await ctx.wait(SchemaReady);
+  const schema = ctx.get(schemaCtx);
+  Object.assign(schema, { nodes: { ...schema.nodes }, marks: { ...schema.marks } });
+};
 
 /**
  * Builds the editor from the Crepe features this plugin uses. The `Crepe`
@@ -97,7 +111,8 @@ async function createCrepe(
     .use(syntaxDecorations)
     .use(tocDecorations)
     .use(activeBlock)
-    .use(searchPlugin);
+    .use(searchPlugin)
+    .use(fasterSave);
   return withTopBar ? crepe.addFeature(topBar, { buildTopBar }) : crepe;
 }
 
