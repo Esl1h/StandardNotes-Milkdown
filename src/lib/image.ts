@@ -22,6 +22,11 @@ function setNoteTextSource(source: (() => string) | null): void {
   noteText = source;
 }
 
+/** The text of the open note, for limits outside the upload path. */
+function getNoteText(): string | null {
+  return noteText?.() ?? null;
+}
+
 function embeddedLength(text: string): number {
   let total = 0;
   for (const match of text.matchAll(/data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+/g)) {
@@ -145,4 +150,12 @@ function safeImageSrc(src: string): string {
   return !hasScheme || /^(https?:|data:image\/)/i.test(head) ? src : '';
 }
 
-export { embedImage, MAX_DATA_URI_LENGTH, MAX_NOTE_IMAGE_LENGTH, safeImageSrc, setNoteTextSource };
+export {
+  embedImage,
+  embeddedLength,
+  getNoteText,
+  MAX_DATA_URI_LENGTH,
+  MAX_NOTE_IMAGE_LENGTH,
+  safeImageSrc,
+  setNoteTextSource,
+};
