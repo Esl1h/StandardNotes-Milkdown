@@ -20,7 +20,7 @@ import { search } from 'prosemirror-search';
 import { $prose } from '@milkdown/kit/utils';
 import { schemaCtx, SchemaReady } from '@milkdown/kit/core';
 import { type MilkdownPlugin } from '@milkdown/kit/ctx';
-import { imageNullFields, keepImageAlt } from './imageMarkdown';
+import { imageNullFields, keepImageAlt, writeImageDataAsIs } from './imageMarkdown';
 import { addTocMenuItem, tocDecorations } from './toc';
 import { addMermaidMenuItems } from './mermaidMenu';
 import { buildTopBar } from './topBarItems';
@@ -106,6 +106,7 @@ async function createCrepe(
   crepe.editor
     .config(preserveSyntaxOnSave)
     .config(keepImageAlt)
+    .config(writeImageDataAsIs)
     .use(imageNullFields)
     .use(frontmatter)
     .use(syntaxDecorations)
