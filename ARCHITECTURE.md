@@ -112,19 +112,22 @@ What runs on every key should cost as much as what changed, not as much as the n
 
 ### Budget
 
-`npm run perf` ([`e2e/perf.spec.js`](e2e/perf.spec.js)) fails, and so does its CI job, when typing
-in the 50k character note goes over any of these:
+`npm run perf` ([`e2e/perf.spec.js`](e2e/perf.spec.js)) fails, and so does its CI job, a required
+check of `main`, when typing in the 50k character note goes over any of these:
 
-| Metric                               | Limit  | Desktop, now | Before the budget |
-| ------------------------------------ | ------ | ------------ | ----------------- |
-| Keydown to paint, 95th percentile    | 50 ms  | 23 ms        | 39 ms             |
-| Main thread time per key             | 40 ms  | 20 ms        | 55 ms             |
-| Longest task while typing and pauses | 150 ms | 72 ms        | 91 ms             |
+| Metric                               | Limit  | CI runners  | Desktop     | Desktop, before the budget |
+| ------------------------------------ | ------ | ----------- | ----------- | -------------------------- |
+| Keydown to paint, 95th percentile    | 50 ms  | 19 to 23 ms | 23 ms       | 39 ms                      |
+| Main thread time per key             | 28 ms  | 13 to 20 ms | 20 to 23 ms | 55 ms                      |
+| Longest task while typing and pauses | 150 ms | up to 50 ms | 68 to 76 ms | 91 ms                      |
 
-The limits leave about twice the desktop numbers for slower machines. A frame at 60 Hz is already
-16 ms, and a 5k note takes 15 ms from keydown to paint, so a tighter paint limit would measure the
-screen and not the editor. A limit of 50 ms per task is out of reach while a pause serializes the
-whole note in one task.
+The CI numbers are of two runs on different processors. Main thread time per key is the limit that
+catches a regression: it is 1.4 to 2 times the runners', and scaled by the same ratios the editor
+before the budget would take 36 to 55 ms there. The other two only catch large ones. A frame at
+60 Hz is already 16 ms, and a 5k note takes 15 ms from keydown to paint, so a tighter paint limit
+would measure the screen and not the editor. A limit of 50 ms per task is out of reach while a
+pause serializes the whole note in one task. A runner slower than these may go over the budget
+with nothing wrong; look at the numbers of `main` before blaming a change.
 
 ## Build and release pipeline
 
