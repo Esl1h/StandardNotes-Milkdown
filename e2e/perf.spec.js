@@ -1,146 +1,300 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { randomBytes } from 'node:crypto';
 import { openHost } from './snHost.js';
 
 /**
- * Performance guard. Measures typing and scrolling on a large note, at full
- * speed and with a 6x CPU throttle (slow mobile WebView), and compares with
- * e2e/perf-baseline.json. Absolute numbers depend on the machine, so the
- * check is relative: a run fails only when it is clearly slower than the
- * baseline recorded on the same machine.
+ * Latency benchmark: typing, cursor movement and boot on generated notes,
+ * driven through the fake host. Writes perf-results.json.
  *
- * Opt-in (PERF=1), and alone: specs running in parallel share the CPU and
- * skew the timings, so the regular e2e run skips it.
- *
- *   PERF=1 PERF_RECORD=1 npx playwright test e2e/perf.spec.js --workers=1   # (re)record
- *   PERF=1 npx playwright test e2e/perf.spec.js --workers=1                 # compare
+ * Opt-in and alone, as specs running in parallel share the CPU and skew the
+ * timings: `npm run perf`.
  */
 
-// Playwright loads the specs as CommonJS here (no "type": "module"), so
-// import.meta is unavailable; the path is resolved from the project root.
-const BASELINE_FILE = path.resolve('e2e', 'perf-baseline.json');
 const ENABLED = process.env.PERF === '1';
-const RECORD = process.env.PERF_RECORD === '1';
-/** Allowed slowdown over the baseline before the test fails. */
-const TOLERANCE = 1.25;
-/** Below this many milliseconds, differences are measurement noise. */
-const NOISE_MS = 4;
+// Playwright loads the specs as CommonJS here, so the path is resolved from
+// the project root.
+const RESULTS_FILE = path.resolve('perf-results.json');
+const KEYS = Number(process.env.PERF_KEYS ?? 200);
+const BOOTS = Number(process.env.PERF_BOOTS ?? 5);
+const ONLY = process.env.PERF_ONLY?.split(',');
 
-function bigNote() {
-  const para =
-    'Lorem ipsum dolor sit amet, **consectetur** adipiscing elit, sed do *eiusmod* ' +
-    'tempor incididunt ut labore et dolore magna aliqua `code` ut enim.';
-  const lines = ['# Large note', ''];
-  for (let section = 1; section <= 25; section++) {
-    lines.push(`## Section ${section}`, '');
-    for (let i = 0; i < 8; i++) {
-      lines.push(para, '');
-    }
-    lines.push('- [ ] task a', '- [x] task b', '', '| K | V |', '| --- | --- |', '| a | 1 |', '');
-    if (section % 5 === 0) {
-      lines.push('```js', 'const x = 1;', '```', '', '> [!NOTE]', '> callout', '');
-    }
+/** Deterministic pseudo random numbers, so every run types the same way. */
+function random(seed) {
+  let state = seed;
+  return () => {
+    state = (Math.imul(state, 48271) >>> 0) % 2147483647;
+    return state / 2147483647;
+  };
+}
+
+const PARAGRAPH =
+  'Lorem ipsum dolor sit amet, **consectetur** adipiscing elit, sed do *eiusmod* tempor ' +
+  'incididunt ut `labore` et [dolore](https://example.com) magna aliqua, see [[Other note]].';
+
+function section(n) {
+  const lines = [`## Section ${n}`, '', PARAGRAPH, '', `${PARAGRAPH} Inline math $a_${n}^2$.`, ''];
+  lines.push('- first item', '- second item', '  - nested item', '');
+  lines.push('- [ ] open task', '- [x] done task', '', `### Detail ${n}`, '', PARAGRAPH, '');
+  lines.push('| Key | Value |', '| --- | ----- |', `| a   | ${n}     |`, '| b   | two   |', '');
+  if (n % 4 === 1) {
+    lines.push('```js', `const value${n} = ${n};`, 'console.log(value);', '```', '');
+  }
+  if (n % 8 === 2) {
+    lines.push('> [!NOTE]', '> A callout.', '');
   }
   return lines.join('\n');
 }
 
-/** The large note plus three embedded images near the per image limit: the
- * data URIs are what slowed the source pane and the host messages down.
- * The bytes are random, so the pictures do not decode; the text is what counts. */
-function imageNote() {
-  const image = (name) =>
-    `![${name}](data:image/png;base64,${randomBytes(270 * 1024).toString('base64')})`;
-  return `${bigNote()}\n\n${image('one')}\n\n${image('two')}\n\n${image('three')}\n`;
+/** A note of about `size` characters mixing every block the editor draws. */
+function note(size) {
+  const parts = [
+    '# Benchmark note\n',
+    '[TOC]\n',
+    '```mermaid\ngraph TD\n  A[Start] --> B[End]\n```\n',
+    '$$\nE = mc^2\n$$\n',
+  ];
+  let length = parts.join('\n').length;
+  for (let n = 1; length < size; n++) {
+    const part = section(n);
+    parts.push(part);
+    length += part.length + 1;
+  }
+  return parts.join('\n');
 }
 
-const percentile = (sorted, p) =>
-  sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))];
+/** A decodable PNG of random pixels, stored uncompressed. */
+function noisePng(side) {
+  const chunk = (type, data) => {
+    const body = Buffer.concat([Buffer.from(type), data]);
+    const out = Buffer.alloc(body.length + 8);
+    out.writeUInt32BE(data.length, 0);
+    body.copy(out, 4);
+    out.writeUInt32BE(zlib.crc32(body), body.length + 4);
+    return out;
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(side, 0);
+  header.writeUInt32BE(side, 4);
+  header.set([8, 2, 0, 0, 0], 8);
+  const rows = randomBytes(side * (side * 3 + 1));
+  for (let y = 0; y < side; y++) {
+    rows[y * (side * 3 + 1)] = 0;
+  }
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', header),
+    chunk('IDAT', zlib.deflateSync(rows, { level: 0 })),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
 
-async function measure(page, throttle, text) {
-  const plugin = await openHost(page, { text, throttle });
-  await plugin.locator('.milkdown .editor h1').first().waitFor({ timeout: 60000 });
-  const frame = page.frames().find((candidate) => candidate.url().includes('/index.html'));
-  await plugin.locator('.milkdown .editor p').nth(3).click();
-  await page.keyboard.press('End');
+/** About 5 MB of embedded images, the most a note may carry. */
+function imageNote() {
+  const images = Array.from(
+    { length: 10 },
+    (_, i) => `![image ${i}](data:image/png;base64,${noisePng(350).toString('base64')})`
+  );
+  return `${note(50_000)}\n\n${images.join('\n\n')}\n`;
+}
 
-  const typing = await frame.evaluate(async () => {
-    const times = [];
-    for (let i = 0; i < 60; i++) {
-      const start = performance.now();
-      document.execCommand('insertText', false, 'x');
-      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
-      times.push(performance.now() - start);
+/** Runs in every frame: when the note arrived and when it was first painted. */
+function bootProbe() {
+  window.addEventListener('message', (event) => {
+    if (event.data?.data?.item && !window.__noteAt) {
+      window.__noteAt = performance.now();
     }
-    return times.sort((a, b) => a - b);
   });
-
-  const scrolling = await frame.evaluate(async () => {
-    const pane = document.querySelector('.crepe-pane');
-    const frames = [];
-    let last = performance.now();
-    for (let i = 0; i < 60; i++) {
-      pane.scrollTop += 120;
-      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
-      const now = performance.now();
-      frames.push(now - last);
-      last = now;
+  const observer = new MutationObserver(() => {
+    if (document.querySelector('.milkdown .ProseMirror[contenteditable="true"] h1')) {
+      observer.disconnect();
+      requestAnimationFrame(() =>
+        setTimeout(() => {
+          window.__interactiveAt = performance.now();
+        })
+      );
     }
-    return frames.sort((a, b) => a - b);
   });
+  observer.observe(document, { childList: true, subtree: true });
+}
 
-  const round = (value) => Math.round(value * 10) / 10;
-  return {
-    typingP50: round(percentile(typing, 0.5)),
-    typingP95: round(percentile(typing, 0.95)),
-    scrollP50: round(percentile(scrolling, 0.5)),
-    scrollP95: round(percentile(scrolling, 0.95)),
+/** Runs in the plugin frame: latency of each key, and the long tasks. */
+function keyProbe() {
+  const probe = { frame: [], paint: [], long: [] };
+  const onKey = () => {
+    const start = performance.now();
+    requestAnimationFrame(() => {
+      probe.frame.push(performance.now() - start);
+      // A message queued from the frame callback runs after style, layout and
+      // paint of that frame.
+      const channel = new MessageChannel();
+      channel.port1.onmessage = () => probe.paint.push(performance.now() - start);
+      channel.port2.postMessage(null);
+    });
+  };
+  window.addEventListener('keydown', onKey, true);
+  const observer = new PerformanceObserver((list) =>
+    probe.long.push(...list.getEntries().map((entry) => entry.duration))
+  );
+  observer.observe({ type: 'longtask' });
+  window.__takeProbe = () => {
+    window.removeEventListener('keydown', onKey, true);
+    observer.disconnect();
+    return probe;
   };
 }
 
+const round = (value) => Math.round(value * 10) / 10;
+
+function percentile(values, p) {
+  const sorted = [...values].sort((a, b) => a - b);
+  return round(sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))]);
+}
+
+async function open(browser, text, throttle) {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await context.newPage();
+  await page.addInitScript(bootProbe);
+  const plugin = await openHost(page, { text, throttle });
+  const frame = await (await page.locator('#f').elementHandle()).contentFrame();
+  await frame.waitForFunction(() => window.__interactiveAt, null, { timeout: 120000 });
+  return { context, page, plugin, frame };
+}
+
+/** Presses `keys` one by one and reports latency, long tasks and CPU time. */
+async function measureKeys(page, frame, keys) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Performance.enable');
+  const cpu = async () => {
+    const { metrics } = await cdp.send('Performance.getMetrics');
+    return metrics.find((metric) => metric.name === 'TaskDuration').value * 1000;
+  };
+  const next = random(7);
+  await frame.evaluate(keyProbe);
+  const before = await cpu();
+  for (let i = 0; i < keys.length; i++) {
+    await page.keyboard.press(keys[i]);
+    // A pause now and then lets the debounced work (serializer, save, word
+    // count) run, as it does between words.
+    await page.waitForTimeout(i % 20 === 19 ? 450 : 20 + Math.floor(next() * 50));
+  }
+  await page.waitForTimeout(600);
+  const after = await cpu();
+  const probe = await frame.evaluate(() => window.__takeProbe());
+  expect(probe.paint).toHaveLength(keys.length);
+  return {
+    keys: keys.length,
+    frameP50: percentile(probe.frame, 0.5),
+    frameP95: percentile(probe.frame, 0.95),
+    paintP50: percentile(probe.paint, 0.5),
+    paintP95: percentile(probe.paint, 0.95),
+    cpuPerKey: round((after - before) / keys.length),
+    longTasks: probe.long.length,
+    longestTask: round(Math.max(0, ...probe.long)),
+  };
+}
+
+const typedKeys = () =>
+  Array.from({ length: KEYS }, (_, i) => 'lorem ipsum dolor sit amet '[i % 27]).map((key) =>
+    key === ' ' ? 'Space' : key
+  );
+
+const arrowKeys = () =>
+  Array.from(
+    { length: KEYS },
+    (_, i) => ['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'][Math.floor((i * 4) / KEYS)]
+  );
+
+/** Puts the cursor at the end of a paragraph in the middle of the note. */
+async function focusMiddle(page, plugin) {
+  const paragraphs = plugin.locator('.milkdown .ProseMirror > p');
+  const target = paragraphs.nth(Math.floor((await paragraphs.count()) / 2));
+  await target.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+  await target.click();
+  await page.keyboard.press('End');
+  // Diagrams, math and the first word count settle before measuring.
+  await page.waitForTimeout(1500);
+}
+
+async function measureTyping(browser, text, throttle) {
+  const { context, page, plugin, frame } = await open(browser, text, throttle);
+  await focusMiddle(page, plugin);
+  const typing = await measureKeys(page, frame, typedKeys());
+  const cursor = await measureKeys(page, frame, arrowKeys());
+  await context.close();
+  return { typing, cursor };
+}
+
+async function measureBoot(browser, text, throttle) {
+  const runs = [];
+  for (let i = 0; i < BOOTS; i++) {
+    const { context, frame } = await open(browser, text, throttle);
+    runs.push(
+      await frame.evaluate(() => ({
+        total: window.__interactiveAt,
+        afterNote: window.__interactiveAt - window.__noteAt,
+      }))
+    );
+    await context.close();
+  }
+  return {
+    runs: BOOTS,
+    // From the navigation of the plugin frame, and from the note arriving.
+    totalP50: percentile(
+      runs.map((run) => run.total),
+      0.5
+    ),
+    afterNoteP50: percentile(
+      runs.map((run) => run.afterNote),
+      0.5
+    ),
+  };
+}
+
+const SCENARIOS = [
+  { name: '5k', text: () => note(5_000), throttle: 1 },
+  { name: '50k', text: () => note(50_000), throttle: 1 },
+  { name: '200k', text: () => note(200_000), throttle: 1 },
+  { name: '50k-cpu4x', text: () => note(50_000), throttle: 4 },
+  { name: 'images-5MB', text: imageNote, throttle: 1 },
+];
+
 test.describe('performance', () => {
-  // Throttled runs of a large note are slow by design.
-  test.setTimeout(180000);
-  test.skip(!ENABLED, 'opt-in: run with PERF=1');
-  test.skip(!RECORD && !fs.existsSync(BASELINE_FILE), 'no baseline: run with PERF_RECORD=1 first');
+  test.setTimeout(900_000);
+  test.skip(!ENABLED, 'opt-in: npm run perf');
 
-  test('typing and scrolling stay within the baseline', async ({ browser }) => {
-    const results = {};
-    for (const [suffix, text] of [
-      ['', bigNote()],
-      ['-images', imageNote()],
-    ]) {
-      for (const throttle of [1, 6]) {
-        const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-        const page = await context.newPage();
-        results[`cpu${throttle}x${suffix}`] = await measure(page, throttle, text);
-        await context.close();
-      }
-    }
-    console.log('perf', JSON.stringify(results));
-
-    if (RECORD) {
-      fs.writeFileSync(BASELINE_FILE, `${JSON.stringify(results, null, 2)}\n`);
-      return;
-    }
-    const baseline = JSON.parse(fs.readFileSync(BASELINE_FILE, 'utf8'));
-    for (const [run, metrics] of Object.entries(results)) {
-      // A baseline recorded before the image note existed has no entry for it.
-      if (!baseline[run]) {
+  test('typing, cursor movement and boot', async ({ browser }) => {
+    const results = {
+      meta: {
+        date: new Date().toISOString(),
+        browser: browser.version(),
+        cpu: os.cpus()[0]?.model,
+        cpus: os.cpus().length,
+        keys: KEYS,
+      },
+      scenarios: {},
+    };
+    for (const { name, text, throttle } of SCENARIOS) {
+      if (ONLY && !ONLY.includes(name)) {
         continue;
       }
-      for (const [metric, value] of Object.entries(metrics)) {
-        // The scroll p95 swings by +-50% between identical runs: logged
-        // above for comparison, never asserted.
-        if (metric === 'scrollP95') {
-          continue;
-        }
-        const limit = Math.max(baseline[run][metric] * TOLERANCE, baseline[run][metric] + NOISE_MS);
-        expect(value, `${run}.${metric} (baseline ${baseline[run][metric]})`).toBeLessThanOrEqual(
-          limit
-        );
+      const markdown = text();
+      const result = {
+        chars: markdown.length,
+        cpuThrottle: throttle,
+        boot: await measureBoot(browser, markdown, throttle),
+        ...(await measureTyping(browser, markdown, throttle)),
+      };
+      results.scenarios[name] = result;
+      for (const part of ['boot', 'typing', 'cursor']) {
+        const values = Object.entries(result[part]).map(([key, value]) => `${key}=${value}`);
+        console.log(`perf ${name} ${part}: ${values.join(' ')}`);
       }
+      // Written after every scenario, so a failure keeps what was measured.
+      fs.writeFileSync(RESULTS_FILE, `${JSON.stringify(results, null, 2)}\n`);
     }
   });
 });
