@@ -44,7 +44,8 @@ What users can expect:
   plugin's own origin, no inline code, no eval, no plugins ([ADR 0005](docs/adr/0005-content-security-policy.md)).
 - Image addresses are limited to `http:`, `https:`, `data:image/` and relative paths; others are
   emptied.
-- Uploaded, pasted or dropped SVG files are stored as pixels, never as SVG.
+- Uploaded, pasted or dropped SVG files are stored as pixels, never as SVG; the same holds for an
+  SVG document inside HTML that is pasted into a note.
 - Exported HTML is sanitized and carries its own CSP that blocks scripts entirely.
 - Releases are verifiable: `SHA256SUMS` and a build provenance attestation
   ([Verifying a release](README.md#verifying-a-release)).
@@ -182,8 +183,9 @@ which owns encryption and accounts, is outside the plugin and is trusted for tho
 - **Unbounded work and memory.** The notes list preview scans at most 2000 characters after
   images are removed, and its tag cleanup is tested against many `<` without `>`
   ([`src/lib/preview.ts`](src/lib/preview.ts), `preview.test.ts`). Images are capped at 500 KB
-  per data URI and 5 MB per note ([`src/lib/image.ts`](src/lib/image.ts)); a file that cannot fit
-  is not read into memory. The echo guard keeps fingerprints, not copies, and only for 60 seconds
+  per data URI and 5 MB per note ([`src/lib/image.ts`](src/lib/image.ts)), and the limits hold
+  for the images inside pasted HTML as well ([`src/lib/paste.ts`](src/lib/paste.ts)); a file that
+  cannot fit is not read into memory. The echo guard keeps fingerprints, not copies, and only for 60 seconds
   (`echoGuard.ts`); `sentMessages.ts` drops payloads of past saves; Mermaid keeps at most 200
   sources and renders one at a time.
 - **Supply chain.** Dependencies are declared in `package.json` and locked in
