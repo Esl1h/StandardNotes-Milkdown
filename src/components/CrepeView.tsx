@@ -303,4 +303,4 @@ function CrepeView(props: CrepeViewProps) {
   );
 }
 
-export default CrepeView;
+export default React.memo(CrepeView);

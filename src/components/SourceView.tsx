@@ -197,4 +197,4 @@ function SourceView(props: SourceViewProps) {
   return <div className="source-container" ref={containerRef} />;
 }
 
-export default SourceView;
+export default React.memo(SourceView);

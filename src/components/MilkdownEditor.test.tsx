@@ -1,6 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import MilkdownEditor from './MilkdownEditor';
+import CrepeView from './CrepeView';
+import ModeSwitcher from './ModeSwitcher';
+import Outline from './Outline';
 import { FakeCrepe } from '../mocks/crepeMock';
 
 vi.mock('../lib/crepe', async () => {
@@ -139,5 +142,88 @@ describe('MilkdownEditor', () => {
     const filled = setup('# Not empty');
     expect(filled.view.queryByText('Add sample')).toBeNull();
     filled.view.unmount();
+  });
+});
+
+describe('renders while typing', () => {
+  const renders = { shell: 0, switcher: 0, outline: 0, crepe: 0 };
+  const restore: Array<() => void> = [];
+
+  /** Counts the renders of a React.memo component, keeping its memo. */
+  function count(component: unknown, name: keyof typeof renders) {
+    const memo = component as { type: (props: object) => React.ReactNode };
+    const inner = memo.type;
+    expect(inner, `${name} is memoized`).toBeTypeOf('function');
+    memo.type = (props) => {
+      renders[name]++;
+      return inner(props);
+    };
+    restore.push(() => {
+      memo.type = inner;
+    });
+  }
+
+  // Called as a function, the shell keeps its state in this component, so
+  // each of its renders passes through here.
+  function CountedShell(props: Parameters<typeof MilkdownEditor>[0]) {
+    renders.shell++;
+    return MilkdownEditor(props);
+  }
+
+  afterEach(() => {
+    restore.splice(0).forEach((undo) => undo());
+  });
+
+  async function setupCounted() {
+    window.localStorage.setItem('standardnotes-milkdown-outline', 'true');
+    const props = {
+      rawText: 'one two three',
+      historyEpoch: 0,
+      onTextChange: vi.fn(),
+      onInsertSample: vi.fn(),
+    };
+    const view = render(<CountedShell {...props} />);
+    await waitFor(() =>
+      expect(document.querySelector('.word-count')?.textContent).toContain('3 words')
+    );
+    const reset = () => Object.assign(renders, { shell: 0, switcher: 0, outline: 0, crepe: 0 });
+    return { view, props, reset };
+  }
+
+  it('renders the counter alone for a new word count', async () => {
+    count(CrepeView, 'crepe');
+    count(ModeSwitcher, 'switcher');
+    count(Outline, 'outline');
+    const { reset } = await setupCounted();
+    reset();
+
+    act(() => FakeCrepe.all[0]!.select(0, 7));
+
+    expect(document.querySelector('.word-count')?.textContent).toBe('2 of 3 words');
+    expect(renders).toEqual({ shell: 0, switcher: 0, outline: 0, crepe: 0 });
+  });
+
+  it('renders the outline alone for new headings', async () => {
+    count(CrepeView, 'crepe');
+    count(ModeSwitcher, 'switcher');
+    count(Outline, 'outline');
+    const { view, reset } = await setupCounted();
+    reset();
+
+    act(() => FakeCrepe.all[0]!.emitUpdated([{ level: 1, text: 'Title' }]));
+
+    expect(view.getByRole('button', { name: 'Title' })).toBeTruthy();
+    expect(renders).toEqual({ shell: 0, switcher: 0, outline: 1, crepe: 0 });
+  });
+
+  it('leaves the icon bar and the outline alone when a save changes the text', async () => {
+    count(ModeSwitcher, 'switcher');
+    count(Outline, 'outline');
+    const { view, props, reset } = await setupCounted();
+    reset();
+
+    view.rerender(<CountedShell {...props} rawText={'one two three four'} />);
+
+    expect(renders).toMatchObject({ shell: 1, switcher: 0, outline: 0 });
   });
 });

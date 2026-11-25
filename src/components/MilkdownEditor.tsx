@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type EditorView as ProseView } from '@milkdown/kit/prose/view';
 import { type EditorView as SourceEditorView } from '@codemirror/view';
 import { openSearchPanel } from '@codemirror/search';
@@ -31,6 +31,7 @@ import { formatCount, type TextStats } from '../lib/wordCount';
 import { copyText } from '../lib/clipboard';
 import { downloadFile } from '../lib/download';
 import { exportFileName, htmlDocument, noteHtml } from '../lib/exportHtml';
+import { type Store, createStore, useStore } from '../lib/store';
 
 interface MilkdownEditorProps {
   rawText: string;
@@ -40,7 +41,11 @@ interface MilkdownEditorProps {
   onInsertSample: () => void;
 }
 
-function WordCount({ stats }: { stats: TextStats }) {
+function WordCount({ store }: { store: Store<TextStats | null> }) {
+  const stats = useStore(store);
+  if (!stats) {
+    return null;
+  }
   const { label, title } = formatCount(stats.total, stats.selection);
   return (
     <span className="word-count" title={title}>
@@ -49,54 +54,80 @@ function WordCount({ stats }: { stats: TextStats }) {
   );
 }
 
+/** A layout preference, written back on every change. */
+function usePreference<T>(read: () => T, write: (value: T) => void) {
+  const [value, setValue] = useState(read);
+  const change = useCallback(
+    (next: T) => {
+      setValue(next);
+      write(next);
+    },
+    [write]
+  );
+  return [value, change] as const;
+}
+
 /** Layout shell: the persistent mode/orientation/top bar preferences plus
  * the visual editor, the source pane, or both. Text flows through the host
- * `Editor` state: each pane receives rawText and reports user edits only. */
+ * `Editor` state: each pane receives rawText and reports user edits only.
+ *
+ * The panes and bars are memoized, so every callback handed to them is stable
+ * and what changes while typing goes through a store. */
 function MilkdownEditor(props: MilkdownEditorProps) {
   const { rawText, historyEpoch, onTextChange, onInsertSample } = props;
-  const [mode, setMode] = useState<Mode>(() => readMode());
-  const [orientation, setOrientation] = useState<Orientation>(() => readOrientation());
-  const [topbar, setTopbar] = useState<boolean>(() => readTopbar());
-  const [topbarPosition, setTopbarPosition] = useState<TopbarPosition>(() => readTopbarPosition());
-  const [layoutBar, setLayoutBar] = useState<boolean>(() => readLayoutBar());
+  const [mode, changeMode] = usePreference<Mode>(readMode, writeMode);
+  const [orientation, changeOrientation] = usePreference<Orientation>(
+    readOrientation,
+    writeOrientation
+  );
+  const [topbar, changeTopbar] = usePreference<boolean>(readTopbar, writeTopbar);
+  const [topbarPosition, changeTopbarPosition] = usePreference<TopbarPosition>(
+    readTopbarPosition,
+    writeTopbarPosition
+  );
+  const [layoutBar, changeLayoutBar] = usePreference<boolean>(readLayoutBar, writeLayoutBar);
+  const [outline, changeOutline] = usePreference<boolean>(readOutline, writeOutline);
+  const [focusMode, changeFocusMode] = usePreference<boolean>(readFocusMode, writeFocusMode);
   // Each pane counts its own text; the visual one wins whenever it is shown.
-  const [visualStats, setVisualStats] = useState<TextStats | null>(null);
-  const [sourceStats, setSourceStats] = useState<TextStats | null>(null);
+  const [stores] = useState(() => ({
+    visualStats: createStore<TextStats | null>(null),
+    sourceStats: createStore<TextStats | null>(null),
+    headings: createStore<Heading[]>([]),
+  }));
   const [proseView, setProseView] = useState<ProseView | null>(null);
   const [sourceView, setSourceView] = useState<SourceEditorView | null>(null);
   const [topBarHeight, setTopBarHeight] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [outline, setOutline] = useState<boolean>(() => readOutline());
-  const [headings, setHeadings] = useState<Heading[]>([]);
-  const [focusMode, setFocusMode] = useState<boolean>(() => readFocusMode());
   // A search belongs to one note's editor instance; a note switch closes it.
   const [searchEpoch, setSearchEpoch] = useState(historyEpoch);
   if (searchEpoch !== historyEpoch) {
     setSearchEpoch(historyEpoch);
     setSearchOpen(false);
   }
-
-  const changeOutline = (next: boolean) => {
-    setOutline(next);
-    writeOutline(next);
-  };
+  const rawTextRef = useRef(rawText);
+  useEffect(() => {
+    rawTextRef.current = rawText;
+  });
 
   // The outline needs the rendered document; source mode has none.
   const outlineShown = outline && mode !== 'source';
 
-  const goToHeading = (heading: Heading) => {
-    if (!proseView) {
-      return;
-    }
-    showHeading(proseView, heading);
-    // On narrow screens the outline covers the note: get out of the way.
-    if (window.matchMedia('(max-width: 899px)').matches) {
-      changeOutline(false);
-    }
-  };
+  const goToHeading = useCallback(
+    (heading: Heading) => {
+      if (!proseView) {
+        return;
+      }
+      showHeading(proseView, heading);
+      // On narrow screens the outline covers the note: get out of the way.
+      if (window.matchMedia('(max-width: 899px)').matches) {
+        changeOutline(false);
+      }
+    },
+    [proseView, changeOutline]
+  );
 
   /** The source pane has CodeMirror's own panel; the visual one the SearchBar. */
-  const openSearch = () => {
+  const openSearch = useCallback(() => {
     if (mode === 'source') {
       if (sourceView) {
         openSearchPanel(sourceView);
@@ -104,54 +135,43 @@ function MilkdownEditor(props: MilkdownEditorProps) {
     } else {
       setSearchOpen(true);
     }
-  };
+  }, [mode, sourceView]);
 
   /** Saves the rendered note as a page of its own, named after its title. */
-  const exportHtml = () => {
+  const exportHtml = useCallback(() => {
     if (!proseView) {
       return;
     }
-    const title = headings[0]?.text ?? '';
+    const title = stores.headings.get()[0]?.text ?? '';
     downloadFile(
       htmlDocument(title || 'Note', noteHtml(proseView)),
       exportFileName(title),
       'text/html'
     );
-  };
+  }, [proseView, stores]);
 
-  const changeMode = (next: Mode) => {
-    setMode(next);
-    writeMode(next);
-  };
-  const changeOrientation = (next: Orientation) => {
-    setOrientation(next);
-    writeOrientation(next);
-  };
-  const changeTopbar = (next: boolean) => {
-    setTopbar(next);
-    writeTopbar(next);
-  };
-  const changeTopbarPosition = (next: TopbarPosition) => {
-    setTopbarPosition(next);
-    writeTopbarPosition(next);
-  };
-
-  const changeFocusMode = (next: boolean) => {
-    setFocusMode(next);
-    writeFocusMode(next);
-  };
-
-  const changeLayoutBar = (next: boolean) => {
-    setLayoutBar(next);
-    writeLayoutBar(next);
-  };
+  const copy = useCallback(() => copyText(rawTextRef.current), []);
+  const hideLayoutBar = useCallback(() => changeLayoutBar(false), [changeLayoutBar]);
 
   const empty = rawText.trim() === '';
-  const stats = mode === 'source' ? sourceStats : visualStats;
-  const wordCount = stats ? <WordCount stats={stats} /> : null;
+  const statsStore = mode === 'source' ? stores.sourceStats : stores.visualStats;
+  const wordCount = useMemo(() => <WordCount store={statsStore} />, [statsStore]);
   // The counter lives in the formatting bar when there is one, else in the
   // icon bar; with both gone the interface stays clean.
   const countInTopBar = topbar && mode !== 'source';
+  const trailing = useMemo(
+    () => (
+      <>
+        {empty && (
+          <button className="insert-sample" onClick={onInsertSample}>
+            Add sample
+          </button>
+        )}
+        {!countInTopBar && wordCount}
+      </>
+    ),
+    [empty, onInsertSample, countInTopBar, wordCount]
+  );
 
   const switcher = layoutBar ? (
     <ModeSwitcher
@@ -163,24 +183,15 @@ function MilkdownEditor(props: MilkdownEditorProps) {
       onOrientationChange={changeOrientation}
       onTopbarChange={changeTopbar}
       onTopbarPositionChange={changeTopbarPosition}
-      onCopy={() => copyText(rawText)}
+      onCopy={copy}
       onExportHtml={mode === 'source' ? null : exportHtml}
       onSearch={openSearch}
       outline={mode === 'source' ? null : outline}
       onOutlineChange={changeOutline}
       focusMode={focusMode}
       onFocusModeChange={changeFocusMode}
-      onHide={() => changeLayoutBar(false)}
-      trailing={
-        <>
-          {empty && (
-            <button className="insert-sample" onClick={onInsertSample}>
-              Add sample
-            </button>
-          )}
-          {!countInTopBar && wordCount}
-        </>
-      }
+      onHide={hideLayoutBar}
+      trailing={trailing}
     />
   ) : (
     <ShowLayoutBarButton onShow={() => changeLayoutBar(true)} />
@@ -213,7 +224,7 @@ function MilkdownEditor(props: MilkdownEditorProps) {
               rawText={rawText}
               epoch={historyEpoch}
               onTextChange={onTextChange}
-              onStats={setSourceStats}
+              onStats={stores.sourceStats.set}
               onView={setSourceView}
             />
           </div>
@@ -233,15 +244,15 @@ function MilkdownEditor(props: MilkdownEditorProps) {
               epoch={historyEpoch}
               topbar={topbar}
               onTextChange={onTextChange}
-              onStats={setVisualStats}
+              onStats={stores.visualStats.set}
               onView={setProseView}
-              onHeadings={setHeadings}
+              onHeadings={stores.headings.set}
               topBarAccessory={countInTopBar ? wordCount : null}
               onTopBarHeight={setTopBarHeight}
             />
           </div>
         )}
-        {outlineShown && <Outline headings={headings} onSelect={goToHeading} />}
+        {outlineShown && <Outline headings={stores.headings} onSelect={goToHeading} />}
       </div>
     </div>
   );
