@@ -124,7 +124,8 @@ class FakeCrepe {
   }
   emit(markdown: string) {
     for (const listener of this.listeners) {
-      listener({}, markdown);
+      // The real listener hands the editor ctx over, with editorViewCtx in it.
+      listener(this.ctx(), markdown);
     }
   }
 }

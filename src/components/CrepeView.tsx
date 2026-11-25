@@ -94,6 +94,11 @@ function CrepeView(props: CrepeViewProps) {
   const crepeRef = useRef<CrepeBuilder | null>(null);
   const statsRef = useRef<ReturnType<typeof createStats> | null>(null);
   const suppressRef = useRef(false);
+  // The document an external replace produced. The listener of Milkdown
+  // fires up to 200 ms late: an update queued before the replace would
+  // otherwise save the text it was queued for over the replaced one.
+  const externalDocRef = useRef<Node | null>(null);
+  const reportHeadingsRef = useRef<((doc: Node) => void) | null>(null);
   // The serialized text the note holds, from a programmatic apply or the
   // last saved user edit; an identical markdownUpdated echo is dropped even
   // without the flag. Tracking user edits too keeps an undo back to the
@@ -148,6 +153,7 @@ function CrepeView(props: CrepeViewProps) {
       }
     });
     statsRef.current = stats;
+    reportHeadingsRef.current = reportHeadings;
     const boot = async () => {
       const crepe = await createCrepe(
         containerRef.current as HTMLElement,
@@ -164,13 +170,16 @@ function CrepeView(props: CrepeViewProps) {
         return;
       }
       crepe.on((listener) => {
-        listener.markdownUpdated((_ctx, markdown) => {
+        listener.markdownUpdated((ctx, markdown) => {
           // The milkdown listener debounces by 200 ms, longer than the
           // suppress flag below holds, so the guard is the serialized
           // form of the last programmatically applied text.
           // `disposed`: destroy is async, and a late update from the
           // previous note's instance would be saved into the new note.
           if (disposed || suppressRef.current || markdown === lastAppliedRef.current) {
+            return;
+          }
+          if (ctx.get(editorViewCtx).state.doc === externalDocRef.current) {
             return;
           }
           lastAppliedRef.current = markdown;
@@ -183,7 +192,7 @@ function CrepeView(props: CrepeViewProps) {
         );
         // Debounced by Milkdown (200 ms): once per pause, not per key.
         listener.updated((ctx, doc) => {
-          if (!disposed) {
+          if (!disposed && doc !== externalDocRef.current) {
             const { state } = ctx.get(editorViewCtx);
             stats.document(state.doc, state.selection);
             reportHeadings(doc);
@@ -269,10 +278,14 @@ function CrepeView(props: CrepeViewProps) {
       } finally {
         suppressRef.current = false;
       }
-      // A flushed replace fires no `updated`: count the new text here.
+      // A flushed replace fires no `updated`: count and list the new text
+      // here, and mark the document so the late update of the text it
+      // replaced is dropped.
       crepe.editor.action((ctx: Ctx) => {
         const { state } = ctx.get(editorViewCtx);
+        externalDocRef.current = state.doc;
         statsRef.current?.document(state.doc, state.selection);
+        reportHeadingsRef.current?.(state.doc);
       });
     }, APPLY_DELAY_MS);
     return () => clearTimeout(timer);
