@@ -25,11 +25,11 @@ const ONLY = process.env.PERF_ONLY?.split(',');
 
 /**
  * What typing in the 50k note may cost, in milliseconds. Timings depend on
- * the machine, so the limits leave about twice what a desktop measures (see
- * ARCHITECTURE.md): room for a CI runner, and still under the 55 ms of main
- * thread per key the editor took before there was a budget.
+ * the machine; the reasons for each limit are in ARCHITECTURE.md. The main
+ * thread time per key is the tight one: CI runners measure 13 to 20 ms, a
+ * desktop 20 to 23 ms.
  */
-const BUDGET = { paintP95: 50, cpuPerKey: 40, longestTask: 150 };
+const BUDGET = { paintP95: 50, cpuPerKey: 28, longestTask: 150 };
 
 /** Deterministic pseudo random numbers, so every run types the same way. */
 function random(seed) {
