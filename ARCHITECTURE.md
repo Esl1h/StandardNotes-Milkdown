@@ -29,13 +29,17 @@ behind it are in [`docs/adr/`](docs/adr/).
   (no AI feature) plus plugins of this project: frontmatter, syntax preservation, TOC, active
   block, search. The instance is recreated on note switch, so undo never reaches another note.
   User edits flow up through `onTextChange`; external text (note switch, remote sync, source
-  edit) is applied with `replaceAll` under a suppress flag, so it is never saved back.
+  edit) is applied with `replaceAll` under a suppress flag, so it is never saved back. A save
+  queued by typing before such a replace arrives late (the listener delays it by 200 ms) and is
+  dropped, so it never overwrites the replaced text in the note.
 - **SourceView** ([`src/components/SourceView.tsx`](src/components/SourceView.tsx)) is a slim
   CodeMirror 6 pane over the same text with the same sync contract. Embedded image data is
   displayed as `[image data]` and left untouched in the document.
 - **Images** ([`src/lib/image.ts`](src/lib/image.ts)): uploads, pastes and drops become data
   URIs in the note. Images over 500 KB (as a data URI) are scaled and recompressed, a note may
-  carry about 5 MB of them, and an SVG is rasterized, never stored. `safeImageSrc` is the filter
+  carry about 5 MB of them, and an SVG is rasterized, never stored. The same limits hold for the
+  images inside HTML that is pasted into the note
+  ([`src/lib/paste.ts`](src/lib/paste.ts)). `safeImageSrc` is the filter
   for every image address.
 - **Mermaid and KaTeX** load lazily. KaTeX is a separate chunk requested at startup
   (`loadLatex` in `crepe.ts`); Mermaid ([`src/lib/mermaid.ts`](src/lib/mermaid.ts)) is imported
