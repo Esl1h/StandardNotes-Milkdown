@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Performance
+
+- Use the native caret
+- Count words only after a pause
+- Render only what typing changes
+- Redraw only the decorations that changed
+- Speed up the serialization of large notes
+- Write embedded image data without escaping
+
+### Documentation
+
+- Explain how to verify the release tags
+- Add a governance page
+- Describe the architecture
+- State security requirements and assurance
+- Add a quick start, roadmap and achievements
+- Tighten the coding and test policy
+- Describe performance and the latency budget
+
 ## [1.1.1] - 2026-11-19
 
 ### Fixed
