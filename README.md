@@ -240,11 +240,31 @@ npm run build           # production build
 npm run check:build     # no unreferenced file in build/
 npm run check:lockfile  # git dependencies only at the known commits
 npm run e2e             # end to end tests (Playwright)
+npm run perf            # latency benchmark and budget (Playwright)
 ```
 
 Run `npx playwright install chromium` once before the first `npm run e2e`. The e2e suite builds the plugin and drives it through a fake Standard Notes host (`e2e/snHost.js`), including a throttled CPU (slow mobile WebView) and the opaque origin of the mobile app.
 
 Only the Crepe features in use are bundled (no AI): the main chunk is about 390 KB gzipped. KaTeX (about 80 KB gzipped) loads in its own chunk at startup, Mermaid only when a note has a diagram, and code block languages on demand.
+
+### Performance
+
+`npm run perf` builds the plugin, opens generated notes in the fake host, presses 200 keys and
+200 arrow keys in each, and writes latency, main thread time per key, long tasks and boot time to
+`perf-results.json`. It fails over the [budget](ARCHITECTURE.md#budget). Typing, on a 12 core
+desktop with headless Chromium (software rendering), before and after the work on latency:
+
+| Note                    | Keydown to paint, p95 | Main thread per key | Long tasks (200 keys) |
+| ----------------------- | --------------------- | ------------------- | --------------------- |
+| 5k characters           | 23 → 16 ms            | 12 → 7 ms           | 0 → 0                 |
+| 50k characters          | 39 → 23 ms            | 55 → 20 ms          | 10 → 7                |
+| 200k characters         | 189 → 60 ms           | 219 → 62 ms         | 228 → 11              |
+| 50k, CPU slowed 4 times | 300 → 57 ms           | 189 → 63 ms         | 218 → 11              |
+| 50k and 5 MB of images  | 36 → 22 ms            | 58 → 23 ms          | 11 → 12               |
+
+Timings depend on the machine: compare runs made on the same one. With CPU frequency scaling, a
+change that leaves the processor idle longer can read slower; look at the main thread time too.
+`PERF_ONLY=50k,200k`, `PERF_KEYS=40` and `PERF_BOOTS=1` shorten a run while working on one thing.
 
 ### Releases
 
