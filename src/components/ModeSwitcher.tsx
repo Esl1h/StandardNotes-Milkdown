@@ -381,4 +381,4 @@ function ShowLayoutBarButton({ onShow }: { onShow: () => void }) {
 
 export { ShowLayoutBarButton };
 
-export default ModeSwitcher;
+export default React.memo(ModeSwitcher);

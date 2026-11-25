@@ -1,4 +1,6 @@
+import { defaultHandlers, type Handle } from 'mdast-util-to-markdown';
 import { imageBlockSchema } from '@milkdown/kit/component/image-block';
+import { remarkStringifyOptionsCtx } from '@milkdown/kit/core';
 import { type Ctx } from '@milkdown/kit/ctx';
 import { $remark } from '@milkdown/kit/utils';
 
@@ -70,4 +72,34 @@ function keepImageAlt(ctx: Ctx): void {
   });
 }
 
-export { imageNullFields, keepImageAlt };
+const BASE64_IMAGE = /^data:image\/[\w.+-]+;base64,[A-Za-z0-9+/]+=*$/;
+// Stands in for the data while the image is written; a private use character,
+// so no alt or title holds it by chance.
+const PLACEHOLDER = 'data:,\uE000';
+
+/**
+ * remark checks an image address against every Markdown syntax to escape it:
+ * on a note with a few embedded pictures that was most of the time to save it.
+ * Base64 never needs an escape, so the data goes in after the image is written.
+ */
+function imageDataAsIs(image: Handle): Handle {
+  const handle: Handle = (node, parent, state, info) => {
+    if (!BASE64_IMAGE.test(node.url)) {
+      return image(node, parent, state, info);
+    }
+    const written = image({ ...node, url: PLACEHOLDER }, parent, state, info);
+    return written.replace(`](${PLACEHOLDER}`, () => `](${node.url}`);
+  };
+  // The serializer peeks at the first character of the node that follows.
+  return Object.assign(handle, { peek: (image as { peek?: Handle }).peek });
+}
+
+function writeImageDataAsIs(ctx: Ctx): void {
+  ctx.update(remarkStringifyOptionsCtx, (options) => {
+    const handlers = (options.handlers ?? {}) as Record<string, Handle>;
+    const image = imageDataAsIs(handlers.image ?? defaultHandlers.image);
+    return { ...options, handlers: { ...handlers, image } };
+  });
+}
+
+export { imageDataAsIs, imageNullFields, keepImageAlt, writeImageDataAsIs };

@@ -72,12 +72,67 @@ behind it are in [`docs/adr/`](docs/adr/).
   text in an editable area, and edits are still saved.
 - No telemetry and no network access of its own.
 
+## Performance
+
+What runs on every key should cost as much as what changed, not as much as the note.
+
+- **Decorations.** Callouts and wiki links are redrawn for the changed top level blocks only
+  (`redecorate` in [`src/lib/markdownSyntax.ts`](src/lib/markdownSyntax.ts)). The table of
+  contents reads each unedited block once and is redrawn only when a heading or a marker changes
+  ([`src/lib/toc.ts`](src/lib/toc.ts)). Property tests compare both with a redraw of the whole
+  document ([`src/lib/decorations.test.ts`](src/lib/decorations.test.ts)).
+- **Word counts.** A selection counts the selected text. The document is counted once per pause,
+  on the `updated` event Milkdown delays by 200 ms.
+- **Rendering.** What changes while typing (word counts, headings) lives in small stores
+  ([`src/lib/store.ts`](src/lib/store.ts)) read by the counter and the outline alone; the panes
+  and bars are memoized. A test counts the renders.
+- **Caret.** The browser's own ([ADR 0007](docs/adr/0007-native-caret.md)).
+- **Saving.** Milkdown serializes the whole document after each pause. The schema types are kept
+  in objects that are quick to copy ([`src/lib/crepe.ts`](src/lib/crepe.ts)), and embedded image
+  data is written without escaping ([`src/lib/imageMarkdown.ts`](src/lib/imageMarkdown.ts)).
+
+### Measured and left as it is
+
+- **Blur behind the floating bars.** `backdrop-filter` showed no difference with software
+  rendering. On a desktop GPU, scrolling was the same with and without it. The selection toolbar
+  took 0.4 to 5 ms more GPU time per step over three runs; its frames were not timed. Weak GPUs
+  were not measured, and touch devices already get opaque surfaces.
+- **KaTeX at boot.** The editor waits for the LaTeX chunk, because the math nodes are part of the
+  schema: without them a note with math would not open as it was written, and adding them later
+  means creating the editor again. The wait was close to 0 ms on a local server, about 60 ms on a
+  fast 4G profile and 350 ms on a slow one, on the first load only.
+
+### Known costs
+
+- The serialization after a pause is one task of about 70 ms on a 50k character note and 200 ms
+  on a 200k one. Most of it is in Milkdown and remark.
+- Arrow keys that move the cursor into or out of a code block recalculate the style of the whole
+  page, with tasks of up to 150 ms on a 50k character note. The cause is not isolated yet.
+- The editor-kit copies the whole note for every save, about 45 ms with 5 MB of images.
+
+### Budget
+
+`npm run perf` ([`e2e/perf.spec.js`](e2e/perf.spec.js)) fails, and so does its CI job, when typing
+in the 50k character note goes over any of these:
+
+| Metric                               | Limit  | Desktop, now | Before the budget |
+| ------------------------------------ | ------ | ------------ | ----------------- |
+| Keydown to paint, 95th percentile    | 50 ms  | 23 ms        | 39 ms             |
+| Main thread time per key             | 40 ms  | 20 ms        | 55 ms             |
+| Longest task while typing and pauses | 150 ms | 72 ms        | 91 ms             |
+
+The limits leave about twice the desktop numbers for slower machines. A frame at 60 Hz is already
+16 ms, and a 5k note takes 15 ms from keydown to paint, so a tighter paint limit would measure the
+screen and not the editor. A limit of 50 ms per task is out of reach while a pause serializes the
+whole note in one task.
+
 ## Build and release pipeline
 
 `npm run build` (Vite, output in `build/`) also writes `THIRD_PARTY_LICENSES.md` and the CSP meta
 tag. CI ([`ci.yml`](.github/workflows/ci.yml)) runs lockfile check, `npm ci`, typecheck, lint,
 format check, unit tests, build, build content check and `npm audit` on Node 22 and 24, plus the
-Playwright e2e suite against a fake Standard Notes host (`e2e/snHost.js`). A pushed `v*` tag
+Playwright e2e suite against a fake Standard Notes host (`e2e/snHost.js`) and the latency
+benchmark. A pushed `v*` tag
 starts [`release.yml`](.github/workflows/release.yml): it requires green CI for the commit,
 rebuilds, packs `extension.zip`, writes `SHA256SUMS`, attests the build provenance, creates the
 release and publishes the build to the `gh-pages` branch, which GitHub Pages serves at the URL

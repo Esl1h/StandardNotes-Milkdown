@@ -1,7 +1,7 @@
 import { commandsCtx, editorViewCtx } from '@milkdown/kit/core';
 import { clearTextInCurrentBlockCommand } from '@milkdown/kit/preset/commonmark';
 import { type Node } from '@milkdown/kit/prose/model';
-import { Plugin, PluginKey } from '@milkdown/kit/prose/state';
+import { Plugin, PluginKey, type Transaction } from '@milkdown/kit/prose/state';
 import { Decoration, DecorationSet } from '@milkdown/kit/prose/view';
 import { $prose } from '@milkdown/kit/utils';
 import { type BlockEditFeatureConfig } from '@milkdown/crepe/feature/block-edit';
@@ -45,32 +45,90 @@ function tocList(headings: Heading[], onSelect: (heading: Heading) => void): HTM
   return nav;
 }
 
-function decorate(doc: Node): DecorationSet {
-  const markers: Array<{ pos: number; size: number }> = [];
-  doc.descendants((node, pos) => {
-    if (isTocMarker(node)) {
-      markers.push({ pos, size: node.nodeSize });
-      return false;
+/** What one top level block adds to a table of contents, positions relative
+ * to the block. */
+interface BlockOutline {
+  headings: Heading[];
+  markers: Array<{ pos: number; size: number }>;
+}
+
+// A block that was not edited is the same object, so it is only read once.
+const blockOutlines = new WeakMap<Node, BlockOutline>();
+
+function blockOutline(block: Node): BlockOutline {
+  let outline = blockOutlines.get(block);
+  if (!outline) {
+    const found: BlockOutline = { headings: [], markers: [] };
+    const visit = (node: Node, pos: number) => {
+      if (node.type.name === 'heading') {
+        found.headings.push({ level: node.attrs.level as number, text: node.textContent, pos });
+        return false;
+      }
+      if (isTocMarker(node)) {
+        found.markers.push({ pos, size: node.nodeSize });
+        return false;
+      }
+      return true;
+    };
+    if (visit(block, 0)) {
+      block.descendants((node, pos) => visit(node, pos + 1));
     }
-    return true;
-  });
-  if (markers.length === 0) {
-    return DecorationSet.empty;
+    blockOutlines.set(block, (outline = found));
   }
-  const headings = headingsOf(doc);
-  // The same key reuses the list as it is, instead of building it again.
-  const signature = headings.map((h) => `${h.level}:${h.pos}:${h.text}`).join('|');
+  return outline;
+}
+
+/** The markers and headings of the document, and the key of each list. */
+function tocOf(doc: Node) {
+  const headings: Heading[] = [];
+  const markers: BlockOutline['markers'] = [];
+  doc.forEach((block, offset) => {
+    const outline = blockOutline(block);
+    headings.push(...outline.headings.map((h) => ({ ...h, pos: h.pos + offset })));
+    markers.push(...outline.markers.map((m) => ({ ...m, pos: m.pos + offset })));
+  });
+  // No positions in the key: typing above a heading must not rebuild the list.
+  const signature = headings.map((h) => `${h.level}:${h.text}`).join('\n');
+  const keys = markers.map((_, index) => `toc:${index}:${signature}`);
+  return { headings, markers, keys };
+}
+
+function draw(doc: Node, { headings, markers, keys }: ReturnType<typeof tocOf>): DecorationSet {
   return DecorationSet.create(
     doc,
-    markers.flatMap(({ pos, size }) => [
+    markers.flatMap(({ pos, size }, index) => [
       Decoration.node(pos, pos + size, { class: 'toc-marker' }),
-      Decoration.widget(pos + size, (view) => tocList(headings, (h) => showHeading(view, h)), {
-        side: -1,
-        key: `toc:${pos}:${signature}`,
-        stopEvent: () => true,
-      }),
+      Decoration.widget(
+        pos + size,
+        (view) =>
+          tocList(headings, (heading) => {
+            // The list outlives edits that move the headings: look the
+            // position up now.
+            const current = headingsOf(view.state.doc)[headings.indexOf(heading)];
+            if (current) {
+              showHeading(view, current);
+            }
+          }),
+        { side: -1, key: keys[index], stopEvent: () => true }
+      ),
     ])
   );
+}
+
+function decorate(doc: Node): DecorationSet {
+  return draw(doc, tocOf(doc));
+}
+
+/** Keeps the lists as they are while neither a marker nor a heading changed. */
+function redecorate(previous: DecorationSet, tr: Transaction): DecorationSet {
+  const toc = tocOf(tr.doc);
+  const mapped = previous.map(tr.mapping, tr.doc);
+  const wanted = toc.markers.flatMap(({ pos, size }, index) => [
+    `${pos}:${pos + size}:`,
+    `${pos + size}:${pos + size}:${toc.keys[index]}`,
+  ]);
+  const kept = mapped.find().map((d) => `${d.from}:${d.to}:${d.spec.key ?? ''}`);
+  return wanted.sort().join('|') === kept.sort().join('|') ? mapped : draw(tr.doc, toc);
 }
 
 const tocKey = new PluginKey<DecorationSet>('tocDecorations');
@@ -81,7 +139,7 @@ const tocDecorations = $prose(
       key: tocKey,
       state: {
         init: (_, state) => decorate(state.doc),
-        apply: (tr, previous) => (tr.docChanged ? decorate(tr.doc) : previous),
+        apply: (tr, previous) => (tr.docChanged ? redecorate(previous, tr) : previous),
       },
       props: {
         decorations: (state) => tocKey.getState(state),
@@ -108,4 +166,4 @@ const addTocMenuItem: NonNullable<BlockEditFeatureConfig['buildMenu']> = (builde
   });
 };
 
-export { addTocMenuItem, isTocMarker, tocDecorations, tocList };
+export { addTocMenuItem, decorate, isTocMarker, redecorate, tocDecorations, tocList };

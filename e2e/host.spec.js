@@ -890,6 +890,22 @@ test('a table of contents is added from the slash menu and follows the headings'
   await expect(plugin.locator('.milkdown .editor h2')).toHaveText('Two!');
 });
 
+test('a table of contents entry finds a heading that has moved', async ({ page }) => {
+  const plugin = await openHost(page, { text: '[TOC]\n\n# One\n\ntext\n\n## Two\n' });
+  const toc = plugin.locator('.milkdown .editor .toc-list');
+  await expect(toc.locator('li')).toHaveText(['One', 'Two']);
+
+  // Typing between the headings moves the second one and leaves the list as is.
+  await plugin.locator('.milkdown .editor p', { hasText: 'text' }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' and quite a bit more of it');
+  await toc.getByRole('button', { name: 'Two' }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('!');
+
+  await expect(plugin.locator('.milkdown .editor h2')).toHaveText('Two!');
+});
+
 test('a Mermaid diagram starts from a template in the slash menu', async ({ page }) => {
   const plugin = await openHost(page, { text: '# Title\n\ntext\n' });
   await plugin.locator('.milkdown .editor p').click();

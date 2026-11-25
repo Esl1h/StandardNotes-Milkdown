@@ -18,7 +18,9 @@ import { preserveSyntaxOnSave, syntaxDecorations } from './markdownSyntax';
 import { activeBlock } from './activeBlock';
 import { search } from 'prosemirror-search';
 import { $prose } from '@milkdown/kit/utils';
-import { imageNullFields, keepImageAlt } from './imageMarkdown';
+import { schemaCtx, SchemaReady } from '@milkdown/kit/core';
+import { type MilkdownPlugin } from '@milkdown/kit/ctx';
+import { imageNullFields, keepImageAlt, writeImageDataAsIs } from './imageMarkdown';
 import { addTocMenuItem, tocDecorations } from './toc';
 import { addMermaidMenuItems } from './mermaidMenu';
 import { buildTopBar } from './topBarItems';
@@ -48,6 +50,18 @@ loadLatex().catch(() => undefined);
 const searchPlugin = $prose(() => search());
 
 /**
+ * The Milkdown serializer copies the node and mark types for every node it
+ * writes. ProseMirror keeps them in objects without a prototype, which V8
+ * copies about ten times slower than ordinary ones: that was a third of the
+ * time to save a large note. The types themselves stay the same.
+ */
+const fasterSave: MilkdownPlugin = (ctx) => async () => {
+  await ctx.wait(SchemaReady);
+  const schema = ctx.get(schemaCtx);
+  Object.assign(schema, { nodes: { ...schema.nodes }, marks: { ...schema.marks } });
+};
+
+/**
  * Builds the editor from the Crepe features this plugin uses. The `Crepe`
  * class imports every feature statically (the AI one and an eager KaTeX
  * included); the builder only pulls what is added, and Latex lazily.
@@ -63,7 +77,8 @@ async function createCrepe(
 ): Promise<CrepeBuilder> {
   const { latex } = await loadLatex();
   const crepe = new CrepeBuilder({ root, defaultValue })
-    .addFeature(cursor)
+    // The virtual cursor forces a layout on every key and caret move (ADR 0007).
+    .addFeature(cursor, { virtual: false })
     .addFeature(listItem, {
       checkBoxUncheckedIcon: CHECKBOX_UNCHECKED,
       checkBoxCheckedIcon: CHECKBOX_CHECKED,
@@ -91,12 +106,14 @@ async function createCrepe(
   crepe.editor
     .config(preserveSyntaxOnSave)
     .config(keepImageAlt)
+    .config(writeImageDataAsIs)
     .use(imageNullFields)
     .use(frontmatter)
     .use(syntaxDecorations)
     .use(tocDecorations)
     .use(activeBlock)
-    .use(searchPlugin);
+    .use(searchPlugin)
+    .use(fasterSave);
   return withTopBar ? crepe.addFeature(topBar, { buildTopBar }) : crepe;
 }
 

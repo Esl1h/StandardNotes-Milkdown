@@ -49,6 +49,19 @@ test('the block holding the cursor is marked active, without saving', async ({ p
   expect(await hostLogs(page, 'save-items')).toHaveLength(0);
 });
 
+test('the caret is the native one, in the accent color', async ({ page }) => {
+  const plugin = await openHost(page, { text: NOTE });
+  await expect(plugin.locator('.milkdown .editor h1')).toBeVisible();
+  await pluginFrame(page).addStyleTag({ content: DARK_THEME });
+  await plugin.locator('.milkdown .editor p').first().click();
+
+  const caret = await pluginFrame(page).evaluate(
+    () => getComputedStyle(document.querySelector('.milkdown .ProseMirror')).caretColor
+  );
+  expect(caret).toBe('rgb(74, 158, 255)');
+  await expect(plugin.locator('.prosemirror-virtual-cursor')).toHaveCount(0);
+});
+
 test('task boxes are drawn with the custom icons', async ({ page }) => {
   const plugin = await openHost(page, { text: '- [x] done\n- [ ] open\n' });
   await expect(plugin.locator('.milkdown-list-item-block .label.checked .cb-check')).toHaveCount(1);

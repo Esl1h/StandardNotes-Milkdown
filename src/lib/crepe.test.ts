@@ -1,4 +1,37 @@
 import { describe, expect, it, vi } from 'vitest';
+import { schemaCtx } from '@milkdown/kit/core';
+import { createCrepe } from './crepe';
+
+describe('caret', () => {
+  it('is the native one: a virtual cursor forces a layout on every key', async () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    const crepe = await createCrepe(root, 'text', false);
+    await crepe.create();
+
+    expect(root.querySelector('.ProseMirror')?.classList).not.toContain('virtual-cursor-enabled');
+
+    await crepe.destroy();
+    root.remove();
+  }, 20000);
+});
+
+describe('saving', () => {
+  it('keeps the schema types in ordinary objects, quick to copy per node', async () => {
+    const root = document.createElement('div');
+    const crepe = await createCrepe(root, '**text**', false);
+    await crepe.create();
+
+    crepe.editor.action((ctx) => {
+      const { nodes, marks } = ctx.get(schemaCtx);
+      expect(Object.getPrototypeOf(nodes)).toBe(Object.prototype);
+      expect(Object.getPrototypeOf(marks)).toBe(Object.prototype);
+    });
+    expect(crepe.getMarkdown()).toBe('**text**\n');
+
+    await crepe.destroy();
+  }, 20000);
+});
 
 describe('loadLatex', () => {
   it('tries the chunk again after the prefetch failed', async () => {

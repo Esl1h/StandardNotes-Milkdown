@@ -43,7 +43,8 @@ Then install `http://localhost:3000/ext.dev.json` via Preferences > Plugins
 
 All six must pass. CI runs the same steps (and a few more checks) on every pull request and on
 every push to `main`, on Node 22 and 24, and reports the result on the pull request. A change
-that does not pass is not merged.
+that does not pass is not merged. CI also runs `npm run perf`, which fails when typing goes over
+the [latency budget](ARCHITECTURE.md#budget).
 
 ## Coding standards
 

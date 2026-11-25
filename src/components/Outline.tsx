@@ -1,13 +1,16 @@
 import React from 'react';
 import { type Heading } from '../lib/headings';
+import { type Store, useStore } from '../lib/store';
 
 interface OutlineProps {
-  headings: Heading[];
+  headings: Store<Heading[]>;
   onSelect: (heading: Heading) => void;
 }
 
 /** The note's headings, indented by level; a click jumps to the heading. */
-function Outline({ headings, onSelect }: OutlineProps) {
+function Outline(props: OutlineProps) {
+  const { onSelect } = props;
+  const headings = useStore(props.headings);
   return (
     <nav className="outline" aria-label="Outline">
       {headings.length === 0 ? (
@@ -25,4 +28,4 @@ function Outline({ headings, onSelect }: OutlineProps) {
   );
 }
 
-export default Outline;
+export default React.memo(Outline);

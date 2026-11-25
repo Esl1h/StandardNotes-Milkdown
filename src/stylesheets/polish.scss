@@ -88,18 +88,9 @@
   }
 }
 
-// ---------- Caret: Crepe's virtual cursor, in the accent color ----------
-.crepe-container .milkdown .ProseMirror-focused {
-  --prosemirror-virtual-cursor-color: var(--ed-accent);
-}
-
-.crepe-container .milkdown .ProseMirror .prosemirror-virtual-cursor {
-  border-radius: 1px;
-  // Static glow: box-shadow is never animated (the blink animates opacity).
-  box-shadow: 0 0 6px color-mix(in srgb, var(--ed-accent) 55%, transparent);
-  transition:
-    left 80ms var(--ed-ease),
-    top 80ms var(--ed-ease);
+// ---------- Caret and selection, in the accent color ----------
+.crepe-container .milkdown .ProseMirror {
+  caret-color: var(--ed-accent);
 }
 
 .crepe-container .milkdown .ProseMirror ::selection {
