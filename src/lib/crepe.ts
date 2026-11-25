@@ -63,7 +63,8 @@ async function createCrepe(
 ): Promise<CrepeBuilder> {
   const { latex } = await loadLatex();
   const crepe = new CrepeBuilder({ root, defaultValue })
-    .addFeature(cursor)
+    // The virtual cursor forces a layout on every key and caret move (ADR 0007).
+    .addFeature(cursor, { virtual: false })
     .addFeature(listItem, {
       checkBoxUncheckedIcon: CHECKBOX_UNCHECKED,
       checkBoxCheckedIcon: CHECKBOX_CHECKED,
