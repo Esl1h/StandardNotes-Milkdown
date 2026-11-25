@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.3] - 2026-11-25
+
+### Fixed
+
+- Keep remote text from being overwritten by a debounced save
+- Apply the image limits to pasted HTML
+
 ## [1.1.2] - 2026-11-25
 
 ### Performance
