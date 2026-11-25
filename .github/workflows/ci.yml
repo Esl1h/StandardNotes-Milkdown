@@ -118,12 +118,11 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  # Latency benchmark. It runs apart from the other specs, which would share
-  # the CPU, and does not block a build while it has no budget.
+  # Latency benchmark, failing over the budget in e2e/perf.spec.js. It runs
+  # apart from the other specs, which would share the CPU.
   perf:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

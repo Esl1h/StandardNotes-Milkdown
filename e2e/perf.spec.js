@@ -8,7 +8,8 @@ import { openHost } from './snHost.js';
 
 /**
  * Latency benchmark: typing, cursor movement and boot on generated notes,
- * driven through the fake host. Writes perf-results.json.
+ * driven through the fake host. Writes perf-results.json and fails when
+ * typing in the 50k note goes over the budget.
  *
  * Opt-in and alone, as specs running in parallel share the CPU and skew the
  * timings: `npm run perf`.
@@ -21,6 +22,14 @@ const RESULTS_FILE = path.resolve('perf-results.json');
 const KEYS = Number(process.env.PERF_KEYS ?? 200);
 const BOOTS = Number(process.env.PERF_BOOTS ?? 5);
 const ONLY = process.env.PERF_ONLY?.split(',');
+
+/**
+ * What typing in the 50k note may cost, in milliseconds. Timings depend on
+ * the machine, so the limits leave about twice what a desktop measures (see
+ * ARCHITECTURE.md): room for a CI runner, and still under the 55 ms of main
+ * thread per key the editor took before there was a budget.
+ */
+const BUDGET = { paintP95: 50, cpuPerKey: 40, longestTask: 150 };
 
 /** Deterministic pseudo random numbers, so every run types the same way. */
 function random(seed) {
@@ -295,6 +304,12 @@ test.describe('performance', () => {
       }
       // Written after every scenario, so a failure keeps what was measured.
       fs.writeFileSync(RESULTS_FILE, `${JSON.stringify(results, null, 2)}\n`);
+    }
+    const budgeted = results.scenarios['50k'];
+    if (budgeted) {
+      for (const [metric, limit] of Object.entries(BUDGET)) {
+        expect.soft(budgeted.typing[metric], `50k typing ${metric}`).toBeLessThanOrEqual(limit);
+      }
     }
   });
 });
